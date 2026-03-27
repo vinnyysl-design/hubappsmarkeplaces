@@ -1,4 +1,4 @@
-import { ExternalLink, Github } from "lucide-react";
+import { ExternalLink } from "lucide-react";
 
 interface App {
   nome: string;
