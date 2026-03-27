@@ -30,22 +30,14 @@ const AppCard = ({ app }: { app: App }) => {
         )}
       </div>
       <p className="text-sm text-muted-foreground flex-1 mb-5">{app.descricao}</p>
-      <div className="flex gap-2 mt-auto">
+      <div className="flex mt-auto">
         <a
           href={app.url}
           target="_blank"
           rel="noopener noreferrer"
-          className="flex-1 flex items-center justify-center gap-2 rounded-xl bg-primary text-primary-foreground py-2.5 text-sm font-semibold hover:opacity-90 transition-opacity"
+          className="w-full flex items-center justify-center gap-2 rounded-xl bg-primary text-primary-foreground py-2.5 text-sm font-semibold hover:opacity-90 transition-opacity"
         >
           <ExternalLink size={15} /> Abrir
-        </a>
-        <a
-          href={app.github}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="flex-1 flex items-center justify-center gap-2 rounded-xl bg-secondary text-secondary-foreground py-2.5 text-sm font-semibold hover:opacity-90 transition-opacity"
-        >
-          <Github size={15} /> GitHub
         </a>
       </div>
     </div>
