@@ -1,0 +1,72 @@
+[
+  {
+    "nome": "Curva ABC, Diagnóstico e Ações",
+    "descricao": "Classifique produtos por importância, diagnostique performance e defina ações estratégicas.",
+    "categoria": "Operação",
+    "status": "Ativo",
+    "tag": "Mais usado",
+    "url": "https://curva-abc-dashboard.streamlit.app/",
+    "github": "",
+    "icone": "🧮"
+  },
+  {
+    "nome": "Dashboard Fulfillment Estratégico",
+    "descricao": "Painel estratégico para acompanhamento e gestão de fulfillment.",
+    "categoria": "Operação",
+    "status": "Ativo",
+    "tag": "",
+    "url": "https://dashboard-full-ml.streamlit.app/",
+    "github": "",
+    "icone": "📦"
+  },
+  {
+    "nome": "AdsEngine",
+    "descricao": "Gerencie e otimize suas campanhas de anúncios com inteligência.",
+    "categoria": "Marketing",
+    "status": "Ativo",
+    "tag": "Novo",
+    "url": "https://melieads-bhggkcnchjkhonfhqhqnw5.streamlit.app/",
+    "github": "",
+    "icone": "🚀"
+  },
+  {
+    "nome": "Precificação Estratégica",
+    "descricao": "Calculadora inteligente para definir preços com margem e competitividade.",
+    "categoria": "Simuladores",
+    "status": "Ativo",
+    "tag": "",
+    "url": "https://calculadora-precificacao-rlvnjtg9xbshcwmpgqcy4b.streamlit.app/",
+    "github": "",
+    "icone": "💰"
+  },
+  {
+    "nome": "Gestão de Devolução Inteligente",
+    "descricao": "Monitore devoluções, identifique motivos e reduza perdas com dados.",
+    "categoria": "Devoluções",
+    "status": "Ativo",
+    "tag": "",
+    "url": "https://planilha-bruno-pbnrmshe3ru8spcd9bzxly.streamlit.app/",
+    "github": "",
+    "icone": "↩️"
+  },
+  {
+    "nome": "Painel Financeiro",
+    "descricao": "Análise detalhada de vendas, custos e rentabilidade da operação.",
+    "categoria": "Relatórios",
+    "status": "Ativo",
+    "tag": "",
+    "url": "https://repasse-teste-d9bq9zktrhbv6egeeuvtsh.streamlit.app/",
+    "github": "",
+    "icone": "🏦"
+  },
+  {
+    "nome": "Inteligência de Mercado",
+    "descricao": "Ferramenta para análise de tamanho de mercado e apoio à tomada de decisão estratégica.",
+    "categoria": "Relatórios",
+    "status": "Ativo",
+    "tag": "Novo",
+    "url": "https://tamanho-do-mercado-jyip5xpzymdhekzyfggxor.streamlit.app/",
+    "github": "",
+    "icone": "🧮"
+  }
+]

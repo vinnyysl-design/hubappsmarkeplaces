@@ -1,0 +1,77 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Definition of the design system. All colors, gradients, fonts, etc should be defined here. 
+All colors MUST be HSL.
+*/
+
+@layer base {
+  :root {
+    --background: 120 5% 7%;
+    --foreground: 100 10% 90%;
+
+    --card: 120 5% 11%;
+    --card-foreground: 100 10% 90%;
+
+    --popover: 120 5% 11%;
+    --popover-foreground: 100 10% 90%;
+
+    --primary: 100 40% 35%;
+    --primary-foreground: 100 10% 95%;
+
+    --secondary: 120 5% 15%;
+    --secondary-foreground: 100 10% 80%;
+
+    --muted: 120 4% 15%;
+    --muted-foreground: 100 5% 55%;
+
+    --accent: 100 45% 30%;
+    --accent-foreground: 100 10% 95%;
+
+    --destructive: 0 60% 45%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 120 5% 18%;
+    --input: 120 5% 18%;
+    --ring: 100 40% 35%;
+
+    --radius: 0.75rem;
+
+    --hero-from: 120 8% 8%;
+    --hero-via: 100 12% 12%;
+    --hero-to: 100 20% 18%;
+
+    --badge-cat-bg: 100 30% 15%;
+    --badge-cat-text: 100 40% 60%;
+    --badge-status-bg: 100 35% 15%;
+    --badge-status-text: 100 50% 55%;
+    --badge-tag-bg: 45 40% 15%;
+    --badge-tag-text: 45 50% 60%;
+
+    --sidebar-background: 120 5% 9%;
+    --sidebar-foreground: 100 10% 80%;
+    --sidebar-primary: 100 40% 35%;
+    --sidebar-primary-foreground: 100 10% 95%;
+    --sidebar-accent: 120 5% 14%;
+    --sidebar-accent-foreground: 100 10% 80%;
+    --sidebar-border: 120 5% 18%;
+    --sidebar-ring: 100 40% 35%;
+  }
+}
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+
+body {
+  font-family: 'Inter', sans-serif;
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+  }
+}
