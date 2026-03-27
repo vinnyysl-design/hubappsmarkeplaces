@@ -74,7 +74,7 @@ const Index = () => {
         )}
 
         {/* All apps */}
-        <h2 className="text-xl font-bold text-foreground mb-4">📋 Aplicativos</h2>
+        <h2 className="text-xl font-bold text-foreground mb-4">Aplicativos</h2>
         {filtrados.length === 0 ? (
           <div className="text-center py-16 text-muted-foreground">
             Nenhum aplicativo encontrado com esse filtro.
