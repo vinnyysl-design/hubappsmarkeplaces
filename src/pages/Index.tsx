@@ -64,7 +64,7 @@ const Index = () => {
         {/* Highlights */}
         {showDestaques && (
           <>
-            <h2 className="text-xl font-bold text-foreground mb-4">⭐ Destaques</h2>
+            <h2 className="text-xl font-bold text-foreground mb-4">Destaques</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 mb-10">
               {destaques.map((app) => (
                 <AppCard key={app.nome} app={app} />
@@ -74,7 +74,7 @@ const Index = () => {
         )}
 
         {/* All apps */}
-        <h2 className="text-xl font-bold text-foreground mb-4">📋 Aplicativos</h2>
+        <h2 className="text-xl font-bold text-foreground mb-4">Aplicativos</h2>
         {filtrados.length === 0 ? (
           <div className="text-center py-16 text-muted-foreground">
             Nenhum aplicativo encontrado com esse filtro.
