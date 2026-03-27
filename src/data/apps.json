@@ -1,0 +1,82 @@
+[
+  {
+    "nome": "Relatório de Vendas ML",
+    "descricao": "Painel com faturamento, vendas, cancelamentos e visão geral da operação.",
+    "categoria": "Vendas",
+    "status": "Ativo",
+    "tag": "Mais usado",
+    "url": "https://seu-app-1.streamlit.app",
+    "github": "https://github.com/seuusuario/relatorio-vendas-ml",
+    "icone": "📈"
+  },
+  {
+    "nome": "Painel de Devoluções",
+    "descricao": "Monitore devoluções, motivos e oportunidades para reduzir perdas.",
+    "categoria": "Devoluções",
+    "status": "Ativo",
+    "tag": "Novo",
+    "url": "https://seu-app-2.streamlit.app",
+    "github": "https://github.com/seuusuario/painel-devolucoes",
+    "icone": "↩️"
+  },
+  {
+    "nome": "Simulador de Repasses",
+    "descricao": "Projete valores a receber nos próximos dias com base nos pedidos pagos.",
+    "categoria": "Simuladores",
+    "status": "Ativo",
+    "tag": "",
+    "url": "https://seu-app-3.streamlit.app",
+    "github": "https://github.com/seuusuario/simulador-repasses",
+    "icone": "💸"
+  },
+  {
+    "nome": "Diagnóstico Amazon",
+    "descricao": "Ferramenta para avaliar conta, anúncios, catálogo e pontos de melhoria.",
+    "categoria": "Diagnóstico",
+    "status": "Beta",
+    "tag": "",
+    "url": "https://seu-app-4.streamlit.app",
+    "github": "https://github.com/seuusuario/diagnostico-amazon",
+    "icone": "🔎"
+  },
+  {
+    "nome": "Analisador de Campanhas",
+    "descricao": "Leia relatórios e destaque campanhas com melhor retorno e ajustes necessários.",
+    "categoria": "Relatórios",
+    "status": "Ativo",
+    "tag": "",
+    "url": "https://seu-app-5.streamlit.app",
+    "github": "https://github.com/seuusuario/analisador-campanhas",
+    "icone": "📊"
+  },
+  {
+    "nome": "Painel Financeiro",
+    "descricao": "Consolide indicadores financeiros e acompanhe margens da operação.",
+    "categoria": "Relatórios",
+    "status": "Ativo",
+    "tag": "",
+    "url": "https://seu-app-6.streamlit.app",
+    "github": "https://github.com/seuusuario/painel-financeiro",
+    "icone": "🏦"
+  },
+  {
+    "nome": "App de Curva ABC",
+    "descricao": "Classifique produtos por importância e identifique prioridades de estoque.",
+    "categoria": "Operação",
+    "status": "Ativo",
+    "tag": "",
+    "url": "https://seu-app-7.streamlit.app",
+    "github": "https://github.com/seuusuario/app-curva-abc",
+    "icone": "🧮"
+  },
+  {
+    "nome": "Hub Operacional",
+    "descricao": "Reúna rotinas, checklists e atalhos usados no dia a dia da operação.",
+    "categoria": "Operação",
+    "status": "Interno",
+    "tag": "",
+    "url": "https://seu-app-8.streamlit.app",
+    "github": "https://github.com/seuusuario/hub-operacional",
+    "icone": "🛠️"
+  }
+]

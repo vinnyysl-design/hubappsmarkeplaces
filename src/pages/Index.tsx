@@ -1,16 +1,99 @@
-// Update this page (the content is just a fallback if you fail to update the page)
+import { useState, useMemo } from "react";
+import { Search } from "lucide-react";
+import HeroSection from "@/components/HeroSection";
+import MetricCards from "@/components/MetricCards";
+import AppCard from "@/components/AppCard";
+import apps from "@/data/apps.json";
 
-// IMPORTANT: Fully REPLACE this with your own code
-const PlaceholderIndex = () => {
-  // PLACEHOLDER: Replace this entire return statement with the user's app.
-  // The inline background color is intentionally not part of the design system.
+const Index = () => {
+  const [busca, setBusca] = useState("");
+  const [categoria, setCategoria] = useState("Todos");
+
+  const categorias = useMemo(
+    () => ["Todos", ...Array.from(new Set(apps.map((a) => a.categoria))).sort()],
+    []
+  );
+
+  const filtrados = useMemo(() => {
+    const termo = busca.toLowerCase().trim();
+    return apps.filter((app) => {
+      const matchCat = categoria === "Todos" || app.categoria === categoria;
+      const conteudo = `${app.nome} ${app.descricao} ${app.tag}`.toLowerCase();
+      const matchTermo = conteudo.includes(termo);
+      return matchCat && matchTermo;
+    });
+  }, [busca, categoria]);
+
+  const ativos = apps.filter((a) => a.status === "Ativo").length;
+  const beta = apps.filter((a) => a.status === "Beta").length;
+  const numCategorias = new Set(apps.map((a) => a.categoria)).size;
+
+  const destaques = apps.filter((a) => a.tag === "Mais usado" || a.tag === "Novo");
+
+  const showDestaques = !busca && categoria === "Todos" && destaques.length > 0;
+
   return (
-    <div className="flex min-h-screen items-center justify-center" style={{ backgroundColor: '#fcfbf8' }}>
-      <img data-lovable-blank-page-placeholder="REMOVE_THIS" src="/placeholder.svg" alt="Your app will live here!" />
+    <div className="min-h-screen bg-background">
+      <div className="max-w-6xl mx-auto px-4 py-8">
+        <HeroSection />
+        <MetricCards total={apps.length} ativos={ativos} beta={beta} categorias={numCategorias} />
+
+        {/* Filters */}
+        <div className="flex flex-col sm:flex-row gap-4 mb-8">
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" size={18} />
+            <input
+              type="text"
+              value={busca}
+              onChange={(e) => setBusca(e.target.value)}
+              placeholder="Buscar aplicativo..."
+              className="w-full pl-10 pr-4 py-3 rounded-xl border border-border bg-card text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring text-sm"
+            />
+          </div>
+          <select
+            value={categoria}
+            onChange={(e) => setCategoria(e.target.value)}
+            className="px-4 py-3 rounded-xl border border-border bg-card text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+          >
+            {categorias.map((c) => (
+              <option key={c} value={c}>{c}</option>
+            ))}
+          </select>
+        </div>
+
+        {/* Highlights */}
+        {showDestaques && (
+          <>
+            <h2 className="text-xl font-bold text-foreground mb-4">⭐ Destaques</h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 mb-10">
+              {destaques.map((app) => (
+                <AppCard key={app.nome} app={app} />
+              ))}
+            </div>
+          </>
+        )}
+
+        {/* All apps */}
+        <h2 className="text-xl font-bold text-foreground mb-4">📋 Aplicativos</h2>
+        {filtrados.length === 0 ? (
+          <div className="text-center py-16 text-muted-foreground">
+            Nenhum aplicativo encontrado com esse filtro.
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+            {filtrados.map((app) => (
+              <AppCard key={app.nome} app={app} />
+            ))}
+          </div>
+        )}
+
+        {/* Footer */}
+        <p className="text-center text-muted-foreground text-sm mt-12 pb-6">
+          Hub de Apps • Portal central para acesso rápido às suas ferramentas
+        </p>
+      </div>
     </div>
   );
 };
-
-const Index = PlaceholderIndex;
 
 export default Index;
