@@ -88,9 +88,11 @@ const Index = () => {
         )}
 
         {/* Footer */}
-        <p className="text-center text-muted-foreground text-sm mt-12 pb-6">
-          Hub de Apps • Portal central para acesso rápido às suas ferramentas
-        </p>
+        <footer className="text-center text-muted-foreground text-sm mt-12 pb-6 border-t border-border pt-6 space-y-1">
+          <p className="font-semibold text-foreground">© {new Date().getFullYear()} Desenvolvido por Vinicius Lima</p>
+          <p>Estratégia de Dados para E-commerce</p>
+          <p>CNPJ: 47.192.694/0001-70 • Todos os direitos reservados</p>
+        </footer>
       </div>
     </div>
   );
