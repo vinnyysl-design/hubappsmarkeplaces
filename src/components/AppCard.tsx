@@ -18,6 +18,8 @@ const iconMap: Record<string, React.ReactNode> = {
   "💰": <DollarSign size={28} />,
   "↩️": <RotateCcw size={28} />,
   "🏦": <Landmark size={28} />,
+  "⚖️": <BarChart3 size={28} />,
+  "📊": <BarChart3 size={28} />,
 };
 
 const AppCard = ({ app }: { app: App }) => {
