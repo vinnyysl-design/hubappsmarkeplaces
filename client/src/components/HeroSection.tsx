@@ -11,7 +11,7 @@ const HeroSection = () => {
       </div>
       <p className="mt-1 text-lg font-semibold text-primary">
         Central de Inteligência para Marketplaces
-      </div>
+      </p>
       <p className="mt-2 text-muted-foreground text-lg max-w-xl">
         Ferramentas estratégicas de dados para precificação, ads, fulfillment, devoluções e rentabilidade — tudo em um só lugar.
       </p>
