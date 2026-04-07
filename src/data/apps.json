@@ -5,7 +5,7 @@
     "categoria": "Operação",
     "status": "Ativo",
     "tag": "Mais usado",
-    "url": "https://curva-abc-dashboard.streamlit.app/",
+    "url": "https://curvaabcdiagnosticoeacoes.streamlit.app/",
     "github": "",
     "icone": "🧮"
   },
@@ -15,7 +15,7 @@
     "categoria": "Operação",
     "status": "Ativo",
     "tag": "",
-    "url": "https://dashboard-full-ml.streamlit.app/",
+    "url": "https://dashboardfulfillmentestratgico.streamlit.app/",
     "github": "",
     "icone": "📦"
   },
@@ -25,7 +25,7 @@
     "categoria": "Marketing",
     "status": "Ativo",
     "tag": "Novo",
-    "url": "https://melieads-bhggkcnchjkhonfhqhqnw5.streamlit.app/",
+    "url": "https://adsengine.streamlit.app/",
     "github": "",
     "icone": "🚀"
   },
@@ -33,9 +33,9 @@
     "nome": "Precificação Estratégica",
     "descricao": "Calculadora inteligente para definir preços com margem e competitividade.",
     "categoria": "Simuladores",
-    "status": "Ativo",
+    "status": "Beta",
     "tag": "",
-    "url": "https://calculadora-precificacao-rlvnjtg9xbshcwmpgqcy4b.streamlit.app/",
+    "url": "https://precificacaoestrategica.streamlit.app/",
     "github": "",
     "icone": "💰"
   },
@@ -45,7 +45,7 @@
     "categoria": "Devoluções",
     "status": "Ativo",
     "tag": "",
-    "url": "https://planilha-bruno-pbnrmshe3ru8spcd9bzxly.streamlit.app/",
+    "url": "https://gestcaodedevolucaointeligente.streamlit.app/",
     "github": "",
     "icone": "↩️"
   },
@@ -55,7 +55,7 @@
     "categoria": "Relatórios",
     "status": "Ativo",
     "tag": "",
-    "url": "https://repasse-teste-d9bq9zktrhbv6egeeuvtsh.streamlit.app/",
+    "url": "https://curvaabcdiagnosticoeacoes.streamlit.app/",
     "github": "",
     "icone": "🏦"
   },
@@ -63,10 +63,30 @@
     "nome": "Inteligência de Mercado",
     "descricao": "Ferramenta para análise de tamanho de mercado e apoio à tomada de decisão estratégica.",
     "categoria": "Relatórios",
-    "status": "Ativo",
-    "tag": "Novo",
-    "url": "https://tamanho-do-mercado-jyip5xpzymdhekzyfggxor.streamlit.app/",
+    "status": "Beta",
+    "tag": "",
+    "url": "https://inteligenciademercado.streamlit.app/",
     "github": "",
     "icone": "🧮"
+  },
+  {
+    "nome": "Ponto de Equilíbrio",
+    "descricao": "Calcule o ponto de equilíbrio da sua operação e saiba exatamente quanto precisa vender para cobrir seus custos.",
+    "categoria": "Simuladores",
+    "status": "Ativo",
+    "tag": "Novo",
+    "url": "https://pontodeequlibrio.netlify.app/",
+    "github": "",
+    "icone": "⚖️"
+  },
+  {
+    "nome": "Conciliação Financeira",
+    "descricao": "Automatize a conciliação de repasses e identifique divergências financeiras com agilidade.",
+    "categoria": "Relatórios",
+    "status": "Ativo",
+    "tag": "Novo",
+    "url": "https://concilicaofianceira.netlify.app/",
+    "github": "",
+    "icone": "📊"
   }
 ]
