@@ -1,5 +1,5 @@
 import { useState, useMemo } from "react";
-import { Search } from "lucide-react";
+import { Search, SlidersHorizontal } from "lucide-react";
 import HeroSection from "@/components/HeroSection";
 import MetricCards from "@/components/MetricCards";
 import AppCard from "@/components/AppCard";
@@ -28,10 +28,6 @@ const Index = () => {
   const beta = apps.filter((a) => a.status === "Beta").length;
   const numCategorias = new Set(apps.map((a) => a.categoria)).size;
 
-  const destaques = apps.filter((a) => a.tag === "Mais usado" || a.tag === "Novo");
-
-  const showDestaques = !busca && categoria === "Todos" && destaques.length > 0;
-
   return (
     <div className="min-h-screen bg-background">
       <div className="max-w-6xl mx-auto px-4 py-8">
@@ -39,48 +35,55 @@ const Index = () => {
         <MetricCards total={apps.length} ativos={ativos} beta={beta} categorias={numCategorias} />
 
         {/* Filters */}
-        <div className="flex flex-col sm:flex-row gap-4 mb-8">
+        <div className="flex flex-col sm:flex-row gap-3 mb-6">
           <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" size={18} />
+            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-muted-foreground" size={16} />
             <input
               type="text"
               value={busca}
               onChange={(e) => setBusca(e.target.value)}
               placeholder="Buscar aplicativo..."
-              className="w-full pl-10 pr-4 py-3 rounded-xl border border-border bg-card text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring text-sm"
+              className="w-full pl-10 pr-4 py-2.5 rounded-lg border border-border bg-card text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary/40 text-sm transition-shadow"
             />
           </div>
-          <select
-            value={categoria}
-            onChange={(e) => setCategoria(e.target.value)}
-            className="px-4 py-3 rounded-xl border border-border bg-card text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-ring"
-          >
-            {categorias.map((c) => (
-              <option key={c} value={c}>{c}</option>
-            ))}
-          </select>
+          <div className="relative">
+            <SlidersHorizontal className="absolute left-3.5 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none" size={14} />
+            <select
+              value={categoria}
+              onChange={(e) => setCategoria(e.target.value)}
+              className="pl-9 pr-8 py-2.5 rounded-lg border border-border bg-card text-foreground text-sm focus:outline-none focus:ring-1 focus:ring-primary/40 appearance-none cursor-pointer transition-shadow"
+            >
+              {categorias.map((c) => (
+                <option key={c} value={c}>{c}</option>
+              ))}
+            </select>
+          </div>
         </div>
 
-        {/* Highlights */}
-        {showDestaques && (
-          <>
-            <h2 className="text-xl font-bold text-foreground mb-4">Destaques</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 mb-10">
-              {destaques.map((app) => (
-                <AppCard key={app.nome} app={app} />
-              ))}
-            </div>
-          </>
-        )}
+        {/* Category pills */}
+        <div className="flex flex-wrap gap-2 mb-6">
+          {categorias.map((c) => (
+            <button
+              key={c}
+              onClick={() => setCategoria(c)}
+              className={`px-3.5 py-1.5 rounded-lg text-xs font-medium border transition-colors ${
+                categoria === c
+                  ? "bg-primary/15 text-primary border-primary/30"
+                  : "bg-card text-muted-foreground border-border hover:border-primary/20 hover:text-foreground"
+              }`}
+            >
+              {c}
+            </button>
+          ))}
+        </div>
 
-        {/* All apps */}
-        <h2 className="text-xl font-bold text-foreground mb-4">Aplicativos</h2>
+        {/* Apps grid */}
         {filtrados.length === 0 ? (
-          <div className="text-center py-16 text-muted-foreground">
-            Nenhum aplicativo encontrado com esse filtro.
+          <div className="text-center py-20 text-muted-foreground text-sm">
+            Nenhum aplicativo encontrado.
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {filtrados.map((app) => (
               <AppCard key={app.nome} app={app} />
             ))}
@@ -88,10 +91,10 @@ const Index = () => {
         )}
 
         {/* Footer */}
-        <footer className="text-center text-muted-foreground text-sm mt-12 pb-6 border-t border-border pt-6 space-y-1">
-          <p className="font-semibold text-foreground">© {new Date().getFullYear()} Desenvolvido por Vinicius Lima</p>
+        <footer className="text-center text-muted-foreground text-xs mt-14 pb-6 border-t border-border pt-6 space-y-0.5">
+          <p className="font-medium text-foreground/80">© {new Date().getFullYear()} Desenvolvido por Vinicius Lima</p>
           <p>Estratégia de Dados para E-commerce</p>
-          <p>CNPJ: 47.192.694/0001-70 • Todos os direitos reservados</p>
+          <p>CNPJ: 47.192.694/0001-70 · Todos os direitos reservados</p>
         </footer>
       </div>
     </div>

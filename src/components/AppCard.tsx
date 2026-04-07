@@ -12,48 +12,57 @@ interface App {
 }
 
 const iconMap: Record<string, React.ReactNode> = {
-  "🧮": <BarChart3 size={28} />,
-  "📦": <Package size={28} />,
-  "🚀": <Rocket size={28} />,
-  "💰": <DollarSign size={28} />,
-  "↩️": <RotateCcw size={28} />,
-  "🏦": <Landmark size={28} />,
-  "⚖️": <BarChart3 size={28} />,
-  "📊": <BarChart3 size={28} />,
+  "🧮": <BarChart3 size={22} />,
+  "📦": <Package size={22} />,
+  "🚀": <Rocket size={22} />,
+  "💰": <DollarSign size={22} />,
+  "↩️": <RotateCcw size={22} />,
+  "🏦": <Landmark size={22} />,
+  "⚖️": <BarChart3 size={22} />,
+  "📊": <BarChart3 size={22} />,
 };
 
 const AppCard = ({ app }: { app: App }) => {
-  const icon = iconMap[app.icone] || <ArrowUpRight size={28} />;
+  const icon = iconMap[app.icone] || <ArrowUpRight size={22} />;
+  const isBeta = app.status === "Beta";
 
   return (
-    <div className="bg-card border border-border rounded-xl p-6 hover:border-primary/50 transition-colors duration-200 flex flex-col h-full">
-      <span className="text-primary mb-3">{icon}</span>
-      <h3 className="text-lg font-bold text-foreground mb-2">{app.nome}</h3>
-      <div className="flex flex-wrap gap-1.5 mb-3">
-        <span className="inline-block px-2.5 py-0.5 rounded-md text-xs font-semibold bg-[hsl(var(--badge-cat-bg))] text-[hsl(var(--badge-cat-text))]">
+    <a
+      href={app.url}
+      target="_blank"
+      rel="noopener noreferrer"
+      className="group bg-card border border-border rounded-xl p-5 hover:border-primary/40 transition-all duration-200 flex flex-col h-full cursor-pointer"
+    >
+      <div className="flex items-start justify-between mb-4">
+        <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-primary/10 text-primary">
+          {icon}
+        </div>
+        <ExternalLink size={14} className="text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity mt-1" />
+      </div>
+
+      <h3 className="text-base font-semibold text-foreground mb-1.5 leading-snug">{app.nome}</h3>
+      <p className="text-sm text-muted-foreground flex-1 mb-4 leading-relaxed">{app.descricao}</p>
+
+      <div className="flex flex-wrap items-center gap-1.5 mt-auto">
+        <span className="inline-block px-2 py-0.5 rounded-md text-[11px] font-medium bg-[hsl(var(--badge-cat-bg))] text-[hsl(var(--badge-cat-text))]">
           {app.categoria}
         </span>
-        <span className="inline-block px-2.5 py-0.5 rounded-md text-xs font-semibold bg-[hsl(var(--badge-status-bg))] text-[hsl(var(--badge-status-text))]">
-          {app.status}
-        </span>
+        {isBeta ? (
+          <span className="inline-block px-2 py-0.5 rounded-md text-[11px] font-medium bg-[hsl(var(--badge-beta-bg))] text-[hsl(var(--badge-beta-text))]">
+            Beta
+          </span>
+        ) : (
+          <span className="inline-block px-2 py-0.5 rounded-md text-[11px] font-medium bg-[hsl(var(--badge-status-bg))] text-[hsl(var(--badge-status-text))]">
+            {app.status}
+          </span>
+        )}
         {app.tag && (
-          <span className="inline-block px-2.5 py-0.5 rounded-md text-xs font-semibold bg-[hsl(var(--badge-tag-bg))] text-[hsl(var(--badge-tag-text))]">
+          <span className="inline-block px-2 py-0.5 rounded-md text-[11px] font-medium bg-[hsl(var(--badge-tag-bg))] text-[hsl(var(--badge-tag-text))]">
             {app.tag}
           </span>
         )}
       </div>
-      <p className="text-sm text-muted-foreground flex-1 mb-5">{app.descricao}</p>
-      <div className="flex mt-auto">
-        <a
-          href={app.url}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="w-full flex items-center justify-center gap-2 rounded-lg bg-primary text-primary-foreground py-2.5 text-sm font-semibold hover:opacity-90 transition-opacity"
-        >
-          <ExternalLink size={15} /> Abrir
-        </a>
-      </div>
-    </div>
+    </a>
   );
 };
 
