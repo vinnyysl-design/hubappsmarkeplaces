@@ -46,6 +46,8 @@ All colors MUST be HSL.
     --badge-cat-text: 100 40% 60%;
     --badge-status-bg: 100 35% 15%;
     --badge-status-text: 100 50% 55%;
+    --badge-beta-bg: 35 80% 12%;
+    --badge-beta-text: 35 90% 55%;
     --badge-tag-bg: 45 40% 15%;
     --badge-tag-text: 45 50% 60%;
 

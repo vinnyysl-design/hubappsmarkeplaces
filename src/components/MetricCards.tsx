@@ -9,22 +9,26 @@ interface MetricCardsProps {
 
 const MetricCards = ({ total, ativos, beta, categorias }: MetricCardsProps) => {
   const metrics = [
-    { label: "Total de apps", value: total, icon: <Box size={20} /> },
-    { label: "Ativos", value: ativos, icon: <CheckCircle size={20} /> },
-    { label: "Em beta", value: beta, icon: <FlaskConical size={20} /> },
-    { label: "Categorias", value: categorias, icon: <LayoutGrid size={20} /> },
+    { label: "Total de apps", value: total, icon: <Box size={18} /> },
+    { label: "Ativos", value: ativos, icon: <CheckCircle size={18} /> },
+    { label: "Em beta", value: beta, icon: <FlaskConical size={18} /> },
+    { label: "Categorias", value: categorias, icon: <LayoutGrid size={18} /> },
   ];
 
   return (
-    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+    <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-8">
       {metrics.map((m) => (
         <div
           key={m.label}
-          className="bg-card border border-border rounded-xl p-5 flex flex-col items-start gap-1"
+          className="group bg-card border border-border rounded-xl px-5 py-4 flex items-center gap-4 hover:border-primary/30 transition-colors"
         >
-          <span className="text-primary">{m.icon}</span>
-          <span className="text-sm font-medium text-muted-foreground">{m.label}</span>
-          <span className="text-3xl font-bold text-foreground">{m.value}</span>
+          <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-primary/10 text-primary shrink-0">
+            {m.icon}
+          </div>
+          <div>
+            <span className="text-2xl font-bold text-foreground leading-none">{m.value}</span>
+            <span className="block text-xs font-medium text-muted-foreground mt-0.5">{m.label}</span>
+          </div>
         </div>
       ))}
     </div>
