@@ -5,7 +5,7 @@
     "categoria": "Operação",
     "status": "Ativo",
     "tag": "Mais usado",
-    "url": "https://curvaabcdiagnosticoeacoes.streamlit.app/",
+    "url": "https://curvaabcdiagnosticoeacoes.netlify.app/",
     "github": "",
     "icone": "🧮"
   },
@@ -45,7 +45,7 @@
     "categoria": "Devoluções",
     "status": "Ativo",
     "tag": "",
-    "url": "https://gestcaodedevolucaointeligente.streamlit.app/",
+    "url": "https://gestaodedevolucao.netlify.app/",
     "github": "",
     "icone": "↩️"
   },
