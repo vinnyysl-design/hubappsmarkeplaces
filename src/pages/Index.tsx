@@ -3,6 +3,7 @@ import { Search, SlidersHorizontal } from "lucide-react";
 import HeroSection from "@/components/HeroSection";
 import MetricCards from "@/components/MetricCards";
 import AppCard from "@/components/AppCard";
+import ThemeToggle from "@/components/ThemeToggle";
 import apps from "@/data/apps.json";
 
 const Index = () => {
@@ -31,6 +32,9 @@ const Index = () => {
   return (
     <div className="min-h-screen bg-background">
       <div className="max-w-6xl mx-auto px-4 py-8">
+        <div className="flex justify-end mb-4">
+          <ThemeToggle />
+        </div>
         <HeroSection />
         <MetricCards total={apps.length} ativos={ativos} beta={beta} categorias={numCategorias} />
 
