@@ -60,6 +60,58 @@ All colors MUST be HSL.
     --sidebar-border: 220 15% 18%;
     --sidebar-ring: 175 65% 45%;
   }
+
+  .light {
+    --background: 210 20% 98%;
+    --foreground: 220 20% 10%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 220 20% 10%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 220 20% 10%;
+
+    --primary: 175 65% 38%;
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 220 15% 93%;
+    --secondary-foreground: 220 15% 30%;
+
+    --muted: 220 12% 93%;
+    --muted-foreground: 220 10% 45%;
+
+    --accent: 260 55% 55%;
+    --accent-foreground: 0 0% 100%;
+
+    --destructive: 0 60% 50%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 220 15% 88%;
+    --input: 220 15% 88%;
+    --ring: 175 65% 38%;
+
+    --hero-from: 210 20% 96%;
+    --hero-via: 240 18% 95%;
+    --hero-to: 175 25% 93%;
+
+    --badge-cat-bg: 175 30% 92%;
+    --badge-cat-text: 175 50% 35%;
+    --badge-status-bg: 175 35% 92%;
+    --badge-status-text: 175 60% 35%;
+    --badge-beta-bg: 260 50% 92%;
+    --badge-beta-text: 260 60% 45%;
+    --badge-tag-bg: 200 30% 92%;
+    --badge-tag-text: 200 40% 35%;
+
+    --sidebar-background: 210 20% 96%;
+    --sidebar-foreground: 220 15% 30%;
+    --sidebar-primary: 175 65% 38%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 220 15% 92%;
+    --sidebar-accent-foreground: 220 15% 30%;
+    --sidebar-border: 220 15% 88%;
+    --sidebar-ring: 175 65% 38%;
+  }
 }
 
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
