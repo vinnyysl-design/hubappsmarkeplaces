@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "@/hooks/use-toast";
-import logoSrc from "@/assets/logo-analyticalx.jpeg";
+import logoSrc from "@/assets/logo-x.png";
 
 const emailSchema = z.string().trim().email({ message: "Email inválido" }).max(255);
 const passwordSchema = z
@@ -196,7 +196,7 @@ export default function Auth() {
               <img
                 src={logoSrc}
                 alt="Analytical X"
-                className="h-16 w-16 rounded-xl object-cover border border-border shadow-sm"
+                className="h-20 w-auto object-contain"
               />
             </div>
             <BrandTitle />
