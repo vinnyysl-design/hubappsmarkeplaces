@@ -1,13 +1,14 @@
 import { useState } from "react";
 import { Navigate, useNavigate } from "react-router-dom";
 import { z } from "zod";
-import { Crosshair, Loader2 } from "lucide-react";
+import { Loader2, Eye, EyeOff } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "@/hooks/use-toast";
+import logoSrc from "@/assets/logo-analyticalx.jpeg";
 
 const emailSchema = z.string().trim().email({ message: "Email inválido" }).max(255);
 const passwordSchema = z
@@ -17,8 +18,64 @@ const passwordSchema = z
 const nameSchema = z
   .string()
   .trim()
-  .min(2, { message: "Mínimo de 2 caracteres" })
+  .min(2, { message: "Nome: mínimo de 2 caracteres" })
   .max(100);
+const phoneSchema = z
+  .string()
+  .trim()
+  .min(8, { message: "Telefone inválido" })
+  .max(20, { message: "Telefone muito longo" })
+  .regex(/^[0-9()+\-\s]+$/, { message: "Telefone contém caracteres inválidos" });
+
+// Reusable branded "Analytical X" wordmark with gradient X (matches HeroSection)
+const BrandTitle = ({ className = "" }: { className?: string }) => (
+  <h1 className={`text-2xl font-extrabold tracking-tight text-foreground ${className}`}>
+    Analytical{" "}
+    <span className="bg-gradient-to-br from-[hsl(220,80%,55%)] via-[hsl(280,60%,55%)] to-[hsl(175,70%,50%)] bg-clip-text text-transparent">
+      X
+    </span>
+  </h1>
+);
+
+// Password input with show/hide toggle
+function PasswordField({
+  id,
+  value,
+  onChange,
+  autoComplete,
+  placeholder,
+}: {
+  id: string;
+  value: string;
+  onChange: (v: string) => void;
+  autoComplete: string;
+  placeholder?: string;
+}) {
+  const [show, setShow] = useState(false);
+  return (
+    <div className="relative">
+      <Input
+        id={id}
+        type={show ? "text" : "password"}
+        autoComplete={autoComplete}
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        required
+        placeholder={placeholder}
+        className="pr-10"
+      />
+      <button
+        type="button"
+        onClick={() => setShow((s) => !s)}
+        aria-label={show ? "Ocultar senha" : "Mostrar senha"}
+        className="absolute right-2 top-1/2 -translate-y-1/2 p-1 text-muted-foreground hover:text-foreground transition-colors"
+        tabIndex={-1}
+      >
+        {show ? <EyeOff size={18} /> : <Eye size={18} />}
+      </button>
+    </div>
+  );
+}
 
 export default function Auth() {
   const { login, signup, resetPassword, isAuthenticated, loading } = useAuth();
@@ -33,6 +90,7 @@ export default function Auth() {
   // signup state
   const [signupName, setSignupName] = useState("");
   const [signupEmail, setSignupEmail] = useState("");
+  const [signupPhone, setSignupPhone] = useState("");
   const [signupPassword, setSignupPassword] = useState("");
 
   // reset state
@@ -77,17 +135,19 @@ export default function Auth() {
     e.preventDefault();
     const nameP = nameSchema.safeParse(signupName);
     const emailP = emailSchema.safeParse(signupEmail);
+    const phoneP = phoneSchema.safeParse(signupPhone);
     const pwP = passwordSchema.safeParse(signupPassword);
-    if (!nameP.success || !emailP.success || !pwP.success) {
+    if (!nameP.success || !emailP.success || !phoneP.success || !pwP.success) {
       const msg =
         (!nameP.success && nameP.error.issues[0].message) ||
         (!emailP.success && emailP.error.issues[0].message) ||
+        (!phoneP.success && phoneP.error.issues[0].message) ||
         (!pwP.success && pwP.error.issues[0].message);
       toast({ title: "Dados inválidos", description: msg as string, variant: "destructive" });
       return;
     }
     setSubmitting(true);
-    const { error } = await signup(emailP.data, pwP.data, nameP.data);
+    const { error } = await signup(emailP.data, pwP.data, nameP.data, phoneP.data);
     setSubmitting(false);
     if (error) {
       toast({ title: "Erro no cadastro", description: error, variant: "destructive" });
@@ -133,13 +193,13 @@ export default function Auth() {
         <div className="bg-card border border-border rounded-2xl p-8 shadow-lg space-y-6">
           <div className="text-center space-y-3">
             <div className="flex justify-center">
-              <div className="p-3 bg-primary/10 rounded-xl">
-                <Crosshair className="text-primary" size={32} />
-              </div>
+              <img
+                src={logoSrc}
+                alt="Analytical X"
+                className="h-16 w-16 rounded-xl object-cover border border-border shadow-sm"
+              />
             </div>
-            <h1 className="text-2xl font-bold text-foreground">
-              Analytical <span className="text-primary">X</span>
-            </h1>
+            <BrandTitle />
             <p className="text-muted-foreground text-sm">
               Hub de inteligência para marketplaces
             </p>
@@ -167,13 +227,11 @@ export default function Auth() {
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="login-password">Senha</Label>
-                  <Input
+                  <PasswordField
                     id="login-password"
-                    type="password"
-                    autoComplete="current-password"
                     value={loginPassword}
-                    onChange={(e) => setLoginPassword(e.target.value)}
-                    required
+                    onChange={setLoginPassword}
+                    autoComplete="current-password"
                   />
                 </div>
                 <Button type="submit" className="w-full" disabled={submitting}>
@@ -208,14 +266,24 @@ export default function Auth() {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="signup-password">Senha</Label>
+                  <Label htmlFor="signup-phone">Telefone</Label>
                   <Input
-                    id="signup-password"
-                    type="password"
-                    autoComplete="new-password"
-                    value={signupPassword}
-                    onChange={(e) => setSignupPassword(e.target.value)}
+                    id="signup-phone"
+                    type="tel"
+                    autoComplete="tel"
+                    placeholder="(11) 99999-9999"
+                    value={signupPhone}
+                    onChange={(e) => setSignupPhone(e.target.value)}
                     required
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="signup-password">Senha</Label>
+                  <PasswordField
+                    id="signup-password"
+                    value={signupPassword}
+                    onChange={setSignupPassword}
+                    autoComplete="new-password"
                   />
                   <p className="text-xs text-muted-foreground">
                     Mínimo 8 caracteres.
