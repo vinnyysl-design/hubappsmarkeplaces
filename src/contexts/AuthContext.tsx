@@ -81,11 +81,39 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const { data: sub } = supabase.auth.onAuthStateChange((_event, newSession) => {
       setSession(newSession);
       setUser(newSession?.user ?? null);
+      // mantém o access_token sincronizado no localStorage para os helpers globais
+      setToken(newSession?.access_token ?? null);
 
       if (newSession?.user) {
-        // defer profile fetch to avoid deadlock inside auth callback
-        setTimeout(() => {
-          loadProfile(newSession.user.id);
+        // defer profile fetch + validação central para evitar deadlock no callback
+        setTimeout(async () => {
+          await loadProfile(newSession.user.id);
+          // valida contra a Netlify Function: bloqueia imediatamente se 401/403
+          const result = await validateAccess();
+          if (!result.ok) {
+            const reason = result.data?.error;
+            if (reason === "user_blocked") {
+              toast({
+                title: "Acesso bloqueado",
+                description:
+                  "Sua conta foi bloqueada por um administrador.",
+                variant: "destructive",
+              });
+            } else if (reason && reason !== "network_error") {
+              toast({
+                title: "Sessão inválida",
+                description: "Faça login novamente para continuar.",
+                variant: "destructive",
+              });
+            }
+            if (reason !== "network_error") {
+              await logoutHelper({ redirect: false });
+              setUser(null);
+              setSession(null);
+              setStatus(null);
+              setRole(null);
+            }
+          }
         }, 0);
       } else {
         setStatus(null);
@@ -97,6 +125,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     supabase.auth.getSession().then(({ data: { session: existing } }) => {
       setSession(existing);
       setUser(existing?.user ?? null);
+      setToken(existing?.access_token ?? null);
       if (existing?.user) {
         loadProfile(existing.user.id).finally(() => setLoading(false));
       } else {
