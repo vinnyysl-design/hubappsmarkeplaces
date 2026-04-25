@@ -2,30 +2,25 @@
  * services/api.js
  *
  * Cliente HTTP para a API de validação centralizada do HUB.
- * Usado pelo próprio HUB e replicável para os 9 apps externos.
+ * Usa uma Edge Function do Lovable Cloud (Supabase Functions) que
+ * funciona tanto no preview quanto em produção (qualquer domínio).
  */
 
+import { supabase } from "@/integrations/supabase/client";
 import { getToken, syncTokenFromSession } from "./auth";
 
 /**
- * Endpoint do HUB. Em produção (Netlify) usamos o caminho relativo
- * `/api/validate-user` (redirecionado para a function).
+ * Valida o token + status do usuário contra a Edge Function `validate-user`.
  *
- * Quando os APPS EXTERNOS forem chamar este endpoint, eles devem usar
- * a URL absoluta do HUB, ex.:
- *   const HUB_VALIDATE_URL = "https://hubappsmarkeplaces.lovable.app/api/validate-user";
- */
-const VALIDATE_URL = "/api/validate-user";
-
-/**
- * Valida o token + status do usuário contra a Netlify Function.
+ * Para apps EXTERNOS, a chamada equivalente é:
+ *   POST https://<project-ref>.supabase.co/functions/v1/validate-user
+ *   Headers: Authorization: Bearer <access_token>
  *
  * @returns {Promise<{ ok: boolean, status: number, data: any }>}
  */
 export async function validateAccess() {
   let token = getToken();
   if (!token) {
-    // tenta recuperar da sessão viva do Supabase antes de desistir
     token = await syncTokenFromSession();
   }
   if (!token) {
@@ -33,15 +28,23 @@ export async function validateAccess() {
   }
 
   try {
-    const res = await fetch(VALIDATE_URL, {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${token}`,
-        "Content-Type": "application/json",
-      },
+    const { data, error } = await supabase.functions.invoke("validate-user", {
+      headers: { Authorization: `Bearer ${token}` },
     });
-    const data = await res.json().catch(() => ({}));
-    return { ok: res.ok, status: res.status, data };
+
+    if (error) {
+      // FunctionsHttpError carrega o status real da resposta
+      const status = error.context?.status ?? 0;
+      let body = {};
+      try {
+        body = (await error.context?.json?.()) ?? {};
+      } catch {
+        // ignore
+      }
+      return { ok: false, status, data: body };
+    }
+
+    return { ok: true, status: 200, data: data ?? {} };
   } catch (err) {
     return {
       ok: false,
