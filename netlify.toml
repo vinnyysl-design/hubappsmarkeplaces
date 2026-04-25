@@ -1,7 +1,18 @@
 [build]
   command = "npm run build"
   publish = "dist"
+  functions = "netlify/functions"
 
+[functions]
+  node_bundler = "esbuild"
+
+# Atalho amigável: /api/validate-user -> /.netlify/functions/validate-user
+[[redirects]]
+  from = "/api/*"
+  to = "/.netlify/functions/:splat"
+  status = 200
+
+# SPA fallback (deve ficar por último)
 [[redirects]]
   from = "/*"
   to = "/index.html"
