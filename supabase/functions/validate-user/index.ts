@@ -2,25 +2,20 @@
  * Edge Function: validate-user
  *
  * Endpoint central de validação de acesso do HUB Analytical X.
- * Recebe um access_token (Supabase) via header `Authorization: Bearer <token>`,
+ * Recebe um access_token via header `Authorization: Bearer <token>`,
  * valida o token, busca o status do usuário na tabela `profiles` e retorna:
  *
  *   200 { valid: true, user: { id, email, status, role } }
  *   401 { valid: false, error: 'invalid_token' | 'missing_token' | 'user_not_found' }
  *   403 { valid: false, error: 'user_blocked' }
  *   500 { valid: false, error: 'server_error' }
- *
- * Usado por:
- *   - O próprio HUB (src/contexts/AuthContext.tsx)
- *   - Os 9 apps externos (cada app envia seu token aqui para validar acesso)
  */
 
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.4";
+import { createClient } from "npm:@supabase/supabase-js@2";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers":
-    "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
   "Access-Control-Allow-Methods": "POST, GET, OPTIONS",
 };
 
@@ -33,48 +28,59 @@ function json(status: number, body: unknown) {
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
-    return new Response(null, { headers: corsHeaders });
+    return new Response("ok", { headers: corsHeaders });
   }
 
-  const SUPABASE_URL = Deno.env.get("SUPABASE_URL");
-  const SERVICE_ROLE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+  const supabaseUrl = Deno.env.get("SUPABASE_URL");
+  const publishableKey = Deno.env.get("SUPABASE_PUBLISHABLE_KEY");
+  const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
 
-  if (!SUPABASE_URL || !SERVICE_ROLE) {
+  if (!supabaseUrl || !publishableKey || !serviceRoleKey) {
     return json(500, { valid: false, error: "server_misconfigured" });
   }
 
-  const authHeader = req.headers.get("authorization") ?? "";
-  const token = authHeader.replace(/^Bearer\s+/i, "").trim();
+  const authHeader = req.headers.get("Authorization") ?? req.headers.get("authorization") ?? "";
+  if (!authHeader.startsWith("Bearer ")) {
+    return json(401, { valid: false, error: "missing_token" });
+  }
 
+  const token = authHeader.replace(/^Bearer\s+/i, "").trim();
   if (!token) {
     return json(401, { valid: false, error: "missing_token" });
   }
 
   try {
-    const admin = createClient(SUPABASE_URL, SERVICE_ROLE, {
+    const userClient = createClient(supabaseUrl, publishableKey, {
+      global: { headers: { Authorization: authHeader } },
       auth: { persistSession: false, autoRefreshToken: false },
     });
 
-    // 1) Valida o token
-    const { data: userData, error: userErr } = await admin.auth.getUser(token);
-    if (userErr || !userData?.user?.id) {
+    const { data: claimsData, error: claimsError } = await userClient.auth.getClaims(token);
+    if (claimsError || !claimsData?.claims?.sub) {
       return json(401, { valid: false, error: "invalid_token" });
     }
-    const authUser = userData.user;
 
-    // 2) Busca profile (service role -> ignora RLS)
-    const { data: profile, error: profileErr } = await admin
+    const userId = claimsData.claims.sub;
+    const userEmail = typeof claimsData.claims.email === "string" ? claimsData.claims.email : null;
+
+    const adminClient = createClient(supabaseUrl, serviceRoleKey, {
+      auth: { persistSession: false, autoRefreshToken: false },
+    });
+
+    const { data: profile, error: profileErr } = await adminClient
       .from("profiles")
       .select("id, email, status")
-      .eq("id", authUser.id)
+      .eq("id", userId)
       .maybeSingle();
 
     if (profileErr) {
       return json(500, { valid: false, error: "profile_lookup_failed" });
     }
+
     if (!profile) {
       return json(401, { valid: false, error: "user_not_found" });
     }
+
     if (profile.status !== "ativo") {
       return json(403, {
         valid: false,
@@ -83,18 +89,22 @@ Deno.serve(async (req) => {
       });
     }
 
-    // 3) Role
-    const { data: roles } = await admin
+    const { data: roles, error: rolesErr } = await adminClient
       .from("user_roles")
       .select("role")
-      .eq("user_id", authUser.id);
+      .eq("user_id", userId);
+
+    if (rolesErr) {
+      return json(500, { valid: false, error: "role_lookup_failed" });
+    }
+
     const isAdmin = Array.isArray(roles) && roles.some((r) => r.role === "admin");
 
     return json(200, {
       valid: true,
       user: {
         id: profile.id,
-        email: profile.email ?? authUser.email,
+        email: profile.email ?? userEmail,
         status: profile.status,
         role: isAdmin ? "admin" : "user",
       },
