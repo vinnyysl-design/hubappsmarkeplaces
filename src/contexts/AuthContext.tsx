@@ -9,6 +9,10 @@ import {
 import type { Session, User } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
+// @ts-expect-error JS module
+import { setToken, logout as logoutHelper } from "@/services/auth";
+// @ts-expect-error JS module
+import { validateAccess } from "@/services/api";
 
 export type UserStatus = "ativo" | "bloqueado";
 export type AppRole = "admin" | "user";
