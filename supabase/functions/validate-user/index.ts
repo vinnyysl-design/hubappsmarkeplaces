@@ -11,8 +11,6 @@
  *   500 { valid: false, error: 'server_error' }
  */
 
-import { createClient } from "npm:@supabase/supabase-js@2";
-
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
@@ -32,10 +30,9 @@ Deno.serve(async (req) => {
   }
 
   const supabaseUrl = Deno.env.get("SUPABASE_URL");
-  const publishableKey = Deno.env.get("SUPABASE_PUBLISHABLE_KEY");
   const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
 
-  if (!supabaseUrl || !publishableKey || !serviceRoleKey) {
+  if (!supabaseUrl || !serviceRoleKey) {
     return json(500, { valid: false, error: "server_misconfigured" });
   }
 
@@ -50,32 +47,39 @@ Deno.serve(async (req) => {
   }
 
   try {
-    const userClient = createClient(supabaseUrl, publishableKey, {
-      global: { headers: { Authorization: authHeader } },
-      auth: { persistSession: false, autoRefreshToken: false },
+    const userRes = await fetch(`${supabaseUrl}/auth/v1/user`, {
+      headers: {
+        apikey: serviceRoleKey,
+        Authorization: `Bearer ${token}`,
+      },
     });
 
-    const { data: claimsData, error: claimsError } = await userClient.auth.getClaims(token);
-    if (claimsError || !claimsData?.claims?.sub) {
+    if (!userRes.ok) {
       return json(401, { valid: false, error: "invalid_token" });
     }
 
-    const userId = claimsData.claims.sub;
-    const userEmail = typeof claimsData.claims.email === "string" ? claimsData.claims.email : null;
+    const authUser = await userRes.json();
+    if (!authUser?.id) {
+      return json(401, { valid: false, error: "invalid_token" });
+    }
 
-    const adminClient = createClient(supabaseUrl, serviceRoleKey, {
-      auth: { persistSession: false, autoRefreshToken: false },
-    });
+    const profileRes = await fetch(
+      `${supabaseUrl}/rest/v1/profiles?id=eq.${authUser.id}&select=id,email,status`,
+      {
+        headers: {
+          apikey: serviceRoleKey,
+          Authorization: `Bearer ${serviceRoleKey}`,
+          Accept: "application/json",
+        },
+      },
+    );
 
-    const { data: profile, error: profileErr } = await adminClient
-      .from("profiles")
-      .select("id, email, status")
-      .eq("id", userId)
-      .maybeSingle();
-
-    if (profileErr) {
+    if (!profileRes.ok) {
       return json(500, { valid: false, error: "profile_lookup_failed" });
     }
+
+    const profiles = await profileRes.json();
+    const profile = Array.isArray(profiles) ? profiles[0] : null;
 
     if (!profile) {
       return json(401, { valid: false, error: "user_not_found" });
@@ -89,22 +93,25 @@ Deno.serve(async (req) => {
       });
     }
 
-    const { data: roles, error: rolesErr } = await adminClient
-      .from("user_roles")
-      .select("role")
-      .eq("user_id", userId);
+    const rolesRes = await fetch(
+      `${supabaseUrl}/rest/v1/user_roles?user_id=eq.${authUser.id}&select=role`,
+      {
+        headers: {
+          apikey: serviceRoleKey,
+          Authorization: `Bearer ${serviceRoleKey}`,
+          Accept: "application/json",
+        },
+      },
+    );
 
-    if (rolesErr) {
-      return json(500, { valid: false, error: "role_lookup_failed" });
-    }
-
+    const roles = rolesRes.ok ? await rolesRes.json() : [];
     const isAdmin = Array.isArray(roles) && roles.some((r) => r.role === "admin");
 
     return json(200, {
       valid: true,
       user: {
         id: profile.id,
-        email: profile.email ?? userEmail,
+        email: profile.email ?? authUser.email,
         status: profile.status,
         role: isAdmin ? "admin" : "user",
       },
