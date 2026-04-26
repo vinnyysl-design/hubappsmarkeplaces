@@ -6,8 +6,10 @@ import AppCard from "@/components/AppCard";
 import ThemeToggle from "@/components/ThemeToggle";
 import UserMenu from "@/components/UserMenu";
 import apps from "@/data/apps.json";
+import { usePageViewTracker } from "@/hooks/useTracking";
 
 const Index = () => {
+  usePageViewTracker();
   const [busca, setBusca] = useState("");
   const [categoria, setCategoria] = useState("Todos");
 
