@@ -14,6 +14,33 @@ export type Database = {
   }
   public: {
     Tables: {
+      page_views: {
+        Row: {
+          created_at: string
+          id: string
+          path: string
+          referrer: string | null
+          user_agent: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          path: string
+          referrer?: string | null
+          user_agent?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          path?: string
+          referrer?: string | null
+          user_agent?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           created_at: string
@@ -38,6 +65,36 @@ export type Database = {
           id?: string
           status?: Database["public"]["Enums"]["user_status"]
           updated_at?: string
+        }
+        Relationships: []
+      }
+      tool_clicks: {
+        Row: {
+          created_at: string
+          id: string
+          tool_category: string | null
+          tool_id: string
+          tool_name: string
+          tool_url: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          tool_category?: string | null
+          tool_id: string
+          tool_name: string
+          tool_url?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          tool_category?: string | null
+          tool_id?: string
+          tool_name?: string
+          tool_url?: string | null
+          user_id?: string
         }
         Relationships: []
       }
