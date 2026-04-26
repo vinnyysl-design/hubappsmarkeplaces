@@ -14,6 +14,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { toast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
+import AdminAnalytics from "@/components/AdminAnalytics";
 
 interface ProfileRow {
   id: string;
@@ -125,6 +126,11 @@ export default function Admin() {
           </Button>
         </div>
 
+        <div className="mb-8">
+          <AdminAnalytics />
+        </div>
+
+        <h2 className="text-lg font-semibold mb-3">Usuários</h2>
         <div className="bg-card border border-border rounded-xl overflow-hidden">
           {loading ? (
             <div className="p-12 flex justify-center">
