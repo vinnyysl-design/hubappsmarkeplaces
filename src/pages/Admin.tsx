@@ -15,6 +15,12 @@ import { Badge } from "@/components/ui/badge";
 import { toast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
 import AdminAnalytics from "@/components/AdminAnalytics";
+import PaymentsPanel, {
+  RegisterPaymentButton,
+  getPaymentStatus,
+  formatDateBR,
+  type PaymentInfo,
+} from "@/components/PaymentsPanel";
 
 interface ProfileRow {
   id: string;
@@ -28,8 +34,10 @@ export default function Admin() {
   const { user: currentUser } = useAuth();
   const [rows, setRows] = useState<ProfileRow[]>([]);
   const [adminIds, setAdminIds] = useState<Set<string>>(new Set());
+  const [paymentsMap, setPaymentsMap] = useState<Record<string, PaymentInfo>>({});
   const [loading, setLoading] = useState(true);
   const [savingId, setSavingId] = useState<string | null>(null);
+  const [paymentsRefresh, setPaymentsRefresh] = useState(0);
 
   const load = async () => {
     setLoading(true);
@@ -107,7 +115,7 @@ export default function Admin() {
 
   return (
     <div className="min-h-screen bg-background">
-      <div className="max-w-5xl mx-auto px-4 py-8">
+      <div className="max-w-6xl mx-auto px-4 py-8">
         <div className="flex items-center justify-between mb-6">
           <div>
             <Link
@@ -118,7 +126,7 @@ export default function Admin() {
             </Link>
             <h1 className="text-2xl font-bold">Painel Administrativo</h1>
             <p className="text-sm text-muted-foreground">
-              Gerencie acesso e papéis dos usuários do hub.
+              Gerencie acesso, papéis e pagamentos dos usuários do hub.
             </p>
           </div>
           <Button variant="outline" onClick={load} disabled={loading}>
@@ -128,6 +136,13 @@ export default function Admin() {
 
         <div className="mb-8">
           <AdminAnalytics />
+        </div>
+
+        <div className="mb-8">
+          <PaymentsPanel
+            onPaymentsLoaded={setPaymentsMap}
+            refreshSignal={paymentsRefresh}
+          />
         </div>
 
         <h2 className="text-lg font-semibold mb-3">Usuários</h2>
@@ -142,8 +157,11 @@ export default function Admin() {
                 <TableRow>
                   <TableHead>Nome</TableHead>
                   <TableHead>Email</TableHead>
+                  <TableHead>Cadastrado em</TableHead>
                   <TableHead>Papel</TableHead>
                   <TableHead>Status</TableHead>
+                  <TableHead>Último pagamento</TableHead>
+                  <TableHead>Próx. vencimento</TableHead>
                   <TableHead className="text-right">Ações</TableHead>
                 </TableRow>
               </TableHeader>
@@ -151,6 +169,8 @@ export default function Admin() {
                 {rows.map((row) => {
                   const isAdmin = adminIds.has(row.id);
                   const isSelf = row.id === currentUser?.id;
+                  const payInfo = paymentsMap[row.id];
+                  const payStatus = getPaymentStatus(payInfo);
                   return (
                     <TableRow key={row.id}>
                       <TableCell className="font-medium">
@@ -164,6 +184,9 @@ export default function Admin() {
                       <TableCell className="text-muted-foreground">
                         {row.email}
                       </TableCell>
+                      <TableCell className="text-xs text-muted-foreground whitespace-nowrap">
+                        {new Date(row.created_at).toLocaleDateString("pt-BR")}
+                      </TableCell>
                       <TableCell>
                         <Badge variant={isAdmin ? "default" : "secondary"}>
                           {isAdmin ? "admin" : "user"}
@@ -176,7 +199,29 @@ export default function Admin() {
                           {row.status}
                         </Badge>
                       </TableCell>
-                      <TableCell className="text-right space-x-2">
+                      <TableCell className="text-xs whitespace-nowrap">
+                        {formatDateBR(payInfo?.last_paid_at ?? null)}
+                      </TableCell>
+                      <TableCell className="whitespace-nowrap">
+                        <div className="flex flex-col gap-0.5">
+                          <span className="text-xs">
+                            {formatDateBR(payInfo?.next_due_date ?? null)}
+                          </span>
+                          <Badge
+                            variant={payStatus.variant}
+                            className="text-[10px] w-fit"
+                          >
+                            {payStatus.label}
+                          </Badge>
+                        </div>
+                      </TableCell>
+                      <TableCell className="text-right space-x-2 whitespace-nowrap">
+                        <RegisterPaymentButton
+                          userId={row.id}
+                          onRegistered={() =>
+                            setPaymentsRefresh((n) => n + 1)
+                          }
+                        />
                         <Button
                           size="sm"
                           variant="outline"
