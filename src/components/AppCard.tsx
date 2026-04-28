@@ -94,7 +94,7 @@ const AppCard = ({ app }: { app: App }) => {
           </span>
         )}
       </div>
-    </Link>
+    </Wrapper>
   );
 };
 
