@@ -1,8 +1,8 @@
 import { ExternalLink, BarChart3, Package, Rocket, DollarSign, RotateCcw, Landmark, ArrowUpRight } from "lucide-react";
-import { useAuth } from "@/contexts/AuthContext";
-import { trackToolClick } from "@/hooks/useTracking";
+import { Link } from "react-router-dom";
 
 interface App {
+  slug?: string;
   nome: string;
   descricao: string;
   categoria: string;
@@ -25,25 +25,13 @@ const iconMap: Record<string, React.ReactNode> = {
 };
 
 const AppCard = ({ app }: { app: App }) => {
-  const { user } = useAuth();
   const icon = iconMap[app.icone] || <ArrowUpRight size={22} />;
   const isBeta = app.status === "Beta";
-
-  const handleClick = () => {
-    void trackToolClick(user?.id, {
-      tool_id: app.nome,
-      tool_name: app.nome,
-      tool_category: app.categoria,
-      tool_url: app.url,
-    });
-  };
+  const to = app.slug ? `/app/${app.slug}` : "/";
 
   return (
-    <a
-      href={app.url}
-      target="_blank"
-      rel="noopener noreferrer"
-      onClick={handleClick}
+    <Link
+      to={to}
       className="group bg-card border border-border rounded-xl p-5 hover:border-primary/40 transition-all duration-200 flex flex-col h-full cursor-pointer"
     >
       <div className="flex items-start justify-between mb-4">
@@ -75,7 +63,7 @@ const AppCard = ({ app }: { app: App }) => {
           </span>
         )}
       </div>
-    </a>
+    </Link>
   );
 };
 
