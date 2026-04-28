@@ -30,7 +30,8 @@
     "tag": "Novo",
     "url": "https://adsegine.streamlit.app/",
     "github": "",
-    "icone": "🚀"
+    "icone": "🚀",
+    "external": true
   },
   {
     "slug": "precificacao",
@@ -41,7 +42,8 @@
     "tag": "",
     "url": "https://precificacaoestrategica.streamlit.app/",
     "github": "",
-    "icone": "💰"
+    "icone": "💰",
+    "external": true
   },
   {
     "slug": "devolucoes",
@@ -63,7 +65,8 @@
     "tag": "",
     "url": "https://painelfinanceiro.streamlit.app/",
     "github": "",
-    "icone": "🏦"
+    "icone": "🏦",
+    "external": true
   },
   {
     "slug": "inteligencia-mercado",
@@ -74,7 +77,8 @@
     "tag": "",
     "url": "https://inteligenciademercado.streamlit.app/",
     "github": "",
-    "icone": "🧮"
+    "icone": "🧮",
+    "external": true
   },
   {
     "slug": "ponto-equilibrio",
