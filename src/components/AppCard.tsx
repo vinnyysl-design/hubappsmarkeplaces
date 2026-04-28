@@ -1,5 +1,7 @@
 import { ExternalLink, BarChart3, Package, Rocket, DollarSign, RotateCcw, Landmark, ArrowUpRight } from "lucide-react";
 import { Link } from "react-router-dom";
+import { trackToolClick } from "@/hooks/useTracking";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface App {
   slug?: string;
@@ -11,6 +13,7 @@ interface App {
   url: string;
   github: string;
   icone: string;
+  external?: boolean;
 }
 
 const iconMap: Record<string, React.ReactNode> = {
@@ -25,15 +28,43 @@ const iconMap: Record<string, React.ReactNode> = {
 };
 
 const AppCard = ({ app }: { app: App }) => {
+  const { user } = useAuth();
   const icon = iconMap[app.icone] || <ArrowUpRight size={22} />;
   const isBeta = app.status === "Beta";
   const to = app.slug ? `/app/${app.slug}` : "/";
 
+  const sharedClass =
+    "group bg-card border border-border rounded-xl p-5 hover:border-primary/40 transition-all duration-200 flex flex-col h-full cursor-pointer";
+
+  const handleExternalClick = () => {
+    void trackToolClick(user?.id, {
+      tool_id: app.slug || app.nome,
+      tool_name: app.nome,
+      tool_category: app.categoria,
+      tool_url: app.url,
+    });
+  };
+
+  const Wrapper = app.external
+    ? ({ children }: { children: React.ReactNode }) => (
+        <a
+          href={app.url}
+          target="_blank"
+          rel="noopener noreferrer"
+          onClick={handleExternalClick}
+          className={sharedClass}
+        >
+          {children}
+        </a>
+      )
+    : ({ children }: { children: React.ReactNode }) => (
+        <Link to={to} className={sharedClass}>
+          {children}
+        </Link>
+      );
+
   return (
-    <Link
-      to={to}
-      className="group bg-card border border-border rounded-xl p-5 hover:border-primary/40 transition-all duration-200 flex flex-col h-full cursor-pointer"
-    >
+    <Wrapper>
       <div className="flex items-start justify-between mb-4">
         <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-primary/10 text-primary">
           {icon}
