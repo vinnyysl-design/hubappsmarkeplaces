@@ -8,7 +8,8 @@
     "tag": "Mais usado",
     "url": "https://curvaabcdiagnosticoeacoes.netlify.app/",
     "github": "",
-    "icone": "🧮"
+    "icone": "🧮",
+    "version": "1.0.0"
   },
   {
     "slug": "fulfillment",
@@ -19,7 +20,8 @@
     "tag": "",
     "url": "https://full.analyticalx.com.br/",
     "github": "",
-    "icone": "📦"
+    "icone": "📦",
+    "version": "1.0.0"
   },
   {
     "slug": "adsengine",
@@ -30,7 +32,8 @@
     "tag": "Novo",
     "url": "https://adsengine.analyticalx.com.br/",
     "github": "",
-    "icone": "🚀"
+    "icone": "🚀",
+    "version": "1.0.0"
   },
   {
     "slug": "precificacao",
@@ -42,7 +45,8 @@
     "url": "https://precificacaoestrategica.streamlit.app/",
     "github": "",
     "icone": "💰",
-    "external": true
+    "external": true,
+    "version": "1.0.0"
   },
   {
     "slug": "devolucoes",
@@ -53,7 +57,8 @@
     "tag": "",
     "url": "https://gestaodedevolucao.netlify.app/",
     "github": "",
-    "icone": "↩️"
+    "icone": "↩️",
+    "version": "1.0.0"
   },
   {
     "slug": "painel-financeiro",
@@ -65,7 +70,8 @@
     "url": "https://painelfinanceiro.streamlit.app/",
     "github": "",
     "icone": "🏦",
-    "external": true
+    "external": true,
+    "version": "1.0.0"
   },
   {
     "slug": "inteligencia-mercado",
@@ -77,7 +83,8 @@
     "url": "https://inteligenciademercado.streamlit.app/",
     "github": "",
     "icone": "🧮",
-    "external": true
+    "external": true,
+    "version": "1.0.0"
   },
   {
     "slug": "ponto-equilibrio",
@@ -88,7 +95,8 @@
     "tag": "Novo",
     "url": "https://pontodeequlibrio.netlify.app/",
     "github": "",
-    "icone": "⚖️"
+    "icone": "⚖️",
+    "version": "1.0.0"
   },
   {
     "slug": "conciliacao",
@@ -99,6 +107,7 @@
     "tag": "Novo",
     "url": "https://analyticalxconcilicaofianceira.netlify.app/",
     "github": "",
-    "icone": "📊"
+    "icone": "📊",
+    "version": "1.0.0"
   }
 ]
