@@ -14,7 +14,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import apps from "@/data/apps.json";
 import { useAuth } from "@/contexts/AuthContext";
 
-type App = (typeof apps)[number] & { version?: string };
+type App = (typeof apps)[number] & { version?: string; whatsNew?: string };
 
 type ChangeKind = "novo" | "atualizado" | "link";
 
@@ -145,8 +145,8 @@ export default function WhatsNewDialog() {
                       </Badge>
                     )}
                   </div>
-                  <p className="text-xs text-muted-foreground mt-1 line-clamp-2">
-                    {app.descricao}
+                  <p className="text-xs text-muted-foreground mt-1 line-clamp-3">
+                    {kind !== "novo" && app.whatsNew ? app.whatsNew : app.descricao}
                   </p>
                   {detail && (
                     <p className="text-[11px] text-primary/80 mt-1 font-mono">

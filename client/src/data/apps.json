@@ -9,7 +9,8 @@
     "url": "https://curvaabcdiagnosticoeacoes.netlify.app/",
     "github": "",
     "icone": "🧮",
-    "version": "1.0.0"
+    "version": "1.1.0",
+    "whatsNew": "Nova análise de diagnóstico aprimorada com sugestões de ações estratégicas por classe (A, B, C) e melhorias de performance no carregamento dos dados."
   },
   {
     "slug": "fulfillment",
