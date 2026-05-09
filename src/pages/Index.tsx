@@ -5,6 +5,7 @@ import MetricCards from "@/components/MetricCards";
 import AppCard from "@/components/AppCard";
 import ThemeToggle from "@/components/ThemeToggle";
 import UserMenu from "@/components/UserMenu";
+import WhatsNewDialog from "@/components/WhatsNewDialog";
 import apps from "@/data/apps.json";
 import { usePageViewTracker } from "@/hooks/useTracking";
 
@@ -34,6 +35,7 @@ const Index = () => {
 
   return (
     <div className="min-h-screen bg-background">
+      <WhatsNewDialog />
       <div className="max-w-6xl mx-auto px-4 py-8">
         <div className="flex justify-end items-center gap-2 mb-4">
           <ThemeToggle />
