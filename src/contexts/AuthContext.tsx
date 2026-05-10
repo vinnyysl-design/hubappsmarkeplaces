@@ -50,6 +50,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   const loadProfile = useCallback(async (uid: string) => {
+    // Aplica regra de trial de 3 dias (bloqueia automaticamente se sem pagamento)
+    const { data: trialData } = await supabase.rpc("enforce_trial_status", {
+      _user_id: uid,
+    });
+    const trial = Array.isArray(trialData) ? trialData[0] : trialData;
+    const trialExpired = !!trial?.trial_expired;
+
     const [{ data: profile }, { data: roles }] = await Promise.all([
       supabase.from("profiles").select("status").eq("id", uid).maybeSingle(),
       supabase.from("user_roles").select("role").eq("user_id", uid),
@@ -63,9 +70,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     if (userStatus === "bloqueado") {
       toast({
-        title: "Acesso bloqueado",
-        description:
-          "Sua conta foi bloqueada por um administrador. Entre em contato para mais informações.",
+        title: trialExpired ? "Período de teste expirado" : "Acesso bloqueado",
+        description: trialExpired
+          ? "Seu período de teste de 3 dias terminou. Entre em contato com o administrador para liberar o acesso."
+          : "Sua conta foi bloqueada por um administrador. Entre em contato para mais informações.",
         variant: "destructive",
       });
       await supabase.auth.signOut();

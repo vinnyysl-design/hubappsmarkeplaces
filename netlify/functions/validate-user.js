@@ -79,7 +79,18 @@ exports.handler = async (event) => {
       return respond(401, { valid: false, error: "invalid_token" });
     }
 
-    // 2) Busca o profile (status) usando service role -> ignora RLS
+    // 2) Aplica trial de 3 dias (bloqueia automaticamente se necessário)
+    await fetch(`${SUPABASE_URL}/rest/v1/rpc/enforce_trial_status`, {
+      method: "POST",
+      headers: {
+        apikey: SERVICE_ROLE,
+        Authorization: `Bearer ${SERVICE_ROLE}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ _user_id: authUser.id }),
+    }).catch(() => null);
+
+    // 3) Busca o profile (status) usando service role -> ignora RLS
     const profileRes = await fetch(
       `${SUPABASE_URL}/rest/v1/profiles?id=eq.${authUser.id}&select=id,email,status`,
       {

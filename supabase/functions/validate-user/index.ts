@@ -63,6 +63,17 @@ Deno.serve(async (req) => {
       return json(401, { valid: false, error: "invalid_token" });
     }
 
+    // Aplica trial de 3 dias (bloqueia automaticamente se necessário)
+    await fetch(`${supabaseUrl}/rest/v1/rpc/enforce_trial_status`, {
+      method: "POST",
+      headers: {
+        apikey: serviceRoleKey,
+        Authorization: `Bearer ${serviceRoleKey}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ _user_id: authUser.id }),
+    }).catch(() => null);
+
     const profileRes = await fetch(
       `${supabaseUrl}/rest/v1/profiles?id=eq.${authUser.id}&select=id,email,status`,
       {
