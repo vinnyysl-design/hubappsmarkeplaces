@@ -156,6 +156,78 @@ export default function AdminAnalytics() {
 
   const recentPageViews = useMemo(() => pageViews.slice(0, 20), [pageViews]);
 
+  // ----- Atividades recentes (page_views + tool_clicks com tempo estimado) -----
+  type Activity = {
+    id: string;
+    user_id: string;
+    created_at: string;
+    kind: "page" | "tool";
+    label: string;
+    sublabel?: string | null;
+    durationMs: number | null;
+  };
+
+  const recentActivities = useMemo<Activity[]>(() => {
+    // junta os dois tipos
+    const all: Activity[] = [
+      ...pageViews.map((pv) => ({
+        id: `pv-${pv.id}`,
+        user_id: pv.user_id,
+        created_at: pv.created_at,
+        kind: "page" as const,
+        label: pv.path,
+        sublabel: null,
+        durationMs: null as number | null,
+      })),
+      ...toolClicks.map((tc) => ({
+        id: `tc-${tc.id}`,
+        user_id: tc.user_id,
+        created_at: tc.created_at,
+        kind: "tool" as const,
+        label: tc.tool_name,
+        sublabel: tc.tool_category ?? null,
+        durationMs: null as number | null,
+      })),
+    ];
+
+    // por usuário, ordena asc para calcular o tempo até o próximo evento
+    const byUser: Record<string, Activity[]> = {};
+    all.forEach((a) => {
+      (byUser[a.user_id] ??= []).push(a);
+    });
+    Object.values(byUser).forEach((list) => {
+      list.sort((a, b) => a.created_at.localeCompare(b.created_at));
+      for (let i = 0; i < list.length; i++) {
+        if (list[i].kind !== "tool") continue;
+        const next = list[i + 1];
+        if (!next) continue;
+        const diff =
+          new Date(next.created_at).getTime() -
+          new Date(list[i].created_at).getTime();
+        // só considera "tempo na ferramenta" se < 2h (acima disso assume sessão encerrada)
+        if (diff > 0 && diff < 1000 * 60 * 60 * 2) {
+          list[i].durationMs = diff;
+        }
+      }
+    });
+
+    return all
+      .sort((a, b) => b.created_at.localeCompare(a.created_at))
+      .slice(0, 30);
+  }, [pageViews, toolClicks]);
+
+  const formatDuration = (ms: number | null) => {
+    if (ms == null) return "—";
+    const totalSec = Math.round(ms / 1000);
+    if (totalSec < 60) return `${totalSec}s`;
+    const min = Math.floor(totalSec / 60);
+    const sec = totalSec % 60;
+    if (min < 60) return sec ? `${min}m ${sec}s` : `${min}m`;
+    const hr = Math.floor(min / 60);
+    const rmin = min % 60;
+    return rmin ? `${hr}h ${rmin}m` : `${hr}h`;
+  };
+
   // ----- Excel export -----
   const exportExcel = () => {
     const wb = XLSX.utils.book_new();
@@ -397,14 +469,14 @@ export default function AdminAnalytics() {
 
         <div className="bg-card border border-border rounded-xl overflow-hidden">
           <div className="px-5 py-3 border-b border-border">
-            <h3 className="font-semibold">Últimas page views</h3>
+            <h3 className="font-semibold">Últimas atividades</h3>
             <p className="text-xs text-muted-foreground">
-              20 mais recentes (últimos 30 dias)
+              30 mais recentes — inclui páginas visitadas e ferramentas usadas (com tempo estimado)
             </p>
           </div>
-          {recentPageViews.length === 0 ? (
+          {recentActivities.length === 0 ? (
             <div className="p-8 text-center text-sm text-muted-foreground">
-              Nenhuma visita registrada ainda.
+              Nenhuma atividade registrada ainda.
             </div>
           ) : (
             <div className="max-h-[420px] overflow-y-auto">
@@ -413,22 +485,47 @@ export default function AdminAnalytics() {
                   <TableRow>
                     <TableHead>Quando</TableHead>
                     <TableHead>Usuário</TableHead>
-                    <TableHead>Rota</TableHead>
+                    <TableHead>Ferramenta / Rota</TableHead>
+                    <TableHead className="text-right">Tempo</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {recentPageViews.map((pv) => (
-                    <TableRow key={pv.id}>
+                  {recentActivities.map((a) => (
+                    <TableRow key={a.id}>
                       <TableCell className="text-xs text-muted-foreground whitespace-nowrap">
-                        {formatDateTime(pv.created_at)}
+                        {formatDateTime(a.created_at)}
                       </TableCell>
                       <TableCell className="text-sm">
-                        {profiles[pv.user_id]?.display_name ??
-                          profiles[pv.user_id]?.email ??
+                        {profiles[a.user_id]?.display_name ??
+                          profiles[a.user_id]?.email ??
                           "—"}
                       </TableCell>
-                      <TableCell className="text-xs font-mono">
-                        {pv.path}
+                      <TableCell className="text-xs">
+                        {a.kind === "tool" ? (
+                          <div className="flex flex-col">
+                            <span className="font-medium text-foreground">
+                              🔧 {a.label}
+                            </span>
+                            {a.sublabel && (
+                              <span className="text-muted-foreground">
+                                {a.sublabel}
+                              </span>
+                            )}
+                          </div>
+                        ) : (
+                          <span className="font-mono text-muted-foreground">
+                            {a.label}
+                          </span>
+                        )}
+                      </TableCell>
+                      <TableCell className="text-right text-xs whitespace-nowrap">
+                        {a.kind === "tool" ? (
+                          <span className="font-semibold text-primary">
+                            {formatDuration(a.durationMs)}
+                          </span>
+                        ) : (
+                          <span className="text-muted-foreground">—</span>
+                        )}
                       </TableCell>
                     </TableRow>
                   ))}
