@@ -469,14 +469,14 @@ export default function AdminAnalytics() {
 
         <div className="bg-card border border-border rounded-xl overflow-hidden">
           <div className="px-5 py-3 border-b border-border">
-            <h3 className="font-semibold">Últimas page views</h3>
+            <h3 className="font-semibold">Últimas atividades</h3>
             <p className="text-xs text-muted-foreground">
-              20 mais recentes (últimos 30 dias)
+              30 mais recentes — inclui páginas visitadas e ferramentas usadas (com tempo estimado)
             </p>
           </div>
-          {recentPageViews.length === 0 ? (
+          {recentActivities.length === 0 ? (
             <div className="p-8 text-center text-sm text-muted-foreground">
-              Nenhuma visita registrada ainda.
+              Nenhuma atividade registrada ainda.
             </div>
           ) : (
             <div className="max-h-[420px] overflow-y-auto">
@@ -485,22 +485,47 @@ export default function AdminAnalytics() {
                   <TableRow>
                     <TableHead>Quando</TableHead>
                     <TableHead>Usuário</TableHead>
-                    <TableHead>Rota</TableHead>
+                    <TableHead>Ferramenta / Rota</TableHead>
+                    <TableHead className="text-right">Tempo</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {recentPageViews.map((pv) => (
-                    <TableRow key={pv.id}>
+                  {recentActivities.map((a) => (
+                    <TableRow key={a.id}>
                       <TableCell className="text-xs text-muted-foreground whitespace-nowrap">
-                        {formatDateTime(pv.created_at)}
+                        {formatDateTime(a.created_at)}
                       </TableCell>
                       <TableCell className="text-sm">
-                        {profiles[pv.user_id]?.display_name ??
-                          profiles[pv.user_id]?.email ??
+                        {profiles[a.user_id]?.display_name ??
+                          profiles[a.user_id]?.email ??
                           "—"}
                       </TableCell>
-                      <TableCell className="text-xs font-mono">
-                        {pv.path}
+                      <TableCell className="text-xs">
+                        {a.kind === "tool" ? (
+                          <div className="flex flex-col">
+                            <span className="font-medium text-foreground">
+                              🔧 {a.label}
+                            </span>
+                            {a.sublabel && (
+                              <span className="text-muted-foreground">
+                                {a.sublabel}
+                              </span>
+                            )}
+                          </div>
+                        ) : (
+                          <span className="font-mono text-muted-foreground">
+                            {a.label}
+                          </span>
+                        )}
+                      </TableCell>
+                      <TableCell className="text-right text-xs whitespace-nowrap">
+                        {a.kind === "tool" ? (
+                          <span className="font-semibold text-primary">
+                            {formatDuration(a.durationMs)}
+                          </span>
+                        ) : (
+                          <span className="text-muted-foreground">—</span>
+                        )}
                       </TableCell>
                     </TableRow>
                   ))}
