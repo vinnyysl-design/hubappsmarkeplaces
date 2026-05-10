@@ -160,6 +160,14 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      enforce_trial_status: {
+        Args: { _user_id: string }
+        Returns: {
+          status: Database["public"]["Enums"]["user_status"]
+          trial_ends_at: string
+          trial_expired: boolean
+        }[]
+      }
       get_user_status: {
         Args: { _user_id: string }
         Returns: Database["public"]["Enums"]["user_status"]
