@@ -7,6 +7,8 @@ import {
   Loader2,
   Download,
   TrendingUp,
+  UserPlus,
+  DollarSign,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
