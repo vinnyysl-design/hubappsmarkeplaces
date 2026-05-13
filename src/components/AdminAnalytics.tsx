@@ -489,6 +489,16 @@ export default function AdminAnalytics() {
 
   const stats = [
     {
+      label: "Novos cadastros no mês",
+      value: newSignupsThisMonth,
+      icon: <UserPlus size={18} />,
+    },
+    {
+      label: "Receita do mês",
+      value: formatBRL(revenueThisMonth),
+      icon: <DollarSign size={18} />,
+    },
+    {
       label: "Page views (30d)",
       value: visitsLast30,
       icon: <Eye size={18} />,
