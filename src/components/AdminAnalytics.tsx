@@ -564,6 +564,50 @@ export default function AdminAnalytics() {
         ))}
       </div>
 
+      {/* Resumo mensal: cadastros e receita */}
+      <div className="bg-card border border-border rounded-xl overflow-hidden">
+        <div className="px-5 py-3 border-b border-border">
+          <h3 className="font-semibold">Resumo mensal — cadastros e receita</h3>
+          <p className="text-xs text-muted-foreground">
+            Últimos 6 meses. Receita = soma dos pagamentos registrados no mês.
+          </p>
+        </div>
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Mês</TableHead>
+              <TableHead className="text-right">Novos cadastros</TableHead>
+              <TableHead className="text-right">Pagamentos</TableHead>
+              <TableHead className="text-right">Receita</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {monthlyBreakdown.map((m) => {
+              const isCurrent = m.key === currentMonthKey;
+              return (
+                <TableRow key={m.key} className={isCurrent ? "bg-primary/5" : ""}>
+                  <TableCell className="font-medium capitalize">
+                    {m.label}
+                    {isCurrent && (
+                      <span className="ml-2 text-[10px] text-primary font-semibold">
+                        atual
+                      </span>
+                    )}
+                  </TableCell>
+                  <TableCell className="text-right">{m.signups}</TableCell>
+                  <TableCell className="text-right text-muted-foreground">
+                    {m.paymentsCount}
+                  </TableCell>
+                  <TableCell className="text-right font-semibold">
+                    {formatBRL(m.revenue)}
+                  </TableCell>
+                </TableRow>
+              );
+            })}
+          </TableBody>
+        </Table>
+      </div>
+
       {/* Top 5 ferramentas + Page views recentes */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         <div className="bg-card border border-border rounded-xl overflow-hidden">
