@@ -318,6 +318,8 @@ export default function AdminAnalytics() {
       { Métrica: "Cliques em ferramentas (30d)", Valor: clicksLast30 },
       { Métrica: "Page views hoje", Valor: pageViewsToday },
       { Métrica: "Visitantes únicos hoje", Valor: uniqueVisitorsToday },
+      { Métrica: "Novos cadastros no mês", Valor: newSignupsThisMonth },
+      { Métrica: "Receita do mês (R$)", Valor: revenueThisMonth },
       {
         Métrica: "Gerado em",
         Valor: new Date().toLocaleString("pt-BR"),
