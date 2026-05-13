@@ -7,6 +7,8 @@ import {
   Loader2,
   Download,
   TrendingUp,
+  UserPlus,
+  DollarSign,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -41,7 +43,22 @@ interface ToolClick {
 }
 
 interface ProfileMap {
-  [id: string]: { display_name: string | null; email: string | null };
+  [id: string]: { display_name: string | null; email: string | null; created_at?: string };
+}
+
+interface PaymentRow {
+  id: string;
+  user_id: string;
+  amount: number | null;
+  paid_at: string;
+  next_due_date: string;
+}
+
+interface ProfileRowMin {
+  id: string;
+  display_name: string | null;
+  email: string | null;
+  created_at: string;
 }
 
 const startOfTodayISO = () => {
@@ -71,12 +88,14 @@ export default function AdminAnalytics() {
   const [pageViews, setPageViews] = useState<PageView[]>([]);
   const [toolClicks, setToolClicks] = useState<ToolClick[]>([]);
   const [profiles, setProfiles] = useState<ProfileMap>({});
+  const [allProfiles, setAllProfiles] = useState<ProfileRowMin[]>([]);
+  const [payments, setPayments] = useState<PaymentRow[]>([]);
 
   const load = async () => {
     setLoading(true);
     const since30 = daysAgoISO(30);
 
-    const [pvRes, tcRes, profRes] = await Promise.all([
+    const [pvRes, tcRes, profRes, payRes] = await Promise.all([
       supabase
         .from("page_views")
         .select("id,user_id,path,referrer,user_agent,created_at")
@@ -89,16 +108,21 @@ export default function AdminAnalytics() {
         )
         .gte("created_at", since30)
         .order("created_at", { ascending: false }),
-      supabase.from("profiles").select("id,display_name,email"),
+      supabase.from("profiles").select("id,display_name,email,created_at"),
+      supabase
+        .from("payments")
+        .select("id,user_id,amount,paid_at,next_due_date")
+        .order("paid_at", { ascending: false }),
     ]);
 
-    if (pvRes.error || tcRes.error || profRes.error) {
+    if (pvRes.error || tcRes.error || profRes.error || payRes.error) {
       toast({
         title: "Erro ao carregar analytics",
         description:
           pvRes.error?.message ??
           tcRes.error?.message ??
-          profRes.error?.message,
+          profRes.error?.message ??
+          payRes.error?.message,
         variant: "destructive",
       });
       setLoading(false);
@@ -109,9 +133,11 @@ export default function AdminAnalytics() {
     setToolClicks(tcRes.data ?? []);
     const map: ProfileMap = {};
     (profRes.data ?? []).forEach((p) => {
-      map[p.id] = { display_name: p.display_name, email: p.email };
+      map[p.id] = { display_name: p.display_name, email: p.email, created_at: p.created_at };
     });
     setProfiles(map);
+    setAllProfiles(profRes.data ?? []);
+    setPayments(payRes.data ?? []);
     setLoading(false);
   };
 
@@ -137,6 +163,59 @@ export default function AdminAnalytics() {
     () => pageViews.filter((pv) => pv.created_at >= today).length,
     [pageViews, today]
   );
+
+  // ----- Mensal: novos cadastros e receita -----
+  const monthKey = (iso: string) => iso.slice(0, 7); // YYYY-MM
+  const currentMonthKey = new Date().toISOString().slice(0, 7);
+
+  const formatBRL = (n: number) =>
+    n.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+
+  const formatMonthLabel = (key: string) => {
+    const [y, m] = key.split("-");
+    const d = new Date(Number(y), Number(m) - 1, 1);
+    return d.toLocaleDateString("pt-BR", { month: "short", year: "numeric" });
+  };
+
+  const newSignupsThisMonth = useMemo(
+    () => allProfiles.filter((p) => monthKey(p.created_at) === currentMonthKey).length,
+    [allProfiles, currentMonthKey]
+  );
+
+  const revenueThisMonth = useMemo(
+    () =>
+      payments
+        .filter((p) => monthKey(p.paid_at) === currentMonthKey)
+        .reduce((s, p) => s + (Number(p.amount) || 0), 0),
+    [payments, currentMonthKey]
+  );
+
+  const monthlyBreakdown = useMemo(() => {
+    // últimos 6 meses
+    const months: string[] = [];
+    const now = new Date();
+    for (let i = 5; i >= 0; i--) {
+      const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+      months.push(d.toISOString().slice(0, 7));
+    }
+    return months.map((key) => {
+      const signups = allProfiles.filter(
+        (p) => monthKey(p.created_at) === key
+      ).length;
+      const monthPayments = payments.filter((p) => monthKey(p.paid_at) === key);
+      const revenue = monthPayments.reduce(
+        (s, p) => s + (Number(p.amount) || 0),
+        0
+      );
+      return {
+        key,
+        label: formatMonthLabel(key),
+        signups,
+        paymentsCount: monthPayments.length,
+        revenue,
+      };
+    });
+  }, [allProfiles, payments]);
 
   const top5Tools = useMemo(() => {
     const counts: Record<string, { name: string; category: string | null; count: number }> =
@@ -239,6 +318,8 @@ export default function AdminAnalytics() {
       { Métrica: "Cliques em ferramentas (30d)", Valor: clicksLast30 },
       { Métrica: "Page views hoje", Valor: pageViewsToday },
       { Métrica: "Visitantes únicos hoje", Valor: uniqueVisitorsToday },
+      { Métrica: "Novos cadastros no mês", Valor: newSignupsThisMonth },
+      { Métrica: "Receita do mês (R$)", Valor: revenueThisMonth },
       {
         Métrica: "Gerado em",
         Valor: new Date().toLocaleString("pt-BR"),
@@ -248,6 +329,53 @@ export default function AdminAnalytics() {
       wb,
       XLSX.utils.json_to_sheet(resumo),
       "Resumo"
+    );
+
+    // Aba: Resumo Mensal (últimos 6 meses)
+    const monthlySheet = monthlyBreakdown.map((m) => ({
+      Mês: m.label,
+      "Novos cadastros": m.signups,
+      "Pagamentos recebidos": m.paymentsCount,
+      "Receita (R$)": m.revenue,
+    }));
+    XLSX.utils.book_append_sheet(
+      wb,
+      XLSX.utils.json_to_sheet(monthlySheet),
+      "Resumo Mensal"
+    );
+
+    // Aba: Pagamentos detalhados
+    const paySheet = payments.map((p) => ({
+      "Pago em": new Date(p.paid_at).toLocaleDateString("pt-BR"),
+      Mês: formatMonthLabel(monthKey(p.paid_at)),
+      Usuário: profiles[p.user_id]?.display_name ?? "-",
+      Email: profiles[p.user_id]?.email ?? "-",
+      "Valor (R$)": Number(p.amount) || 0,
+      "Próx. vencimento": new Date(p.next_due_date).toLocaleDateString("pt-BR"),
+    }));
+    XLSX.utils.book_append_sheet(
+      wb,
+      XLSX.utils.json_to_sheet(
+        paySheet.length ? paySheet : [{ aviso: "Sem pagamentos" }]
+      ),
+      "Pagamentos"
+    );
+
+    // Aba: Novos Cadastros
+    const signupsSheet = [...allProfiles]
+      .sort((a, b) => b.created_at.localeCompare(a.created_at))
+      .map((p) => ({
+        "Cadastrado em": new Date(p.created_at).toLocaleDateString("pt-BR"),
+        Mês: formatMonthLabel(monthKey(p.created_at)),
+        Usuário: p.display_name ?? "-",
+        Email: p.email ?? "-",
+      }));
+    XLSX.utils.book_append_sheet(
+      wb,
+      XLSX.utils.json_to_sheet(
+        signupsSheet.length ? signupsSheet : [{ aviso: "Sem dados" }]
+      ),
+      "Novos Cadastros"
     );
 
     // Aba 2: Top 5 ferramentas
@@ -361,6 +489,16 @@ export default function AdminAnalytics() {
 
   const stats = [
     {
+      label: "Novos cadastros no mês",
+      value: newSignupsThisMonth,
+      icon: <UserPlus size={18} />,
+    },
+    {
+      label: "Receita do mês",
+      value: formatBRL(revenueThisMonth),
+      icon: <DollarSign size={18} />,
+    },
+    {
       label: "Page views (30d)",
       value: visitsLast30,
       icon: <Eye size={18} />,
@@ -424,6 +562,50 @@ export default function AdminAnalytics() {
             </div>
           </div>
         ))}
+      </div>
+
+      {/* Resumo mensal: cadastros e receita */}
+      <div className="bg-card border border-border rounded-xl overflow-hidden">
+        <div className="px-5 py-3 border-b border-border">
+          <h3 className="font-semibold">Resumo mensal — cadastros e receita</h3>
+          <p className="text-xs text-muted-foreground">
+            Últimos 6 meses. Receita = soma dos pagamentos registrados no mês.
+          </p>
+        </div>
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Mês</TableHead>
+              <TableHead className="text-right">Novos cadastros</TableHead>
+              <TableHead className="text-right">Pagamentos</TableHead>
+              <TableHead className="text-right">Receita</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {monthlyBreakdown.map((m) => {
+              const isCurrent = m.key === currentMonthKey;
+              return (
+                <TableRow key={m.key} className={isCurrent ? "bg-primary/5" : ""}>
+                  <TableCell className="font-medium capitalize">
+                    {m.label}
+                    {isCurrent && (
+                      <span className="ml-2 text-[10px] text-primary font-semibold">
+                        atual
+                      </span>
+                    )}
+                  </TableCell>
+                  <TableCell className="text-right">{m.signups}</TableCell>
+                  <TableCell className="text-right text-muted-foreground">
+                    {m.paymentsCount}
+                  </TableCell>
+                  <TableCell className="text-right font-semibold">
+                    {formatBRL(m.revenue)}
+                  </TableCell>
+                </TableRow>
+              );
+            })}
+          </TableBody>
+        </Table>
       </div>
 
       {/* Top 5 ferramentas + Page views recentes */}
