@@ -43,7 +43,22 @@ interface ToolClick {
 }
 
 interface ProfileMap {
-  [id: string]: { display_name: string | null; email: string | null };
+  [id: string]: { display_name: string | null; email: string | null; created_at?: string };
+}
+
+interface PaymentRow {
+  id: string;
+  user_id: string;
+  amount: number | null;
+  paid_at: string;
+  next_due_date: string;
+}
+
+interface ProfileRowMin {
+  id: string;
+  display_name: string | null;
+  email: string | null;
+  created_at: string;
 }
 
 const startOfTodayISO = () => {
