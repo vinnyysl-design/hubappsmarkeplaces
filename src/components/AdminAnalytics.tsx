@@ -164,6 +164,59 @@ export default function AdminAnalytics() {
     [pageViews, today]
   );
 
+  // ----- Mensal: novos cadastros e receita -----
+  const monthKey = (iso: string) => iso.slice(0, 7); // YYYY-MM
+  const currentMonthKey = new Date().toISOString().slice(0, 7);
+
+  const formatBRL = (n: number) =>
+    n.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+
+  const formatMonthLabel = (key: string) => {
+    const [y, m] = key.split("-");
+    const d = new Date(Number(y), Number(m) - 1, 1);
+    return d.toLocaleDateString("pt-BR", { month: "short", year: "numeric" });
+  };
+
+  const newSignupsThisMonth = useMemo(
+    () => allProfiles.filter((p) => monthKey(p.created_at) === currentMonthKey).length,
+    [allProfiles, currentMonthKey]
+  );
+
+  const revenueThisMonth = useMemo(
+    () =>
+      payments
+        .filter((p) => monthKey(p.paid_at) === currentMonthKey)
+        .reduce((s, p) => s + (Number(p.amount) || 0), 0),
+    [payments, currentMonthKey]
+  );
+
+  const monthlyBreakdown = useMemo(() => {
+    // últimos 6 meses
+    const months: string[] = [];
+    const now = new Date();
+    for (let i = 5; i >= 0; i--) {
+      const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+      months.push(d.toISOString().slice(0, 7));
+    }
+    return months.map((key) => {
+      const signups = allProfiles.filter(
+        (p) => monthKey(p.created_at) === key
+      ).length;
+      const monthPayments = payments.filter((p) => monthKey(p.paid_at) === key);
+      const revenue = monthPayments.reduce(
+        (s, p) => s + (Number(p.amount) || 0),
+        0
+      );
+      return {
+        key,
+        label: formatMonthLabel(key),
+        signups,
+        paymentsCount: monthPayments.length,
+        revenue,
+      };
+    });
+  }, [allProfiles, payments]);
+
   const top5Tools = useMemo(() => {
     const counts: Record<string, { name: string; category: string | null; count: number }> =
       {};
