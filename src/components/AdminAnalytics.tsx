@@ -88,12 +88,14 @@ export default function AdminAnalytics() {
   const [pageViews, setPageViews] = useState<PageView[]>([]);
   const [toolClicks, setToolClicks] = useState<ToolClick[]>([]);
   const [profiles, setProfiles] = useState<ProfileMap>({});
+  const [allProfiles, setAllProfiles] = useState<ProfileRowMin[]>([]);
+  const [payments, setPayments] = useState<PaymentRow[]>([]);
 
   const load = async () => {
     setLoading(true);
     const since30 = daysAgoISO(30);
 
-    const [pvRes, tcRes, profRes] = await Promise.all([
+    const [pvRes, tcRes, profRes, payRes] = await Promise.all([
       supabase
         .from("page_views")
         .select("id,user_id,path,referrer,user_agent,created_at")
@@ -106,16 +108,21 @@ export default function AdminAnalytics() {
         )
         .gte("created_at", since30)
         .order("created_at", { ascending: false }),
-      supabase.from("profiles").select("id,display_name,email"),
+      supabase.from("profiles").select("id,display_name,email,created_at"),
+      supabase
+        .from("payments")
+        .select("id,user_id,amount,paid_at,next_due_date")
+        .order("paid_at", { ascending: false }),
     ]);
 
-    if (pvRes.error || tcRes.error || profRes.error) {
+    if (pvRes.error || tcRes.error || profRes.error || payRes.error) {
       toast({
         title: "Erro ao carregar analytics",
         description:
           pvRes.error?.message ??
           tcRes.error?.message ??
-          profRes.error?.message,
+          profRes.error?.message ??
+          payRes.error?.message,
         variant: "destructive",
       });
       setLoading(false);
@@ -126,9 +133,11 @@ export default function AdminAnalytics() {
     setToolClicks(tcRes.data ?? []);
     const map: ProfileMap = {};
     (profRes.data ?? []).forEach((p) => {
-      map[p.id] = { display_name: p.display_name, email: p.email };
+      map[p.id] = { display_name: p.display_name, email: p.email, created_at: p.created_at };
     });
     setProfiles(map);
+    setAllProfiles(profRes.data ?? []);
+    setPayments(payRes.data ?? []);
     setLoading(false);
   };
 
