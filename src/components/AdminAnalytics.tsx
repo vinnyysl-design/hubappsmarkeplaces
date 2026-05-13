@@ -331,6 +331,53 @@ export default function AdminAnalytics() {
       "Resumo"
     );
 
+    // Aba: Resumo Mensal (últimos 6 meses)
+    const monthlySheet = monthlyBreakdown.map((m) => ({
+      Mês: m.label,
+      "Novos cadastros": m.signups,
+      "Pagamentos recebidos": m.paymentsCount,
+      "Receita (R$)": m.revenue,
+    }));
+    XLSX.utils.book_append_sheet(
+      wb,
+      XLSX.utils.json_to_sheet(monthlySheet),
+      "Resumo Mensal"
+    );
+
+    // Aba: Pagamentos detalhados
+    const paySheet = payments.map((p) => ({
+      "Pago em": new Date(p.paid_at).toLocaleDateString("pt-BR"),
+      Mês: formatMonthLabel(monthKey(p.paid_at)),
+      Usuário: profiles[p.user_id]?.display_name ?? "-",
+      Email: profiles[p.user_id]?.email ?? "-",
+      "Valor (R$)": Number(p.amount) || 0,
+      "Próx. vencimento": new Date(p.next_due_date).toLocaleDateString("pt-BR"),
+    }));
+    XLSX.utils.book_append_sheet(
+      wb,
+      XLSX.utils.json_to_sheet(
+        paySheet.length ? paySheet : [{ aviso: "Sem pagamentos" }]
+      ),
+      "Pagamentos"
+    );
+
+    // Aba: Novos Cadastros
+    const signupsSheet = [...allProfiles]
+      .sort((a, b) => b.created_at.localeCompare(a.created_at))
+      .map((p) => ({
+        "Cadastrado em": new Date(p.created_at).toLocaleDateString("pt-BR"),
+        Mês: formatMonthLabel(monthKey(p.created_at)),
+        Usuário: p.display_name ?? "-",
+        Email: p.email ?? "-",
+      }));
+    XLSX.utils.book_append_sheet(
+      wb,
+      XLSX.utils.json_to_sheet(
+        signupsSheet.length ? signupsSheet : [{ aviso: "Sem dados" }]
+      ),
+      "Novos Cadastros"
+    );
+
     // Aba 2: Top 5 ferramentas
     const top5Sheet = top5Tools.map((t, i) => ({
       Posição: i + 1,
