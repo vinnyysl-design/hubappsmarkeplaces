@@ -1,6 +1,6 @@
 import { useEffect, useMemo } from "react";
 import { useParams, Link, Navigate } from "react-router-dom";
-import { ArrowLeft, ExternalLink } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 import apps from "@/data/apps.json";
 import { useAuth } from "@/contexts/AuthContext";
 import { trackToolClick } from "@/hooks/useTracking";
@@ -67,16 +67,6 @@ const AppViewer = () => {
             {app.nome}
           </h1>
         </div>
-        <a
-          href={app.url}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors"
-          title="Abrir em nova aba"
-        >
-          <ExternalLink size={14} />
-          <span className="hidden sm:inline">Nova aba</span>
-        </a>
       </header>
       <iframe
         src={embedUrl}
