@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { Search, SlidersHorizontal, Lock, CreditCard, Loader2 } from "lucide-react";
 import HeroSection from "@/components/HeroSection";
 import { supabase } from "@/integrations/supabase/client";
@@ -14,7 +14,37 @@ import { useAuth } from "@/contexts/AuthContext";
 
 const Index = () => {
   usePageViewTracker();
-  const { status, isAdmin } = useAuth();
+  const { status, isAdmin, refreshProfile } = useAuth();
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const payment = params.get("payment");
+    if (!payment) return;
+    if (payment === "success") {
+      toast({
+        title: "Pagamento recebido!",
+        description: "Estamos liberando seu acesso. Pode levar alguns segundos.",
+      });
+      let tries = 0;
+      const interval = setInterval(async () => {
+        tries++;
+        await refreshProfile();
+        if (tries >= 6) clearInterval(interval);
+      }, 3000);
+    } else if (payment === "pending") {
+      toast({
+        title: "Pagamento pendente",
+        description: "Assim que for confirmado seu acesso será liberado automaticamente.",
+      });
+    } else if (payment === "failure") {
+      toast({
+        title: "Pagamento não concluído",
+        description: "Você pode tentar novamente.",
+        variant: "destructive",
+      });
+    }
+    window.history.replaceState({}, "", window.location.pathname);
+  }, [refreshProfile]);
   const isBlocked = status === "bloqueado" && !isAdmin;
   const [busca, setBusca] = useState("");
   const [categoria, setCategoria] = useState("Todos");
