@@ -22,6 +22,8 @@ interface AuthContextValue {
   session: Session | null;
   status: UserStatus | null;
   role: AppRole | null;
+  termsAcceptedAt: string | null;
+  termsVersion: string | null;
   loading: boolean;
   isAuthenticated: boolean;
   isAdmin: boolean;
