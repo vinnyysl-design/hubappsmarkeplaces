@@ -49,6 +49,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [status, setStatus] = useState<UserStatus | null>(null);
   const [role, setRole] = useState<AppRole | null>(null);
+  const [termsAcceptedAt, setTermsAcceptedAt] = useState<string | null>(null);
+  const [termsVersion, setTermsVersion] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
   const loadProfile = useCallback(async (uid: string) => {
@@ -60,7 +62,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const trialExpired = !!trial?.trial_expired;
 
     const [{ data: profile }, { data: roles }] = await Promise.all([
-      supabase.from("profiles").select("status").eq("id", uid).maybeSingle(),
+      supabase
+        .from("profiles")
+        .select("status, terms_accepted_at, terms_version")
+        .eq("id", uid)
+        .maybeSingle(),
       supabase.from("user_roles").select("role").eq("user_id", uid),
     ]);
 
@@ -69,6 +75,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     setStatus(userStatus);
     setRole(isAdmin ? "admin" : "user");
+    setTermsAcceptedAt((profile as any)?.terms_accepted_at ?? null);
+    setTermsVersion((profile as any)?.terms_version ?? null);
 
     if (userStatus === "bloqueado") {
       toast({
