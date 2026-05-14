@@ -70,17 +70,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     if (userStatus === "bloqueado") {
       toast({
-        title: trialExpired ? "Período de teste expirado" : "Acesso bloqueado",
-        description: trialExpired
-          ? "Seu período de teste de 3 dias terminou. Entre em contato com o administrador para liberar o acesso."
-          : "Sua conta foi bloqueada por um administrador. Entre em contato para mais informações.",
-        variant: "destructive",
+        title: "Acesso aos apps bloqueado",
+        description:
+          "Sua conta está aguardando liberação do administrador. Você pode navegar pelo Hub, mas os apps estão bloqueados até a liberação.",
       });
-      await supabase.auth.signOut();
-      setUser(null);
-      setSession(null);
-      setStatus(null);
-      setRole(null);
     }
   }, []);
 
@@ -100,21 +93,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           const result = await validateAccess();
           if (!result.ok) {
             const reason = result.data?.error;
+            // user_blocked: NÃO desloga — usuário pode entrar no Hub, mas apps ficam travados
             if (reason === "user_blocked") {
-              toast({
-                title: "Acesso bloqueado",
-                description:
-                  "Sua conta foi bloqueada por um administrador.",
-                variant: "destructive",
-              });
-            } else if (reason && reason !== "network_error") {
+              return;
+            }
+            if (reason && reason !== "network_error") {
               toast({
                 title: "Sessão inválida",
                 description: "Faça login novamente para continuar.",
                 variant: "destructive",
               });
-            }
-            if (reason !== "network_error") {
               await logoutHelper({ redirect: false });
               setUser(null);
               setSession(null);
@@ -209,7 +197,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         status,
         role,
         loading,
-        isAuthenticated: !!user && status === "ativo",
+        isAuthenticated: !!user,
         isAdmin: role === "admin",
         login,
         signup,
