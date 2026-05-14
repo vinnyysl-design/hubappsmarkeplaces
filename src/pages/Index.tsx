@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect } from "react";
-import { Search, SlidersHorizontal, Lock, CreditCard, Loader2 } from "lucide-react";
+import { Search, SlidersHorizontal, Lock, CreditCard, Loader2, FileCheck } from "lucide-react";
 import HeroSection from "@/components/HeroSection";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
@@ -8,13 +8,14 @@ import AppCard from "@/components/AppCard";
 import ThemeToggle from "@/components/ThemeToggle";
 import UserMenu from "@/components/UserMenu";
 import WhatsNewDialog from "@/components/WhatsNewDialog";
+import TermsDialog, { TERMS_VERSION } from "@/components/TermsDialog";
 import apps from "@/data/apps.json";
 import { usePageViewTracker } from "@/hooks/useTracking";
 import { useAuth } from "@/contexts/AuthContext";
 
 const Index = () => {
   usePageViewTracker();
-  const { status, isAdmin, refreshProfile } = useAuth();
+  const { status, isAdmin, refreshProfile, termsAcceptedAt, termsVersion, isAuthenticated } = useAuth();
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
