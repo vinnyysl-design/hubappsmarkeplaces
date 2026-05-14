@@ -27,12 +27,15 @@ const iconMap: Record<string, React.ReactNode> = {
   "📊": <BarChart3 size={22} />,
 };
 
+const TERMS_VERSION = "1.0";
+
 const AppCard = ({ app }: { app: App }) => {
-  const { user, status, isAdmin } = useAuth();
+  const { user, status, isAdmin, termsAcceptedAt, termsVersion } = useAuth() as any;
   const icon = iconMap[app.icone] || <ArrowUpRight size={22} />;
   const isBeta = app.status === "Beta";
   const to = app.slug ? `/app/${app.slug}` : "/";
-  const locked = status === "bloqueado" && !isAdmin;
+  const needsTerms = !isAdmin && status === "ativo" && (!termsAcceptedAt || termsVersion !== TERMS_VERSION);
+  const locked = !isAdmin && (status === "bloqueado" || needsTerms);
 
   const sharedClass =
     "group bg-card border border-border rounded-xl p-5 hover:border-primary/40 transition-all duration-200 flex flex-col h-full cursor-pointer";
@@ -52,7 +55,7 @@ const AppCard = ({ app }: { app: App }) => {
     ? ({ children }: { children: React.ReactNode }) => (
         <div
           className={lockedClass}
-          title="Acesso bloqueado — aguarde liberação do administrador"
+          title={needsTerms ? "Aceite o Termo de Uso para liberar o acesso" : "Acesso bloqueado — aguarde liberação do administrador"}
           aria-disabled="true"
         >
           {children}
