@@ -1,4 +1,4 @@
-import { ExternalLink, BarChart3, Package, Rocket, DollarSign, RotateCcw, Landmark, ArrowUpRight } from "lucide-react";
+import { ExternalLink, BarChart3, Package, Rocket, DollarSign, RotateCcw, Landmark, ArrowUpRight, Lock } from "lucide-react";
 import { Link } from "react-router-dom";
 import { trackToolClick } from "@/hooks/useTracking";
 import { useAuth } from "@/contexts/AuthContext";
@@ -28,13 +28,16 @@ const iconMap: Record<string, React.ReactNode> = {
 };
 
 const AppCard = ({ app }: { app: App }) => {
-  const { user } = useAuth();
+  const { user, status, isAdmin } = useAuth();
   const icon = iconMap[app.icone] || <ArrowUpRight size={22} />;
   const isBeta = app.status === "Beta";
   const to = app.slug ? `/app/${app.slug}` : "/";
+  const locked = status === "bloqueado" && !isAdmin;
 
   const sharedClass =
     "group bg-card border border-border rounded-xl p-5 hover:border-primary/40 transition-all duration-200 flex flex-col h-full cursor-pointer";
+  const lockedClass =
+    "relative bg-card border border-border rounded-xl p-5 flex flex-col h-full cursor-not-allowed opacity-70 select-none";
 
   const handleExternalClick = () => {
     void trackToolClick(user?.id, {
@@ -45,7 +48,17 @@ const AppCard = ({ app }: { app: App }) => {
     });
   };
 
-  const Wrapper = app.external
+  const Wrapper = locked
+    ? ({ children }: { children: React.ReactNode }) => (
+        <div
+          className={lockedClass}
+          title="Acesso bloqueado — aguarde liberação do administrador"
+          aria-disabled="true"
+        >
+          {children}
+        </div>
+      )
+    : app.external
     ? ({ children }: { children: React.ReactNode }) => (
         <a
           href={app.url}
