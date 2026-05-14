@@ -79,10 +79,16 @@ const AppCard = ({ app }: { app: App }) => {
   return (
     <Wrapper>
       <div className="flex items-start justify-between mb-4">
-        <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-primary/10 text-primary">
-          {icon}
+        <div className={`flex items-center justify-center w-10 h-10 rounded-lg ${locked ? "bg-muted text-muted-foreground" : "bg-primary/10 text-primary"}`}>
+          {locked ? <Lock size={20} /> : icon}
         </div>
-        <ExternalLink size={14} className="text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity mt-1" />
+        {locked ? (
+          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-medium bg-destructive/10 text-destructive border border-destructive/20">
+            <Lock size={11} /> Bloqueado
+          </span>
+        ) : (
+          <ExternalLink size={14} className="text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity mt-1" />
+        )}
       </div>
 
       <h3 className="text-base font-semibold text-foreground mb-1.5 leading-snug">{app.nome}</h3>
