@@ -1,6 +1,6 @@
 import { useEffect, useMemo } from "react";
 import { useParams, Link, Navigate } from "react-router-dom";
-import { ArrowLeft, ExternalLink } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 import apps from "@/data/apps.json";
 import { useAuth } from "@/contexts/AuthContext";
 import { trackToolClick } from "@/hooks/useTracking";
