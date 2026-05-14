@@ -1,6 +1,8 @@
 import { useState, useMemo } from "react";
-import { Search, SlidersHorizontal, Lock } from "lucide-react";
+import { Search, SlidersHorizontal, Lock, CreditCard, Loader2 } from "lucide-react";
 import HeroSection from "@/components/HeroSection";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "@/hooks/use-toast";
 import MetricCards from "@/components/MetricCards";
 import AppCard from "@/components/AppCard";
 import ThemeToggle from "@/components/ThemeToggle";
@@ -16,6 +18,27 @@ const Index = () => {
   const isBlocked = status === "bloqueado" && !isAdmin;
   const [busca, setBusca] = useState("");
   const [categoria, setCategoria] = useState("Todos");
+  const [paying, setPaying] = useState(false);
+
+  const handleSubscribe = async () => {
+    setPaying(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("create-mp-preference", {
+        body: { return_url: window.location.origin },
+      });
+      if (error) throw error;
+      const url = data?.init_point || data?.sandbox_init_point;
+      if (!url) throw new Error("URL de checkout não recebida");
+      window.location.href = url;
+    } catch (err: any) {
+      toast({
+        title: "Erro ao iniciar pagamento",
+        description: err?.message ?? "Tente novamente em instantes.",
+        variant: "destructive",
+      });
+      setPaying(false);
+    }
+  };
 
   const categorias = useMemo(
     () => ["Todos", ...Array.from(new Set(apps.map((a) => a.categoria))).sort()],
@@ -46,15 +69,28 @@ const Index = () => {
         </div>
         <HeroSection />
         {isBlocked && (
-          <div className="mb-6 flex items-start gap-3 p-4 rounded-xl border border-destructive/30 bg-destructive/5 text-destructive">
-            <Lock size={18} className="mt-0.5 shrink-0" />
-            <div className="text-sm">
-              <p className="font-semibold">Seu acesso aos apps está bloqueado.</p>
+          <div className="mb-6 flex flex-col sm:flex-row items-start gap-4 p-5 rounded-xl border border-destructive/30 bg-destructive/5 text-destructive">
+            <Lock size={20} className="mt-0.5 shrink-0" />
+            <div className="text-sm flex-1">
+              <p className="font-semibold mb-1">Seu acesso aos apps está bloqueado.</p>
               <p className="text-destructive/80">
-                Sua conta foi criada com sucesso e está aguardando liberação do administrador.
-                Você pode navegar pelo Hub, mas os apps permanecerão bloqueados (ícone de cadeado) até a liberação.
+                Para liberar todos os apps do Hub, assine o plano mensal por{" "}
+                <strong>R$ 100,00/mês</strong>. Após o pagamento (Pix ou cartão), seu acesso é
+                liberado automaticamente por 30 dias.
               </p>
             </div>
+            <button
+              onClick={handleSubscribe}
+              disabled={paying}
+              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg bg-primary text-primary-foreground text-sm font-semibold hover:opacity-90 transition disabled:opacity-60 whitespace-nowrap"
+            >
+              {paying ? (
+                <Loader2 size={16} className="animate-spin" />
+              ) : (
+                <CreditCard size={16} />
+              )}
+              {paying ? "Redirecionando..." : "Assinar por R$ 100/mês"}
+            </button>
           </div>
         )}
         <MetricCards total={apps.length} ativos={ativos} beta={beta} categorias={numCategorias} />
