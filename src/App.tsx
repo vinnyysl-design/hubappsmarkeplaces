@@ -43,7 +43,7 @@ const App = () => (
             <Route
               path="/app/:slug"
               element={
-                <ProtectedRoute>
+                <ProtectedRoute requireActive>
                   <AppViewer />
                 </ProtectedRoute>
               }
