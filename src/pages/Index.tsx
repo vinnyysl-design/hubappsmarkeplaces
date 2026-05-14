@@ -46,7 +46,12 @@ const Index = () => {
     }
     window.history.replaceState({}, "", window.location.pathname);
   }, [refreshProfile]);
-  const isBlocked = status === "bloqueado" && !isAdmin;
+  const needsTerms =
+    isAuthenticated &&
+    !isAdmin &&
+    status === "ativo" &&
+    (!termsAcceptedAt || termsVersion !== TERMS_VERSION);
+  const isBlocked = (status === "bloqueado" || needsTerms) && !isAdmin;
   const [busca, setBusca] = useState("");
   const [categoria, setCategoria] = useState("Todos");
   const [paying, setPaying] = useState(false);
