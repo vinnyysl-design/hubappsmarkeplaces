@@ -98,6 +98,7 @@ const Index = () => {
   return (
     <div className="min-h-screen bg-background">
       <WhatsNewDialog />
+      <TermsDialog open={needsTerms} onAccepted={() => refreshProfile()} />
       <div className="max-w-6xl mx-auto px-4 py-8">
         <div className="flex justify-end items-center gap-2 mb-4">
           <ThemeToggle />
@@ -106,27 +107,41 @@ const Index = () => {
         <HeroSection />
         {isBlocked && (
           <div className="mb-6 flex flex-col sm:flex-row items-start gap-4 p-5 rounded-xl border border-destructive/30 bg-destructive/5 text-destructive">
-            <Lock size={20} className="mt-0.5 shrink-0" />
+            {needsTerms ? <FileCheck size={20} className="mt-0.5 shrink-0" /> : <Lock size={20} className="mt-0.5 shrink-0" />}
             <div className="text-sm flex-1">
-              <p className="font-semibold mb-1">Seu acesso aos apps está bloqueado.</p>
-              <p className="text-destructive/80">
-                Para liberar todos os apps do Hub, assine o plano mensal por{" "}
-                <strong>R$ 100,00/mês</strong>. Após o pagamento (Pix ou cartão), seu acesso é
-                liberado automaticamente por 30 dias.
-              </p>
-            </div>
-            <button
-              onClick={handleSubscribe}
-              disabled={paying}
-              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg bg-primary text-primary-foreground text-sm font-semibold hover:opacity-90 transition disabled:opacity-60 whitespace-nowrap"
-            >
-              {paying ? (
-                <Loader2 size={16} className="animate-spin" />
+              {needsTerms ? (
+                <>
+                  <p className="font-semibold mb-1">Falta apenas aceitar o Termo de Uso.</p>
+                  <p className="text-destructive/80">
+                    Pagamento confirmado! Para liberar o acesso aos apps pelo período contratado,
+                    leia e aceite o Termo de Uso e Responsabilidade.
+                  </p>
+                </>
               ) : (
-                <CreditCard size={16} />
+                <>
+                  <p className="font-semibold mb-1">Seu acesso aos apps está bloqueado.</p>
+                  <p className="text-destructive/80">
+                    Para liberar todos os apps do Hub, assine o plano mensal por{" "}
+                    <strong>R$ 100,00/mês</strong>. Após o pagamento (Pix ou cartão), seu acesso é
+                    liberado automaticamente por 30 dias.
+                  </p>
+                </>
               )}
-              {paying ? "Redirecionando..." : "Assinar por R$ 100/mês"}
-            </button>
+            </div>
+            {!needsTerms && (
+              <button
+                onClick={handleSubscribe}
+                disabled={paying}
+                className="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg bg-primary text-primary-foreground text-sm font-semibold hover:opacity-90 transition disabled:opacity-60 whitespace-nowrap"
+              >
+                {paying ? (
+                  <Loader2 size={16} className="animate-spin" />
+                ) : (
+                  <CreditCard size={16} />
+                )}
+                {paying ? "Redirecionando..." : "Assinar por R$ 100/mês"}
+              </button>
+            )}
           </div>
         )}
         <MetricCards total={apps.length} ativos={ativos} beta={beta} categorias={numCategorias} />
