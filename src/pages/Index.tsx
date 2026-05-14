@@ -1,5 +1,5 @@
 import { useState, useMemo } from "react";
-import { Search, SlidersHorizontal } from "lucide-react";
+import { Search, SlidersHorizontal, Lock } from "lucide-react";
 import HeroSection from "@/components/HeroSection";
 import MetricCards from "@/components/MetricCards";
 import AppCard from "@/components/AppCard";
@@ -8,9 +8,12 @@ import UserMenu from "@/components/UserMenu";
 import WhatsNewDialog from "@/components/WhatsNewDialog";
 import apps from "@/data/apps.json";
 import { usePageViewTracker } from "@/hooks/useTracking";
+import { useAuth } from "@/contexts/AuthContext";
 
 const Index = () => {
   usePageViewTracker();
+  const { status, isAdmin } = useAuth();
+  const isBlocked = status === "bloqueado" && !isAdmin;
   const [busca, setBusca] = useState("");
   const [categoria, setCategoria] = useState("Todos");
 
@@ -42,6 +45,18 @@ const Index = () => {
           <UserMenu />
         </div>
         <HeroSection />
+        {isBlocked && (
+          <div className="mb-6 flex items-start gap-3 p-4 rounded-xl border border-destructive/30 bg-destructive/5 text-destructive">
+            <Lock size={18} className="mt-0.5 shrink-0" />
+            <div className="text-sm">
+              <p className="font-semibold">Seu acesso aos apps está bloqueado.</p>
+              <p className="text-destructive/80">
+                Sua conta foi criada com sucesso e está aguardando liberação do administrador.
+                Você pode navegar pelo Hub, mas os apps permanecerão bloqueados (ícone de cadeado) até a liberação.
+              </p>
+            </div>
+          </div>
+        )}
         <MetricCards total={apps.length} ativos={ativos} beta={beta} categorias={numCategorias} />
 
         {/* Filters */}

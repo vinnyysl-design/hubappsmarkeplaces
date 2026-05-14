@@ -1,4 +1,4 @@
-import { ExternalLink, BarChart3, Package, Rocket, DollarSign, RotateCcw, Landmark, ArrowUpRight } from "lucide-react";
+import { ExternalLink, BarChart3, Package, Rocket, DollarSign, RotateCcw, Landmark, ArrowUpRight, Lock } from "lucide-react";
 import { Link } from "react-router-dom";
 import { trackToolClick } from "@/hooks/useTracking";
 import { useAuth } from "@/contexts/AuthContext";
@@ -28,13 +28,16 @@ const iconMap: Record<string, React.ReactNode> = {
 };
 
 const AppCard = ({ app }: { app: App }) => {
-  const { user } = useAuth();
+  const { user, status, isAdmin } = useAuth();
   const icon = iconMap[app.icone] || <ArrowUpRight size={22} />;
   const isBeta = app.status === "Beta";
   const to = app.slug ? `/app/${app.slug}` : "/";
+  const locked = status === "bloqueado" && !isAdmin;
 
   const sharedClass =
     "group bg-card border border-border rounded-xl p-5 hover:border-primary/40 transition-all duration-200 flex flex-col h-full cursor-pointer";
+  const lockedClass =
+    "relative bg-card border border-border rounded-xl p-5 flex flex-col h-full cursor-not-allowed opacity-70 select-none";
 
   const handleExternalClick = () => {
     void trackToolClick(user?.id, {
@@ -45,7 +48,17 @@ const AppCard = ({ app }: { app: App }) => {
     });
   };
 
-  const Wrapper = app.external
+  const Wrapper = locked
+    ? ({ children }: { children: React.ReactNode }) => (
+        <div
+          className={lockedClass}
+          title="Acesso bloqueado — aguarde liberação do administrador"
+          aria-disabled="true"
+        >
+          {children}
+        </div>
+      )
+    : app.external
     ? ({ children }: { children: React.ReactNode }) => (
         <a
           href={app.url}
@@ -66,10 +79,16 @@ const AppCard = ({ app }: { app: App }) => {
   return (
     <Wrapper>
       <div className="flex items-start justify-between mb-4">
-        <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-primary/10 text-primary">
-          {icon}
+        <div className={`flex items-center justify-center w-10 h-10 rounded-lg ${locked ? "bg-muted text-muted-foreground" : "bg-primary/10 text-primary"}`}>
+          {locked ? <Lock size={20} /> : icon}
         </div>
-        <ExternalLink size={14} className="text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity mt-1" />
+        {locked ? (
+          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-medium bg-destructive/10 text-destructive border border-destructive/20">
+            <Lock size={11} /> Bloqueado
+          </span>
+        ) : (
+          <ExternalLink size={14} className="text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity mt-1" />
+        )}
       </div>
 
       <h3 className="text-base font-semibold text-foreground mb-1.5 leading-snug">{app.nome}</h3>

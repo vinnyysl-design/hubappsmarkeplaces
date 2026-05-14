@@ -6,10 +6,11 @@ import { Loader2 } from "lucide-react";
 interface Props {
   children: ReactNode;
   requireAdmin?: boolean;
+  requireActive?: boolean;
 }
 
-export default function ProtectedRoute({ children, requireAdmin = false }: Props) {
-  const { isAuthenticated, isAdmin, loading } = useAuth();
+export default function ProtectedRoute({ children, requireAdmin = false, requireActive = false }: Props) {
+  const { isAuthenticated, isAdmin, status, loading } = useAuth();
   const location = useLocation();
 
   if (loading) {
@@ -25,6 +26,10 @@ export default function ProtectedRoute({ children, requireAdmin = false }: Props
   }
 
   if (requireAdmin && !isAdmin) {
+    return <Navigate to="/" replace />;
+  }
+
+  if (requireActive && status !== "ativo" && !isAdmin) {
     return <Navigate to="/" replace />;
   }
 
