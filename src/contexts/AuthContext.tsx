@@ -206,6 +206,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         session,
         status,
         role,
+        termsAcceptedAt,
+        termsVersion,
         loading,
         isAuthenticated: !!user,
         isAdmin: role === "admin",
