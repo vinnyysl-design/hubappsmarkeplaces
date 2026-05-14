@@ -55,7 +55,7 @@ const AppCard = ({ app }: { app: App }) => {
     ? ({ children }: { children: React.ReactNode }) => (
         <div
           className={lockedClass}
-          title="Acesso bloqueado — aguarde liberação do administrador"
+          title={needsTerms ? "Aceite o Termo de Uso para liberar o acesso" : "Acesso bloqueado — aguarde liberação do administrador"}
           aria-disabled="true"
         >
           {children}
