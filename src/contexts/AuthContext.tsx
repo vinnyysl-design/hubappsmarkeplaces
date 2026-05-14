@@ -116,13 +116,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
               await logoutHelper({ redirect: false });
               setUser(null);
               setSession(null);
-              setStatus(null);
+              setStatus(null); setRole(null); setTermsAcceptedAt(null); setTermsVersion(null);
               setRole(null);
             }
           }
         }, 0);
       } else {
-        setStatus(null);
+        setStatus(null); setRole(null); setTermsAcceptedAt(null); setTermsVersion(null);
         setRole(null);
       }
     });
@@ -191,7 +191,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     await supabase.auth.signOut();
     setUser(null);
     setSession(null);
-    setStatus(null);
+    setStatus(null); setRole(null); setTermsAcceptedAt(null); setTermsVersion(null);
     setRole(null);
   };
 
