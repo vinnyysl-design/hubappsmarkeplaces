@@ -47,9 +47,12 @@ export type Database = {
           created_at: string
           created_by: string | null
           id: string
+          mp_payment_id: string | null
+          mp_preference_id: string | null
           next_due_date: string
           notes: string | null
           paid_at: string
+          payment_method: string | null
           updated_at: string
           user_id: string
         }
@@ -58,9 +61,12 @@ export type Database = {
           created_at?: string
           created_by?: string | null
           id?: string
+          mp_payment_id?: string | null
+          mp_preference_id?: string | null
           next_due_date: string
           notes?: string | null
           paid_at: string
+          payment_method?: string | null
           updated_at?: string
           user_id: string
         }
@@ -69,9 +75,12 @@ export type Database = {
           created_at?: string
           created_by?: string | null
           id?: string
+          mp_payment_id?: string | null
+          mp_preference_id?: string | null
           next_due_date?: string
           notes?: string | null
           paid_at?: string
+          payment_method?: string | null
           updated_at?: string
           user_id?: string
         }
