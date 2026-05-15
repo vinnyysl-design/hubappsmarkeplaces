@@ -26,18 +26,50 @@ interface ChangeItem {
 
 const STORAGE_PREFIX = "hub:lastSeenApps:";
 
-function buildSignatureMap(): Record<string, { v: string; u: string }> {
-  const map: Record<string, { v: string; u: string }> = {};
-  (apps as App[]).forEach((a) => {
-    map[a.slug] = { v: a.version ?? "1.0.0", u: a.url };
-  });
-  return map;
+// Resolved metadata per app: version + whatsNew (remote overrides static).
+type AppMeta = { v: string; u: string; whatsNew?: string };
+
+async function fetchRemoteMeta(app: App): Promise<Partial<AppMeta>> {
+  // Apps "external" são abertos em nova guia (não são iframáveis); evitamos
+  // CORS desnecessário, usamos só os metadados locais.
+  if ((app as any).external) return {};
+  try {
+    const base = app.url.replace(/\/+$/, "");
+    const res = await fetch(`${base}/version.json`, {
+      cache: "no-store",
+      mode: "cors",
+    });
+    if (!res.ok) return {};
+    const data = await res.json();
+    const out: Partial<AppMeta> = {};
+    if (typeof data?.version === "string") out.v = data.version;
+    if (typeof data?.whatsNew === "string") out.whatsNew = data.whatsNew;
+    return out;
+  } catch {
+    return {};
+  }
+}
+
+async function buildSignatureMap(): Promise<Record<string, AppMeta>> {
+  const entries = await Promise.all(
+    (apps as App[]).map(async (a) => {
+      const remote = await fetchRemoteMeta(a);
+      const meta: AppMeta = {
+        v: remote.v ?? a.version ?? "1.0.0",
+        u: a.url,
+        whatsNew: remote.whatsNew ?? a.whatsNew,
+      };
+      return [a.slug, meta] as const;
+    })
+  );
+  return Object.fromEntries(entries);
 }
 
 export default function WhatsNewDialog() {
   const { user, loading } = useAuth();
   const [open, setOpen] = useState(false);
   const [changes, setChanges] = useState<ChangeItem[]>([]);
+  const [currentMap, setCurrentMap] = useState<Record<string, AppMeta> | null>(null);
 
   const storageKey = useMemo(
     () => (user ? `${STORAGE_PREFIX}${user.id}` : null),
@@ -46,8 +78,20 @@ export default function WhatsNewDialog() {
 
   useEffect(() => {
     if (loading || !storageKey) return;
+    let cancelled = false;
 
-    const current = buildSignatureMap();
+    (async () => {
+      const current = await buildSignatureMap();
+      if (cancelled) return;
+      setCurrentMap(current);
+      runDiff(current);
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+
+    function runDiff(current: Record<string, AppMeta>) {
     const raw = localStorage.getItem(storageKey);
 
     // First login ever: save baseline silently, no popup
