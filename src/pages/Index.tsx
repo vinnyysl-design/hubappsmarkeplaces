@@ -8,6 +8,7 @@ import AppCard from "@/components/AppCard";
 import ThemeToggle from "@/components/ThemeToggle";
 import UserMenu from "@/components/UserMenu";
 import WhatsNewDialog from "@/components/WhatsNewDialog";
+import WelcomeDialog from "@/components/WelcomeDialog";
 import TermsDialog, { TERMS_VERSION } from "@/components/TermsDialog";
 import apps from "@/data/apps.json";
 import { usePageViewTracker } from "@/hooks/useTracking";
