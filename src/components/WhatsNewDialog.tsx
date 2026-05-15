@@ -125,18 +125,19 @@ export default function WhatsNewDialog() {
       }
     });
 
-    if (diffs.length > 0) {
-      setChanges(diffs);
-      setOpen(true);
-    } else {
-      // Keep storage fresh (in case slugs were removed)
-      localStorage.setItem(storageKey, JSON.stringify(current));
+      if (diffs.length > 0) {
+        setChanges(diffs);
+        setOpen(true);
+      } else {
+        // Keep storage fresh (in case slugs were removed)
+        localStorage.setItem(storageKey, JSON.stringify(current));
+      }
     }
   }, [loading, storageKey]);
 
   const handleClose = () => {
-    if (storageKey) {
-      localStorage.setItem(storageKey, JSON.stringify(buildSignatureMap()));
+    if (storageKey && currentMap) {
+      localStorage.setItem(storageKey, JSON.stringify(currentMap));
     }
     setOpen(false);
   };
