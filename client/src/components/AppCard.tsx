@@ -1,4 +1,4 @@
-import { ExternalLink, BarChart3, Package, Rocket, DollarSign, RotateCcw, Landmark, ArrowUpRight } from "lucide-react";
+import { ExternalLink, BarChart3, Package, Rocket, DollarSign, RotateCcw, Landmark, ArrowUpRight, Eye } from "lucide-react";
 
 interface App {
   nome: string;
