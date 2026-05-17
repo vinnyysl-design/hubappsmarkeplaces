@@ -109,5 +109,17 @@
     "github": "",
     "icone": "📊",
     "version": "1.0.0"
+  },
+  {
+    "slug": "vision-x",
+    "nome": "Vision X — Especialista em Análise de Anúncios",
+    "descricao": "Agente especialista em análise de anúncios para otimizar campanhas e maximizar resultados.",
+    "categoria": "Marketing",
+    "status": "Ativo",
+    "tag": "Novo",
+    "url": "https://visionx.analyticalx.com.br",
+    "github": "",
+    "icone": "👁️",
+    "version": "1.0.0"
   }
 ]
