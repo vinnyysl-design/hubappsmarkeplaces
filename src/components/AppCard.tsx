@@ -1,4 +1,4 @@
-import { ExternalLink, BarChart3, Package, Rocket, DollarSign, RotateCcw, Landmark, ArrowUpRight, Lock } from "lucide-react";
+import { ExternalLink, BarChart3, Package, Rocket, DollarSign, RotateCcw, Landmark, ArrowUpRight, Lock, Eye } from "lucide-react";
 import { Link } from "react-router-dom";
 import { trackToolClick } from "@/hooks/useTracking";
 import { useAuth } from "@/contexts/AuthContext";
