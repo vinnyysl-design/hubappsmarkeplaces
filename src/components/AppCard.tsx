@@ -25,6 +25,7 @@ const iconMap: Record<string, React.ReactNode> = {
   "🏦": <Landmark size={22} />,
   "⚖️": <BarChart3 size={22} />,
   "📊": <BarChart3 size={22} />,
+  "👁️": <Eye size={22} />,
 };
 
 const TERMS_VERSION = "1.0";
