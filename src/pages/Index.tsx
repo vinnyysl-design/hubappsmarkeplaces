@@ -10,6 +10,7 @@ import UserMenu from "@/components/UserMenu";
 import WhatsNewDialog from "@/components/WhatsNewDialog";
 import WelcomeDialog from "@/components/WelcomeDialog";
 import TermsDialog, { TERMS_VERSION } from "@/components/TermsDialog";
+import VisionAgent from "@/components/VisionAgent";
 import apps from "@/data/apps.json";
 import { usePageViewTracker } from "@/hooks/useTracking";
 import { useAuth } from "@/contexts/AuthContext";
@@ -209,6 +210,7 @@ const Index = () => {
           <p>© 2026 Analytical X | Desenvolvido por Vinicius Lima · CNPJ: 47.192.694/0001-70 · Todos os direitos reservados</p>
         </footer>
       </div>
+      {!isBlocked && <VisionAgent />}
     </div>
   );
 };
