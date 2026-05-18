@@ -41,14 +41,39 @@ Deno.serve(async (req) => {
     }
     const userId = userData.user.id;
 
-    const { message } = await req.json();
+    const body = await req.json();
+    const message: string = body?.message;
+    const apps: Array<{
+      slug?: string;
+      nome?: string;
+      categoria?: string;
+      status?: string;
+      descricao?: string;
+      url?: string;
+      aiKnowledge?: string;
+    }> = Array.isArray(body?.apps) ? body.apps : [];
+
     if (!message || typeof message !== "string") {
       return new Response(JSON.stringify({ error: "message obrigatória" }), {
         status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
-    // 1) Carrega base de conhecimento (RLS permite leitura para autenticados)
+    // 1) Base dinâmica vinda do apps.json (fonte de verdade do catálogo)
+    const appsBlock = apps
+      .map((a) => {
+        const head = `### ${a.nome ?? a.slug}${a.categoria ? ` — ${a.categoria}` : ""}${a.status ? ` [${a.status}]` : ""}`;
+        const meta = [
+          a.slug ? `slug: ${a.slug}` : null,
+          a.url ? `url: ${a.url}` : null,
+          a.descricao ? `descrição: ${a.descricao}` : null,
+        ].filter(Boolean).join("\n");
+        const deep = a.aiKnowledge?.trim() ? `\n${a.aiKnowledge.trim()}` : "";
+        return `${head}\n${meta}${deep}`;
+      })
+      .join("\n\n");
+
+    // 2) Conhecimento extra editável pelo admin (vision_knowledge)
     const { data: knowledge } = await supabase
       .from("vision_knowledge")
       .select("title, content, app_slug")
