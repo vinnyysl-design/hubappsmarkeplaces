@@ -10,7 +10,8 @@
     "github": "",
     "icone": "🧮",
     "version": "1.1.0",
-    "whatsNew": "Nova análise de diagnóstico aprimorada com sugestões de ações estratégicas por classe (A, B, C) e melhorias de performance no carregamento dos dados."
+    "whatsNew": "Nova análise de diagnóstico aprimorada com sugestões de ações estratégicas por classe (A, B, C) e melhorias de performance no carregamento dos dados.",
+    "aiKnowledge": "O que faz: classifica os SKUs em classes A (top faturamento), B (intermediários) e C (cauda longa) e sugere ações estratégicas por classe.\n\nComo usar:\n1. Exporte o relatório de vendas por SKU do seu canal (Mercado Livre, Shopee, Amazon, ERP) em CSV/Excel.\n2. Abra a ferramenta e faça upload do arquivo na tela inicial.\n3. Configure o período de análise e a moeda.\n4. Veja o gráfico de Pareto, a tabela classificada e o painel de diagnóstico.\n\nRelatórios disponíveis: Pareto por faturamento, ranking de SKUs, diagnóstico por classe (A/B/C) com ações sugeridas, exportação em CSV.\n\nQuando usar: para decidir quais produtos merecem mais investimento em mídia, estoque e portfólio."
   },
   {
     "slug": "fulfillment",
@@ -22,7 +23,8 @@
     "url": "https://full.analyticalx.com.br/",
     "github": "",
     "icone": "📦",
-    "version": "1.0.0"
+    "version": "1.0.0",
+    "aiKnowledge": "O que faz: monitora a operação de Full (Mercado Envios Full, FBA, Shopee Full) — estoque, sell-through, dias de cobertura e custo de armazenagem.\n\nComo usar:\n1. Exporte o relatório de estoque Full e o de vendas dos últimos 30/60/90 dias.\n2. Faça upload dos arquivos na ferramenta.\n3. Analise os KPIs: cobertura em dias, giro, risco de ruptura, risco de excesso (long term storage).\n\nRelatórios disponíveis: cobertura por SKU, ranking de risco de ruptura, ranking de excesso (custo de armazenagem alto), recomendação de reposição/retirada.\n\nQuando usar: semanalmente para planejar reposição e evitar tarifas de estoque parado."
   },
   {
     "slug": "adsengine",
@@ -34,7 +36,8 @@
     "url": "https://adsengine.analyticalx.com.br/",
     "github": "",
     "icone": "🚀",
-    "version": "1.0.0"
+    "version": "1.0.0",
+    "aiKnowledge": "O que faz: centraliza, analisa e otimiza campanhas de Product Ads do Mercado Livre (e outros canais), apontando o que escalar, pausar ou ajustar de lance.\n\nComo usar:\n1. Exporte o relatório de campanhas/itens patrocinados do canal.\n2. Suba o CSV/Excel na ferramenta.\n3. Veja ACOS, TACOS, ROAS, CPA e cliques por campanha/SKU.\n4. Siga as recomendações automáticas (escalar, pausar, ajustar lance, mudar estratégia).\n\nRelatórios disponíveis: performance por campanha, por SKU, evolução temporal de ACOS/TACOS, sugestões de otimização.\n\nQuando usar: revisão diária ou semanal de mídia paga."
   },
   {
     "slug": "precificacao",
@@ -47,7 +50,8 @@
     "github": "",
     "icone": "💰",
     "external": true,
-    "version": "1.0.0"
+    "version": "1.0.0",
+    "aiKnowledge": "O que faz: calcula preço de venda ideal considerando custo do produto, comissão do canal, frete, impostos, taxa fixa e margem alvo.\n\nComo usar:\n1. Informe custo do produto, peso/dimensão, canal de venda e categoria.\n2. Defina margem desejada ou preço-alvo do mercado.\n3. A ferramenta retorna o preço ideal, a margem real e quanto cada custo representa.\n\nRelatórios disponíveis: simulação por SKU, comparativo de margens entre canais, ponto onde a venda começa a dar prejuízo.\n\nQuando usar: ao lançar um produto, mudar tabela de preços ou reagir a alteração de comissão dos marketplaces."
   },
   {
     "slug": "devolucoes",
@@ -59,7 +63,8 @@
     "url": "https://gestaodedevolucao.netlify.app/",
     "github": "",
     "icone": "↩️",
-    "version": "1.0.0"
+    "version": "1.0.0",
+    "aiKnowledge": "O que faz: cruza dados de devoluções por SKU e motivo, mostra taxa de devolução e o impacto financeiro.\n\nComo usar:\n1. Exporte o relatório de devoluções/reclamações do canal.\n2. Faça upload na ferramenta.\n3. Veja ranking de SKUs mais devolvidos, principais motivos e custo total de devolução.\n\nRelatórios disponíveis: taxa de devolução por SKU, motivos mais comuns, impacto financeiro mensal, evolução temporal.\n\nQuando usar: para identificar problemas de anúncio, qualidade ou logística e priorizar correções."
   },
   {
     "slug": "painel-financeiro",
@@ -71,7 +76,8 @@
     "url": "https://painelficanceiro.analyticalx.com.br/",
     "github": "",
     "icone": "🏦",
-    "version": "1.0.0"
+    "version": "1.0.0",
+    "aiKnowledge": "O que faz: consolida vendas, custos, taxas e impostos para mostrar a rentabilidade real da operação (DRE gerencial).\n\nComo usar:\n1. Exporte o relatório de vendas e o de repasses do canal.\n2. Importe os arquivos na ferramenta.\n3. Acesse o painel para ver faturamento bruto, líquido, CMV, margem de contribuição e lucro.\n\nRelatórios disponíveis: DRE mensal, margem por SKU, margem por canal, evolução de receita e lucro, breakdown de custos.\n\nQuando usar: fechamento mensal e tomada de decisão sobre mix de produtos e canais."
   },
   {
     "slug": "inteligencia-mercado",
@@ -84,7 +90,8 @@
     "github": "",
     "icone": "🧮",
     "external": true,
-    "version": "1.0.0"
+    "version": "1.0.0",
+    "aiKnowledge": "O que faz: estima o tamanho de mercado de uma categoria/segmento e mostra share de concorrentes, ajudando decisões de entrada/expansão.\n\nComo usar:\n1. Informe a categoria, palavra-chave ou nicho que quer analisar.\n2. A ferramenta retorna estimativa de volume de vendas, ticket médio, principais players e share aproximado.\n\nRelatórios disponíveis: tamanho de mercado, ranking de concorrentes, ticket médio da categoria, oportunidades de gap.\n\nQuando usar: ao avaliar lançamento de produto, entrada em nova categoria ou estudo competitivo."
   },
   {
     "slug": "ponto-equilibrio",
@@ -96,7 +103,8 @@
     "url": "https://pontodeequlibrio.netlify.app/",
     "github": "",
     "icone": "⚖️",
-    "version": "1.0.0"
+    "version": "1.0.0",
+    "aiKnowledge": "O que faz: calcula o break-even — quanto a operação precisa faturar/vender para cobrir custos fixos e variáveis.\n\nComo usar:\n1. Informe custos fixos mensais (pró-labore, aluguel, salários, sistemas).\n2. Informe ticket médio, margem de contribuição média ou custos variáveis.\n3. A ferramenta retorna faturamento mínimo, unidades mínimas e quanto cada SKU contribui.\n\nRelatórios disponíveis: ponto de equilíbrio em R$ e em unidades, margem de segurança, simulações com aumento/redução de custos.\n\nQuando usar: planejamento mensal, contratação, decisão de investimento em mídia."
   },
   {
     "slug": "conciliacao",
@@ -108,7 +116,8 @@
     "url": "https://analyticalxconcilicaofianceira.netlify.app/",
     "github": "",
     "icone": "📊",
-    "version": "1.0.0"
+    "version": "1.0.0",
+    "aiKnowledge": "O que faz: cruza vendas com repasses dos marketplaces e aponta divergências (taxas erradas, frete cobrado a mais, repasses faltantes).\n\nComo usar:\n1. Exporte o relatório de vendas e o de repasses (liberações) do canal.\n2. Faça upload dos dois arquivos na ferramenta.\n3. Veja vendas conciliadas, pendentes e divergências com valor exato a contestar.\n\nRelatórios disponíveis: conciliação por pedido, divergências por tipo (taxa, frete, comissão), total a recuperar.\n\nQuando usar: mensalmente para recuperar valores e validar repasses dos marketplaces."
   },
   {
     "slug": "vision-x",
@@ -120,6 +129,7 @@
     "url": "https://visionx.analyticalx.com.br",
     "github": "",
     "icone": "👁️",
-    "version": "1.0.0"
+    "version": "1.0.0",
+    "aiKnowledge": "O que faz: agente de IA especialista que analisa anúncios (título, descrição, fotos, ficha técnica, preço) e dá recomendações para aumentar conversão e qualidade no Mercado Livre e outros marketplaces.\n\nComo usar:\n1. Cole o link do anúncio ou faça upload das informações.\n2. O Vision X gera análise completa: pontos fortes, fracos e plano de melhorias.\n3. Aplique as sugestões e revise periodicamente.\n\nRelatórios disponíveis: análise qualitativa do anúncio, checklist de SEO, sugestão de título/descrição, recomendações de fotos.\n\nQuando usar: ao publicar um anúncio novo, ao revisar campeões de venda ou para destravar SKUs com baixa conversão."
   }
 ]
