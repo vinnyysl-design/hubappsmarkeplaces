@@ -15,6 +15,7 @@ import { Badge } from "@/components/ui/badge";
 import { toast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
 import AdminAnalytics from "@/components/AdminAnalytics";
+import VisionKnowledgePanel from "@/components/VisionKnowledgePanel";
 import PaymentsPanel, {
   RegisterPaymentButton,
   getPaymentStatus,
@@ -143,6 +144,10 @@ export default function Admin() {
             onPaymentsLoaded={setPaymentsMap}
             refreshSignal={paymentsRefresh}
           />
+        </div>
+
+        <div className="mb-8">
+          <VisionKnowledgePanel />
         </div>
 
         <h2 className="text-lg font-semibold mb-3">Usuários</h2>
