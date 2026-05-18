@@ -98,7 +98,7 @@ Deno.serve(async (req) => {
       user_id: userId, role: "user", content: message,
     });
 
-    const systemPrompt = `${BASE_PROMPT}\n\nBASE DE CONHECIMENTO:\n${knowledgeBlock}`;
+    const systemPrompt = `${BASE_PROMPT}\n\n# CATÁLOGO DE FERRAMENTAS DO HUB (fonte primária)\n${appsBlock || "(vazio)"}\n\n# CONHECIMENTO COMPLEMENTAR (curado pelo admin)\n${knowledgeBlock || "(vazio)"}`;
 
     const aiResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
