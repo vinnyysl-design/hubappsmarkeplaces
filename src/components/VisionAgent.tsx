@@ -12,18 +12,28 @@ const SUGESTOES = [
   "Qual ferramenta usar para precificar?",
 ];
 
+const SAUDACAO =
+  "Olá, eu sou o **Vision**, o agente da Analytical X — estou aqui para te ajudar! 👋\n\nPosso te explicar o que cada ferramenta do Hub faz, como usá-la e onde tirar os relatórios. O que você quer saber?";
+
 export default function VisionAgent() {
   const [open, setOpen] = useState(false);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const [messages, setMessages] = useState<Msg[]>([
-    {
-      role: "assistant",
-      content: "Oi! Eu sou a **Vision** 👋\n\nPosso te ajudar a entender as ferramentas do Hub, como usá-las e onde tirar cada relatório. O que você quer saber?",
-    },
+    { role: "assistant", content: SAUDACAO },
   ]);
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+
+  // Abre automaticamente na primeira vez que o usuário loga (por sessão do navegador)
+  useEffect(() => {
+    const KEY = "vision_greeted_session";
+    if (!sessionStorage.getItem(KEY)) {
+      const t = setTimeout(() => setOpen(true), 800);
+      sessionStorage.setItem(KEY, "1");
+      return () => clearTimeout(t);
+    }
+  }, []);
 
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
@@ -32,6 +42,7 @@ export default function VisionAgent() {
   useEffect(() => {
     if (open) setTimeout(() => inputRef.current?.focus(), 100);
   }, [open]);
+
 
   const send = async (text: string) => {
     const content = text.trim();
