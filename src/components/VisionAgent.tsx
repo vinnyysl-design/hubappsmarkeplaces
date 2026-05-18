@@ -3,8 +3,20 @@ import { supabase } from "@/integrations/supabase/client";
 import { Send, X, Loader2, Trash2 } from "lucide-react";
 import visionLogo from "@/assets/vision-logo.gif";
 import { useAuth } from "@/contexts/AuthContext";
+import appsData from "@/data/apps.json";
 
 type Msg = { role: "user" | "assistant"; content: string };
+
+// Envia apenas os campos úteis para o Vision (base de conhecimento dinâmica)
+const APPS_PAYLOAD = (appsData as Array<Record<string, unknown>>).map((a) => ({
+  slug: a.slug,
+  nome: a.nome,
+  categoria: a.categoria,
+  status: a.status,
+  descricao: a.descricao,
+  url: a.url,
+  aiKnowledge: a.aiKnowledge ?? "",
+}));
 
 const SUGESTOES = [
   "Quais ferramentas o Hub tem?",
