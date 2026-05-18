@@ -101,7 +101,7 @@ export default function VisionAgent() {
             "Content-Type": "application/json",
             Authorization: `Bearer ${token}`,
           },
-          body: JSON.stringify({ message: content }),
+          body: JSON.stringify({ message: content, apps: APPS_PAYLOAD }),
         });
 
         if (!res.ok || !res.body) {
