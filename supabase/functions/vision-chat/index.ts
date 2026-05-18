@@ -1,86 +1,81 @@
-// Vision - Agente especialista do Hub Analytical X
+// Vision - chat com streaming SSE, knowledge dinâmico e memória por usuário
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-const APPS_KNOWLEDGE = `
-APLICATIVOS DISPONÍVEIS NO HUB ANALYTICAL X:
-
-1. Curva ABC, Diagnóstico e Ações (Categoria: Operação)
-   - O que faz: Classifica produtos por importância (classes A, B e C) com base no faturamento/volume, faz diagnóstico de performance e sugere ações estratégicas por classe.
-   - Como usar: Importe a planilha de vendas, escolha o critério (faturamento, margem ou quantidade) e a ferramenta gera automaticamente a classificação + recomendações.
-   - Onde tirar relatórios: Dentro da própria ferramenta, na aba "Diagnóstico" há exportação em Excel/PDF da curva e do plano de ação.
-
-2. Dashboard Fulfillment Estratégico (Categoria: Operação)
-   - O que faz: Painel estratégico para acompanhar e gerir operações de fulfillment (estoque em FBA/Full, giro, cobertura, rupturas).
-   - Como usar: Conecte ou suba o relatório de estoque do marketplace; o painel mostra KPIs de cobertura, dias de estoque e alertas.
-   - Onde tirar relatórios: Aba "Exportar" do dashboard — gera Excel consolidado por SKU/centro de distribuição.
-
-3. AdsEngine (Categoria: Marketing)
-   - O que faz: Gerencia e otimiza campanhas de anúncios (Mercado Livre Ads, Amazon Ads etc.) com inteligência aplicada a ACOS, TACOS e palavras-chave.
-   - Como usar: Importe o relatório de campanhas, a ferramenta sugere lances, palavras negativas e oportunidades.
-   - Onde tirar relatórios: Aba "Relatórios" → exporta performance por campanha, grupo e palavra-chave.
-
-4. Precificação Estratégica (Categoria: Simuladores)
-   - O que faz: Calculadora inteligente para definir preços considerando custo, taxas do marketplace, frete, impostos e margem alvo.
-   - Como usar: Preencha custo do produto, taxas do canal e a margem desejada; a ferramenta devolve o preço sugerido e o lucro líquido.
-   - Onde tirar relatórios: A simulação pode ser baixada em PDF/Excel diretamente da tela de resultado.
-
-5. Gestão de Devolução Inteligente (Categoria: Devoluções)
-   - O que faz: Monitora devoluções, identifica os principais motivos e ajuda a reduzir perdas com base em dados.
-   - Como usar: Suba o relatório de devoluções do canal; a ferramenta categoriza por motivo, SKU e cliente.
-   - Onde tirar relatórios: Aba "Análise" → exporta ranking de motivos e SKUs com mais devolução.
-
-6. Painel Financeiro (Categoria: Relatórios)
-   - O que faz: Análise detalhada de vendas, custos, taxas e rentabilidade da operação.
-   - Como usar: Importe vendas e custos; o painel mostra DRE simplificada, margem por SKU e evolução mensal.
-   - Onde tirar relatórios: Botão "Exportar DRE" na tela principal — gera Excel consolidado.
-
-7. Inteligência de Mercado (Categoria: Relatórios)
-   - O que faz: Analisa tamanho de mercado, concorrência e oportunidades para apoiar decisão estratégica.
-   - Como usar: Informe categoria/nicho; a ferramenta calcula GMV estimado, principais players e share.
-   - Onde tirar relatórios: Tela final tem opção de exportar resumo executivo em PDF.
-
-8. Ponto de Equilíbrio (Categoria: Simuladores)
-   - O que faz: Calcula o ponto de equilíbrio (break-even) da operação — quanto precisa vender para cobrir custos.
-   - Como usar: Informe custos fixos, custo variável e ticket médio; mostra unidades e faturamento mínimo.
-   - Onde tirar relatórios: Resultado pode ser baixado em PDF na própria tela.
-
-9. Conciliação Financeira (Categoria: Relatórios)
-   - O que faz: Automatiza conciliação de repasses dos marketplaces, identifica divergências de taxas, fretes e estornos.
-   - Como usar: Suba o relatório de repasses + relatório de vendas; a ferramenta cruza linha a linha.
-   - Onde tirar relatórios: Aba "Divergências" exporta Excel com tudo que não bateu.
-
-10. Vision X — Especialista em Análise de Anúncios (Categoria: Marketing)
-    - O que faz: Agente de IA especialista em análise de anúncios — avalia títulos, imagens, descrição e sugere melhorias.
-    - Como usar: Cole o link do anúncio ou faça upload das imagens; o agente devolve diagnóstico e plano de ação.
-    - Onde tirar relatórios: O próprio chat gera um resumo que pode ser copiado/baixado.
-`;
-
-const SYSTEM_PROMPT = `Você é a Vision, assistente oficial do Hub Analytical X.
-Seu papel é ajudar usuários a entender e usar as ferramentas hospedadas no Hub.
+const BASE_PROMPT = `Você é o Vision, agente oficial da Analytical X.
+Sua missão: ajudar os usuários do Hub a entender e usar todas as ferramentas hospedadas.
 
 Regras:
-- Responda sempre em português brasileiro, de forma clara, direta e amigável.
-- Use as informações abaixo como única fonte de verdade sobre as ferramentas.
-- Se perguntarem algo fora do escopo do Hub, redirecione gentilmente para o tema.
-- Quando indicar uma ferramenta, diga o nome exato e em que categoria ela está.
-- Se o usuário perguntar onde tirar um relatório, explique passo a passo.
-- Seja objetiva: respostas curtas quando possível, listas quando ajudar.
-
-BASE DE CONHECIMENTO:
-${APPS_KNOWLEDGE}`;
+- Responda em português brasileiro, claro, direto e acolhedor.
+- Use APENAS a BASE DE CONHECIMENTO abaixo como fonte de verdade sobre ferramentas.
+- Se a pergunta estiver fora do escopo do Hub, redirecione gentilmente.
+- Cite o nome exato da ferramenta e a categoria quando indicar uma.
+- Para "onde tirar relatório", explique passo a passo.
+- Quando souber o histórico do usuário, use-o para personalizar a resposta.
+- Seja objetivo: parágrafos curtos, listas quando ajudar.`;
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
-    const { messages } = await req.json();
+    const authHeader = req.headers.get("Authorization") ?? "";
+    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+    const supabaseAnon = Deno.env.get("SUPABASE_ANON_KEY")!;
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY não configurada");
 
-    const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+    // cliente com o JWT do usuário (RLS aplicada)
+    const supabase = createClient(supabaseUrl, supabaseAnon, {
+      global: { headers: { Authorization: authHeader } },
+    });
+
+    const { data: userData, error: userErr } = await supabase.auth.getUser();
+    if (userErr || !userData?.user) {
+      return new Response(JSON.stringify({ error: "Não autenticado" }), {
+        status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+    const userId = userData.user.id;
+
+    const { message } = await req.json();
+    if (!message || typeof message !== "string") {
+      return new Response(JSON.stringify({ error: "message obrigatória" }), {
+        status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    // 1) Carrega base de conhecimento (RLS permite leitura para autenticados)
+    const { data: knowledge } = await supabase
+      .from("vision_knowledge")
+      .select("title, content, app_slug")
+      .order("title");
+
+    const knowledgeBlock = (knowledge ?? [])
+      .map((k) => `### ${k.title}${k.app_slug ? ` (slug: ${k.app_slug})` : ""}\n${k.content}`)
+      .join("\n\n");
+
+    // 2) Carrega últimas 20 mensagens do usuário (memória)
+    const { data: history } = await supabase
+      .from("vision_messages")
+      .select("role, content")
+      .eq("user_id", userId)
+      .order("created_at", { ascending: false })
+      .limit(20);
+
+    const historyAsc = (history ?? []).reverse();
+
+    // 3) Salva a mensagem nova do usuário
+    await supabase.from("vision_messages").insert({
+      user_id: userId, role: "user", content: message,
+    });
+
+    const systemPrompt = `${BASE_PROMPT}\n\nBASE DE CONHECIMENTO:\n${knowledgeBlock}`;
+
+    const aiResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
       headers: {
         Authorization: `Bearer ${LOVABLE_API_KEY}`,
@@ -88,29 +83,84 @@ Deno.serve(async (req) => {
       },
       body: JSON.stringify({
         model: "google/gemini-2.5-flash",
-        messages: [{ role: "system", content: SYSTEM_PROMPT }, ...messages],
+        stream: true,
+        messages: [
+          { role: "system", content: systemPrompt },
+          ...historyAsc,
+          { role: "user", content: message },
+        ],
       }),
     });
 
-    if (response.status === 429) {
-      return new Response(JSON.stringify({ error: "Muitas requisições. Tente novamente em instantes." }), {
+    if (aiResponse.status === 429) {
+      return new Response(JSON.stringify({ error: "Muitas requisições. Aguarde um pouco." }), {
         status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
-    if (response.status === 402) {
-      return new Response(JSON.stringify({ error: "Créditos de IA esgotados. Contate o administrador." }), {
+    if (aiResponse.status === 402) {
+      return new Response(JSON.stringify({ error: "Créditos de IA esgotados. Avise o administrador." }), {
         status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
-    if (!response.ok) {
-      const errText = await response.text();
-      throw new Error(`AI gateway erro: ${response.status} ${errText}`);
+    if (!aiResponse.ok || !aiResponse.body) {
+      const t = await aiResponse.text();
+      throw new Error(`AI gateway erro: ${aiResponse.status} ${t}`);
     }
 
-    const data = await response.json();
-    const reply = data.choices?.[0]?.message?.content ?? "Não consegui responder agora.";
-    return new Response(JSON.stringify({ reply }), {
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    // 4) Faz proxy do SSE para o cliente e acumula o texto para salvar no banco
+    let fullText = "";
+    const reader = aiResponse.body.getReader();
+    const decoder = new TextDecoder();
+    const encoder = new TextEncoder();
+    let buffer = "";
+
+    const stream = new ReadableStream({
+      async start(controller) {
+        try {
+          while (true) {
+            const { done, value } = await reader.read();
+            if (done) break;
+            buffer += decoder.decode(value, { stream: true });
+            const lines = buffer.split("\n");
+            buffer = lines.pop() ?? "";
+            for (const raw of lines) {
+              const line = raw.trim();
+              if (!line.startsWith("data:")) continue;
+              const data = line.slice(5).trim();
+              if (data === "[DONE]") continue;
+              try {
+                const j = JSON.parse(data);
+                const delta = j.choices?.[0]?.delta?.content;
+                if (delta) {
+                  fullText += delta;
+                  controller.enqueue(encoder.encode(`data: ${JSON.stringify({ delta })}\n\n`));
+                }
+              } catch {
+                // ignora linhas inválidas
+              }
+            }
+          }
+          // salva resposta completa
+          if (fullText) {
+            await supabase.from("vision_messages").insert({
+              user_id: userId, role: "assistant", content: fullText,
+            });
+          }
+          controller.enqueue(encoder.encode(`data: [DONE]\n\n`));
+          controller.close();
+        } catch (e) {
+          controller.error(e);
+        }
+      },
+    });
+
+    return new Response(stream, {
+      headers: {
+        ...corsHeaders,
+        "Content-Type": "text/event-stream",
+        "Cache-Control": "no-cache",
+        "Connection": "keep-alive",
+      },
     });
   } catch (e) {
     console.error("vision-chat error", e);
