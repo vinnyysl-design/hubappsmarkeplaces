@@ -5,35 +5,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "@/hooks/use-toast";
-import mammoth from "mammoth";
-// pdfjs-dist em modo legacy para rodar no browser sem worker pesado
-import * as pdfjsLib from "pdfjs-dist";
-import pdfWorker from "pdfjs-dist/build/pdf.worker.min.mjs?url";
-pdfjsLib.GlobalWorkerOptions.workerSrc = pdfWorker;
-
-async function extractTextFromFile(file: File): Promise<string> {
-  const name = file.name.toLowerCase();
-  if (name.endsWith(".txt") || name.endsWith(".md") || file.type.startsWith("text/")) {
-    return await file.text();
-  }
-  if (name.endsWith(".docx") || name.endsWith(".doc")) {
-    const buf = await file.arrayBuffer();
-    const { value } = await mammoth.extractRawText({ arrayBuffer: buf });
-    return value;
-  }
-  if (name.endsWith(".pdf")) {
-    const buf = await file.arrayBuffer();
-    const pdf = await pdfjsLib.getDocument({ data: buf }).promise;
-    let out = "";
-    for (let i = 1; i <= pdf.numPages; i++) {
-      const page = await pdf.getPage(i);
-      const tc = await page.getTextContent();
-      out += tc.items.map((it: any) => it.str).join(" ") + "\n\n";
-    }
-    return out;
-  }
-  throw new Error("Formato não suportado. Use PDF, TXT, DOC ou DOCX.");
-}
 
 type Knowledge = {
   id: string;
@@ -63,16 +34,13 @@ export default function VisionKnowledgePanel() {
     for (const file of files) {
       try {
         if (file.size > 15 * 1024 * 1024) throw new Error("Arquivo maior que 15MB");
-        const raw = await extractTextFromFile(file);
-        const content = raw.replace(/\s+\n/g, "\n").replace(/\n{3,}/g, "\n\n").trim();
-        if (!content) throw new Error("Sem texto extraível");
-        const title = file.name.replace(/\.[^.]+$/, "").slice(0, 120);
-        const { error } = await supabase.from("vision_knowledge").insert({
-          title,
-          app_slug: null,
-          content: content.slice(0, 50000), // limita por segurança
+        const form = new FormData();
+        form.append("file", file);
+        const { data, error } = await supabase.functions.invoke("vision-ingest", {
+          body: form,
         });
-        if (error) throw error;
+        if (error) throw new Error(error.message || "Falha no servidor");
+        if ((data as any)?.error) throw new Error((data as any).error);
         ok++;
       } catch (err) {
         console.error(file.name, err);
