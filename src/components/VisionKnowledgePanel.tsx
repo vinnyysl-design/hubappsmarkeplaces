@@ -193,9 +193,10 @@ export default function VisionKnowledgePanel() {
             <Plus size={14} className="mr-1" /> Novo
           </Button>
         </div>
+      </div>
       <p className="text-xs text-muted-foreground mb-4">
-        Tudo que estiver aqui o Vision usa para responder. Edite, adicione ou remova entradas a
-        qualquer momento — o aprendizado é instantâneo, sem precisar mexer no código.
+        Tudo que estiver aqui o Vision usa para responder. Suba PDF, TXT, DOC ou DOCX, ou edite manualmente.
+        O aprendizado é instantâneo.
       </p>
 
       {(creating || editing) && (
