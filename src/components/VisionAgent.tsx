@@ -1,4 +1,6 @@
 import { useState, useRef, useEffect, useCallback } from "react";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 import { supabase } from "@/integrations/supabase/client";
 import { Send, X, Loader2, Trash2 } from "lucide-react";
 import visionLogo from "@/assets/vision-logo.gif";
