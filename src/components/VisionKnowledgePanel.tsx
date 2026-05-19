@@ -50,6 +50,46 @@ export default function VisionKnowledgePanel() {
   const [creating, setCreating] = useState(false);
   const [form, setForm] = useState({ title: "", app_slug: "", content: "" });
   const [saving, setSaving] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const fileRef = useRef<HTMLInputElement>(null);
+
+  const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files ?? []);
+    if (files.length === 0) return;
+    e.target.value = "";
+    setUploading(true);
+    let ok = 0;
+    let fail = 0;
+    for (const file of files) {
+      try {
+        if (file.size > 15 * 1024 * 1024) throw new Error("Arquivo maior que 15MB");
+        const raw = await extractTextFromFile(file);
+        const content = raw.replace(/\s+\n/g, "\n").replace(/\n{3,}/g, "\n\n").trim();
+        if (!content) throw new Error("Sem texto extraível");
+        const title = file.name.replace(/\.[^.]+$/, "").slice(0, 120);
+        const { error } = await supabase.from("vision_knowledge").insert({
+          title,
+          app_slug: null,
+          content: content.slice(0, 50000), // limita por segurança
+        });
+        if (error) throw error;
+        ok++;
+      } catch (err) {
+        console.error(file.name, err);
+        fail++;
+        toast({
+          title: `Falha em ${file.name}`,
+          description: (err as Error).message,
+          variant: "destructive",
+        });
+      }
+    }
+    setUploading(false);
+    if (ok > 0) {
+      toast({ title: `${ok} arquivo(s) processado(s)`, description: "Vision já aprendeu o conteúdo." });
+      load();
+    }
+  };
 
   const load = async () => {
     setLoading(true);
