@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Loader2, Plus, Pencil, Trash2, Brain, Save, X, Upload } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { FunctionsHttpError } from "@supabase/supabase-js";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -24,6 +25,20 @@ export default function VisionKnowledgePanel() {
   const [uploading, setUploading] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
 
+  const getFunctionErrorMessage = async (error: unknown) => {
+    if (error instanceof FunctionsHttpError) {
+      try {
+        const payload = await error.context.json();
+        if (payload?.error) return payload.error as string;
+      } catch {
+        const text = await error.context.text().catch(() => "");
+        if (text) return text;
+      }
+    }
+
+    return error instanceof Error ? error.message : "Falha no servidor";
+  };
+
   const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files ?? []);
     if (files.length === 0) return;
@@ -39,7 +54,7 @@ export default function VisionKnowledgePanel() {
         const { data, error } = await supabase.functions.invoke("vision-ingest", {
           body: form,
         });
-        if (error) throw new Error(error.message || "Falha no servidor");
+        if (error) throw new Error(await getFunctionErrorMessage(error));
         if ((data as any)?.error) throw new Error((data as any).error);
         ok++;
       } catch (err) {
