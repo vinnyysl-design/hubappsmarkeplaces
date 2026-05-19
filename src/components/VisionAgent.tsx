@@ -209,15 +209,23 @@ export default function VisionAgent() {
             {messages.map((m, i) => (
               <div key={i} className={`flex ${m.role === "user" ? "justify-end" : "justify-start"}`}>
                 <div
-                  className={`max-w-[85%] rounded-2xl px-3.5 py-2 text-sm whitespace-pre-wrap leading-relaxed ${
+                  className={`max-w-[85%] rounded-2xl px-3.5 py-2 text-sm leading-relaxed ${
                     m.role === "user"
-                      ? "bg-primary text-primary-foreground rounded-br-sm"
+                      ? "bg-primary text-primary-foreground rounded-br-sm whitespace-pre-wrap"
                       : "bg-muted text-foreground rounded-bl-sm"
                   }`}
                 >
-                  {m.content || (loading && i === messages.length - 1 ? (
-                    <Loader2 size={14} className="animate-spin" />
-                  ) : "")}
+                  {m.role === "assistant" ? (
+                    m.content ? (
+                      <div className="vision-md space-y-2 [&_p]:leading-relaxed [&_ul]:list-disc [&_ul]:pl-5 [&_ol]:list-decimal [&_ol]:pl-5 [&_li]:my-0.5 [&_strong]:font-semibold [&_strong]:text-foreground [&_h3]:font-semibold [&_h3]:text-sm [&_h3]:mt-1 [&_a]:text-primary [&_a]:underline">
+                        <ReactMarkdown remarkPlugins={[remarkGfm]}>{m.content}</ReactMarkdown>
+                      </div>
+                    ) : (
+                      loading && i === messages.length - 1 ? <Loader2 size={14} className="animate-spin" /> : null
+                    )
+                  ) : (
+                    m.content
+                  )}
                 </div>
               </div>
             ))}
