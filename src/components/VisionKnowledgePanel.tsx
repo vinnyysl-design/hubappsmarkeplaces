@@ -167,10 +167,32 @@ export default function VisionKnowledgePanel() {
           <Brain className="text-primary" size={20} />
           <h2 className="text-lg font-semibold">Conhecimento do Vision</h2>
         </div>
-        <Button size="sm" onClick={startCreate} disabled={creating || !!editing}>
-          <Plus size={14} className="mr-1" /> Novo
-        </Button>
-      </div>
+        <div className="flex items-center gap-2">
+          <input
+            ref={fileRef}
+            type="file"
+            accept=".pdf,.txt,.md,.doc,.docx,application/pdf,text/plain,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+            multiple
+            className="hidden"
+            onChange={handleUpload}
+          />
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={() => fileRef.current?.click()}
+            disabled={uploading || creating || !!editing}
+          >
+            {uploading ? (
+              <Loader2 size={14} className="mr-1 animate-spin" />
+            ) : (
+              <Upload size={14} className="mr-1" />
+            )}
+            Subir arquivo
+          </Button>
+          <Button size="sm" onClick={startCreate} disabled={creating || !!editing || uploading}>
+            <Plus size={14} className="mr-1" /> Novo
+          </Button>
+        </div>
       <p className="text-xs text-muted-foreground mb-4">
         Tudo que estiver aqui o Vision usa para responder. Edite, adicione ou remova entradas a
         qualquer momento — o aprendizado é instantâneo, sem precisar mexer no código.
