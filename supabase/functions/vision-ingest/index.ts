@@ -1,12 +1,54 @@
 // Vision - ingestão de arquivos (PDF, DOCX, DOC, TXT, MD) → vision_knowledge
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-import { extractText, getDocumentProxy } from "https://esm.sh/unpdf@0.12.1";
+import { extractText, getResolvedPDFJS } from "https://esm.sh/unpdf@1.6.2";
 import mammoth from "https://esm.sh/mammoth@1.8.0";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
+
+const normalizeText = (value: string) =>
+  value
+    .replace(/\u0000/g, "")
+    .replace(/\s+\n/g, "\n")
+    .replace(/[ \t]{2,}/g, " ")
+    .replace(/\n{3,}/g, "\n\n")
+    .trim();
+
+async function extractPdfText(buf: ArrayBuffer): Promise<string> {
+  const bytes = new Uint8Array(buf);
+
+  try {
+    const { text } = await extractText(bytes, { mergePages: true });
+    const normalized = normalizeText(typeof text === "string" ? text : text.join("\n\n"));
+    if (normalized) return normalized;
+  } catch (error) {
+    console.error("vision-ingest pdf extractText failed", error);
+  }
+
+  try {
+    const { getDocument } = await getResolvedPDFJS();
+    const pdf = await getDocument(bytes).promise;
+    const pages: string[] = [];
+
+    for (let pageNumber = 1; pageNumber <= pdf.numPages; pageNumber++) {
+      const page = await pdf.getPage(pageNumber);
+      const textContent = await page.getTextContent();
+      const pageText = textContent.items
+        .map((item) => ("str" in item ? item.str : ""))
+        .join(" ");
+
+      const normalized = normalizeText(pageText);
+      if (normalized) pages.push(normalized);
+    }
+
+    return pages.join("\n\n");
+  } catch (error) {
+    console.error("vision-ingest pdf pdfjs fallback failed", error);
+    return "";
+  }
+}
 
 async function extractFromBuffer(name: string, mime: string, buf: ArrayBuffer): Promise<string> {
   const lower = name.toLowerCase();
@@ -18,9 +60,7 @@ async function extractFromBuffer(name: string, mime: string, buf: ArrayBuffer): 
     return value ?? "";
   }
   if (lower.endsWith(".pdf") || mime.includes("pdf")) {
-    const pdf = await getDocumentProxy(new Uint8Array(buf));
-    const { text } = await extractText(pdf, { mergePages: true });
-    return Array.isArray(text) ? text.join("\n\n") : (text ?? "");
+    return extractPdfText(buf);
   }
   throw new Error("Formato não suportado. Use PDF, TXT, MD, DOC ou DOCX.");
 }
@@ -60,11 +100,11 @@ Deno.serve(async (req) => {
 
     const buf = await file.arrayBuffer();
     const raw = await extractFromBuffer(file.name, file.type, buf);
-    const content = raw.replace(/\s+\n/g, "\n").replace(/\n{3,}/g, "\n\n").trim();
+    const content = normalizeText(raw);
 
     if (!content) {
       return new Response(JSON.stringify({
-        error: "Sem texto extraível. O PDF pode ser uma imagem escaneada (precisaria OCR).",
+        error: "Não consegui extrair texto deste arquivo. Se for um PDF escaneado, protegido ou só com imagens, ele precisa de OCR antes do envio.",
       }), { status: 422, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
 
