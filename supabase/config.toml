@@ -3,3 +3,7 @@ project_id = "nhgehigwwxcqsovjzxch"
 [functions.validate-user]
 verify_jwt = false
 
+[functions.app-version]
+verify_jwt = false
+
+
