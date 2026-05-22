@@ -13,6 +13,7 @@ import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import apps from "@/data/apps.json";
 import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
 
 type App = (typeof apps)[number] & { version?: string; whatsNew?: string };
 
@@ -29,21 +30,24 @@ const STORAGE_PREFIX = "hub:lastSeenApps:";
 // Resolved metadata per app: version + whatsNew (remote overrides static).
 type AppMeta = { v: string; u: string; whatsNew?: string };
 
-async function fetchRemoteMeta(app: App): Promise<Partial<AppMeta>> {
-  // Apps "external" são abertos em nova guia (não são iframáveis); evitamos
-  // CORS desnecessário, usamos só os metadados locais.
-  if ((app as any).external) return {};
+async function fetchRemoteMetaBatch(items: App[]): Promise<Record<string, Partial<AppMeta>>> {
+  // Apps "external" são abertos em nova guia; pulamos.
+  const targets = items.filter((a) => !(a as any).external);
+  if (targets.length === 0) return {};
   try {
-    const base = app.url.replace(/\/+$/, "");
-    const res = await fetch(`${base}/version.json`, {
-      cache: "no-store",
-      mode: "cors",
+    const { data, error } = await supabase.functions.invoke("app-version", {
+      body: { urls: targets.map((a) => a.url) },
     });
-    if (!res.ok) return {};
-    const data = await res.json();
-    const out: Partial<AppMeta> = {};
-    if (typeof data?.version === "string") out.v = data.version;
-    if (typeof data?.whatsNew === "string") out.whatsNew = data.whatsNew;
+    if (error || !data?.results) return {};
+    const out: Record<string, Partial<AppMeta>> = {};
+    for (const r of data.results as Array<{ url: string; ok: boolean; data?: any }>) {
+      const app = targets.find((a) => a.url === r.url);
+      if (!app || !r.ok || !r.data) continue;
+      const meta: Partial<AppMeta> = {};
+      if (typeof r.data.version === "string") meta.v = r.data.version;
+      if (typeof r.data.whatsNew === "string") meta.whatsNew = r.data.whatsNew;
+      out[app.slug] = meta;
+    }
     return out;
   } catch {
     return {};
@@ -51,19 +55,21 @@ async function fetchRemoteMeta(app: App): Promise<Partial<AppMeta>> {
 }
 
 async function buildSignatureMap(): Promise<Record<string, AppMeta>> {
-  const entries = await Promise.all(
-    (apps as App[]).map(async (a) => {
-      const remote = await fetchRemoteMeta(a);
+  const list = apps as App[];
+  const remoteMap = await fetchRemoteMetaBatch(list);
+  return Object.fromEntries(
+    list.map((a) => {
+      const remote = remoteMap[a.slug] ?? {};
       const meta: AppMeta = {
         v: remote.v ?? a.version ?? "1.0.0",
         u: a.url,
         whatsNew: remote.whatsNew ?? a.whatsNew,
       };
-      return [a.slug, meta] as const;
+      return [a.slug, meta];
     })
   );
-  return Object.fromEntries(entries);
 }
+
 
 export default function WhatsNewDialog() {
   const { user, loading } = useAuth();
