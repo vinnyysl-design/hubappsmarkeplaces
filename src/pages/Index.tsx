@@ -12,7 +12,6 @@ import WelcomeDialog from "@/components/WelcomeDialog";
 import TermsDialog, { TERMS_VERSION } from "@/components/TermsDialog";
 import VisionAgent from "@/components/VisionAgent";
 import SupportButton from "@/components/SupportButton";
-import InstagramButton from "@/components/InstagramButton";
 import apps from "@/data/apps.json";
 import { usePageViewTracker } from "@/hooks/useTracking";
 import { useAuth } from "@/contexts/AuthContext";
@@ -211,12 +210,23 @@ const Index = () => {
 
         {/* Footer */}
         <footer className="text-center text-muted-foreground text-xs mt-14 pb-6 border-t border-border pt-6">
+          <div className="flex items-center justify-center gap-4 mb-2">
+            <a
+              href="https://www.instagram.com/analytical.x.com.br"
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label="Instagram Analytical X"
+              className="inline-flex items-center gap-1.5 text-muted-foreground hover:text-[#e6683c] transition-colors"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="20" height="20" x="2" y="2" rx="5" ry="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" x2="17.51" y1="6.5" y2="6.5"/></svg>
+              <span>@analytical.x.com.br</span>
+            </a>
+          </div>
           <p>© 2026 Analytical X | Desenvolvido por Vinicius Lima · CNPJ: 47.192.694/0001-70 · Todos os direitos reservados</p>
         </footer>
       </div>
       {!isBlocked && <VisionAgent />}
       <SupportButton phoneNumber={WHATSAPP_NUMBER} />
-      <InstagramButton />
     </div>
   );
 };
