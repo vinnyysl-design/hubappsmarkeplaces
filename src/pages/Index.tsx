@@ -11,9 +11,12 @@ import WhatsNewDialog from "@/components/WhatsNewDialog";
 import WelcomeDialog from "@/components/WelcomeDialog";
 import TermsDialog, { TERMS_VERSION } from "@/components/TermsDialog";
 import VisionAgent from "@/components/VisionAgent";
+import SupportButton from "@/components/SupportButton";
 import apps from "@/data/apps.json";
 import { usePageViewTracker } from "@/hooks/useTracking";
 import { useAuth } from "@/contexts/AuthContext";
+
+const WHATSAPP_NUMBER = "5511999999999"; // TODO: atualizar com número real da empresa
 
 const Index = () => {
   usePageViewTracker();
@@ -211,6 +214,7 @@ const Index = () => {
         </footer>
       </div>
       {!isBlocked && <VisionAgent />}
+      <SupportButton phoneNumber={WHATSAPP_NUMBER} />
     </div>
   );
 };
