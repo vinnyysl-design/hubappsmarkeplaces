@@ -12,7 +12,6 @@ import WelcomeDialog from "@/components/WelcomeDialog";
 import TermsDialog, { TERMS_VERSION } from "@/components/TermsDialog";
 import VisionAgent from "@/components/VisionAgent";
 import SupportButton from "@/components/SupportButton";
-import InstagramButton from "@/components/InstagramButton";
 import apps from "@/data/apps.json";
 import { usePageViewTracker } from "@/hooks/useTracking";
 import { useAuth } from "@/contexts/AuthContext";
