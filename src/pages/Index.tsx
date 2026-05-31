@@ -216,6 +216,7 @@ const Index = () => {
       </div>
       {!isBlocked && <VisionAgent />}
       <SupportButton phoneNumber={WHATSAPP_NUMBER} />
+      <InstagramButton />
     </div>
   );
 };
