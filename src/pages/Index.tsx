@@ -214,6 +214,7 @@ const Index = () => {
         </footer>
       </div>
       {!isBlocked && <VisionAgent />}
+      <SupportButton phoneNumber={WHATSAPP_NUMBER} />
     </div>
   );
 };
