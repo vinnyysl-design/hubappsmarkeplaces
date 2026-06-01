@@ -14,7 +14,12 @@ export default function SupportButton({
 }: SupportButtonProps) {
   const handleClick = () => {
     const encodedMessage = encodeURIComponent(message);
-    const url = `https://wa.me/${phoneNumber}?text=${encodedMessage}`;
+    const isMobile = /Android|iPhone|iPad|iPod|Mobile/i.test(
+      navigator.userAgent
+    );
+    const url = isMobile
+      ? `whatsapp://send?phone=${phoneNumber}&text=${encodedMessage}`
+      : `https://web.whatsapp.com/send?phone=${phoneNumber}&text=${encodedMessage}`;
     window.open(url, "_blank", "noopener,noreferrer");
   };
 
