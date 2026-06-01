@@ -16,7 +16,7 @@ import apps from "@/data/apps.json";
 import { usePageViewTracker } from "@/hooks/useTracking";
 import { useAuth } from "@/contexts/AuthContext";
 
-const WHATSAPP_NUMBER = "5511999999999"; // TODO: atualizar com número real da empresa
+const WHATSAPP_NUMBER = "5511915264364";
 
 const Index = () => {
   usePageViewTracker();
