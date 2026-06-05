@@ -11,6 +11,7 @@ import Auth from "./pages/Auth.tsx";
 import ResetPassword from "./pages/ResetPassword.tsx";
 import Admin from "./pages/Admin.tsx";
 import AppViewer from "./pages/AppViewer.tsx";
+import VerifyPhone from "./pages/VerifyPhone.tsx";
 
 const queryClient = new QueryClient();
 
@@ -24,6 +25,7 @@ const App = () => (
           <Routes>
             <Route path="/auth" element={<Auth />} />
             <Route path="/reset-password" element={<ResetPassword />} />
+            <Route path="/verify-phone" element={<VerifyPhone />} />
             <Route
               path="/"
               element={

@@ -10,7 +10,7 @@ interface Props {
 }
 
 export default function ProtectedRoute({ children, requireAdmin = false, requireActive = false }: Props) {
-  const { isAuthenticated, isAdmin, status, loading } = useAuth();
+  const { isAuthenticated, isAdmin, status, loading, needsPhoneVerification } = useAuth();
   const location = useLocation();
 
   if (loading) {
@@ -23,6 +23,10 @@ export default function ProtectedRoute({ children, requireAdmin = false, require
 
   if (!isAuthenticated) {
     return <Navigate to="/auth" state={{ from: location }} replace />;
+  }
+
+  if (needsPhoneVerification) {
+    return <Navigate to="/verify-phone" replace />;
   }
 
   if (requireAdmin && !isAdmin) {
