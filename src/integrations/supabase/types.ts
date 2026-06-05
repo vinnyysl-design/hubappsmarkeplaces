@@ -14,6 +14,39 @@ export type Database = {
   }
   public: {
     Tables: {
+      otp_codes: {
+        Row: {
+          attempts: number
+          code_hash: string
+          consumed_at: string | null
+          created_at: string
+          expires_at: string
+          id: string
+          phone: string
+          user_id: string
+        }
+        Insert: {
+          attempts?: number
+          code_hash: string
+          consumed_at?: string | null
+          created_at?: string
+          expires_at: string
+          id?: string
+          phone: string
+          user_id: string
+        }
+        Update: {
+          attempts?: number
+          code_hash?: string
+          consumed_at?: string | null
+          created_at?: string
+          expires_at?: string
+          id?: string
+          phone?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       page_views: {
         Row: {
           created_at: string
@@ -92,9 +125,13 @@ export type Database = {
           display_name: string | null
           email: string | null
           id: string
+          phone: string | null
+          phone_verified: boolean
           status: Database["public"]["Enums"]["user_status"]
           terms_accepted_at: string | null
           terms_version: string | null
+          trial_started_at: string | null
+          trial_status: string
           updated_at: string
         }
         Insert: {
@@ -102,9 +139,13 @@ export type Database = {
           display_name?: string | null
           email?: string | null
           id: string
+          phone?: string | null
+          phone_verified?: boolean
           status?: Database["public"]["Enums"]["user_status"]
           terms_accepted_at?: string | null
           terms_version?: string | null
+          trial_started_at?: string | null
+          trial_status?: string
           updated_at?: string
         }
         Update: {
@@ -112,9 +153,13 @@ export type Database = {
           display_name?: string | null
           email?: string | null
           id?: string
+          phone?: string | null
+          phone_verified?: boolean
           status?: Database["public"]["Enums"]["user_status"]
           terms_accepted_at?: string | null
           terms_version?: string | null
+          trial_started_at?: string | null
+          trial_status?: string
           updated_at?: string
         }
         Relationships: []
@@ -245,6 +290,12 @@ export type Database = {
         }
         Returns: boolean
       }
+      is_phone_available: { Args: { _phone: string }; Returns: boolean }
+      mark_phone_verified: {
+        Args: { _phone: string; _user_id: string }
+        Returns: undefined
+      }
+      normalize_phone: { Args: { _phone: string }; Returns: string }
     }
     Enums: {
       app_role: "admin" | "user"
