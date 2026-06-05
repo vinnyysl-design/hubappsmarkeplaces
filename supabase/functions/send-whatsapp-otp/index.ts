@@ -24,6 +24,13 @@ function normalizePhone(p: string): string {
 
 const TWILIO_WHATSAPP_SANDBOX_FROM = "whatsapp:+14155238886";
 
+type TwilioMessageResponse = {
+  sid?: string;
+  status?: string;
+  error_code?: number | null;
+  error_message?: string | null;
+};
+
 async function sha256Hex(input: string): Promise<string> {
   const data = new TextEncoder().encode(input);
   const buf = await crypto.subtle.digest("SHA-256", data);
@@ -144,25 +151,66 @@ Deno.serve(async (req) => {
     });
 
     const text = await response.text();
-    return { ok: response.ok, status: response.status, text, fromAddress };
+
+    let payload: TwilioMessageResponse | null = null;
+    try {
+      payload = JSON.parse(text) as TwilioMessageResponse;
+    } catch {
+      payload = null;
+    }
+
+    const twilioErrorCode = payload?.error_code ?? null;
+    const twilioStatus = payload?.status ?? null;
+    const accepted = response.ok && twilioStatus !== "failed" && twilioErrorCode == null;
+
+    return {
+      ok: accepted,
+      status: response.status,
+      text,
+      fromAddress,
+      payload,
+      twilioErrorCode,
+      twilioStatus,
+    };
   };
 
   let twilioResult = await sendTwilioMessage(from);
 
-  if (!twilioResult.ok && twilioResult.text.includes('"code":63007') && from !== TWILIO_WHATSAPP_SANDBOX_FROM) {
+  if (!twilioResult.ok && twilioResult.twilioErrorCode === 63007 && from !== TWILIO_WHATSAPP_SANDBOX_FROM) {
     console.warn("[send-whatsapp-otp] configured sender not found, retrying with Twilio WhatsApp sandbox");
     twilioResult = await sendTwilioMessage(TWILIO_WHATSAPP_SANDBOX_FROM);
   }
 
   if (!twilioResult.ok) {
-    console.error("[send-whatsapp-otp] twilio error", twilioResult.status, twilioResult.text);
-    return json(502, {
+    console.error(
+      "[send-whatsapp-otp] twilio error",
+      twilioResult.status,
+      twilioResult.twilioErrorCode,
+      twilioResult.twilioStatus,
+      twilioResult.text,
+    );
+
+    if (twilioResult.twilioErrorCode === 63015) {
+      return json(200, {
+        error: "sandbox_join_required",
+        hint:
+          "Esse número ainda não entrou no sandbox do WhatsApp. No WhatsApp do telefone destinatário, envie `join <palavra-chave>` para +1 415 523 8886 e tente novamente. Se a adesão foi feita há mais de 3 dias, é preciso entrar de novo.",
+      });
+    }
+
+    if (twilioResult.twilioErrorCode === 63007) {
+      return json(200, {
+        error: "whatsapp_sender_not_available",
+        hint:
+          "O remetente WhatsApp configurado não existe nesta conta. É preciso usar um sender WhatsApp aprovado ou continuar no sandbox do Twilio.",
+      });
+    }
+
+    return json(200, {
       error: "twilio_error",
       status: twilioResult.status,
       details: twilioResult.text,
-      hint: twilioResult.text.includes('"code":63007')
-        ? "O remetente WhatsApp configurado não existe nesta conta Twilio. Use um sender WhatsApp aprovado ou entre no sandbox do Twilio antes do teste."
-        : undefined,
+      hint: twilioResult.payload?.error_message ?? "O provedor recusou a entrega da mensagem.",
     });
   }
 
