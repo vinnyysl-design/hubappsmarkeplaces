@@ -24,6 +24,14 @@ function normalizePhone(p: string): string {
 
 const TWILIO_WHATSAPP_SANDBOX_FROM = "whatsapp:+14155238886";
 
+type TwilioMessageResponse = {
+  sid?: string;
+  status?: string;
+  code?: number | null;
+  error_code?: number | null;
+  error_message?: string | null;
+};
+
 async function sha256Hex(input: string): Promise<string> {
   const data = new TextEncoder().encode(input);
   const buf = await crypto.subtle.digest("SHA-256", data);
@@ -90,6 +98,7 @@ Deno.serve(async (req) => {
     .from("otp_codes")
     .select("created_at")
     .eq("user_id", userId)
+    .is("consumed_at", null)
     .gte("created_at", new Date(Date.now() - 60_000).toISOString())
     .limit(1);
   if (recent && recent.length > 0) {
@@ -126,6 +135,15 @@ Deno.serve(async (req) => {
 
   const gwUrl = "https://connector-gateway.lovable.dev/twilio/Messages.json";
 
+  const invalidateCurrentCode = async () => {
+    await admin
+      .from("otp_codes")
+      .update({ consumed_at: new Date().toISOString() })
+      .eq("user_id", userId)
+      .eq("phone", phone)
+      .is("consumed_at", null);
+  };
+
   const sendTwilioMessage = async (fromAddress: string) => {
     const form = new URLSearchParams({
       To: to,
@@ -144,25 +162,118 @@ Deno.serve(async (req) => {
     });
 
     const text = await response.text();
-    return { ok: response.ok, status: response.status, text, fromAddress };
+
+    let payload: TwilioMessageResponse | null = null;
+    try {
+      payload = JSON.parse(text) as TwilioMessageResponse;
+    } catch {
+      payload = null;
+    }
+
+    const twilioErrorCode = payload?.error_code ?? payload?.code ?? null;
+    const twilioStatus = payload?.status ?? null;
+    const accepted = response.ok && twilioStatus !== "failed" && twilioErrorCode == null;
+
+    return {
+      ok: accepted,
+      status: response.status,
+      text,
+      fromAddress,
+      payload,
+      twilioErrorCode,
+      twilioStatus,
+    };
+  };
+
+  const waitForTerminalStatus = async (sid: string) => {
+    for (let attempt = 0; attempt < 4; attempt += 1) {
+      const response = await fetch(`https://connector-gateway.lovable.dev/twilio/Messages/${sid}.json`, {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${LOVABLE_API_KEY}`,
+          "X-Connection-Api-Key": TWILIO_API_KEY,
+        },
+      });
+
+      const text = await response.text();
+      let payload: TwilioMessageResponse | null = null;
+      try {
+        payload = JSON.parse(text) as TwilioMessageResponse;
+      } catch {
+        payload = null;
+      }
+
+      const twilioErrorCode = payload?.error_code ?? payload?.code ?? null;
+      const twilioStatus = payload?.status ?? null;
+
+      if (!response.ok || twilioErrorCode != null || twilioStatus === "failed") {
+        return { ok: false, status: response.status, text, payload, twilioErrorCode, twilioStatus };
+      }
+
+      if (twilioStatus && !["queued", "accepted", "sending", "scheduled"].includes(twilioStatus)) {
+        return { ok: true, status: response.status, text, payload, twilioErrorCode, twilioStatus };
+      }
+
+      await new Promise((resolve) => setTimeout(resolve, 1200));
+    }
+
+    return null;
   };
 
   let twilioResult = await sendTwilioMessage(from);
 
-  if (!twilioResult.ok && twilioResult.text.includes('"code":63007') && from !== TWILIO_WHATSAPP_SANDBOX_FROM) {
+  if (!twilioResult.ok && twilioResult.twilioErrorCode === 63007 && from !== TWILIO_WHATSAPP_SANDBOX_FROM) {
     console.warn("[send-whatsapp-otp] configured sender not found, retrying with Twilio WhatsApp sandbox");
     twilioResult = await sendTwilioMessage(TWILIO_WHATSAPP_SANDBOX_FROM);
   }
 
+  if (twilioResult.ok && twilioResult.payload?.sid) {
+    const finalStatus = await waitForTerminalStatus(twilioResult.payload.sid);
+    if (finalStatus && !finalStatus.ok) {
+      twilioResult = {
+        ...twilioResult,
+        ok: false,
+        status: finalStatus.status,
+        text: finalStatus.text,
+        payload: finalStatus.payload,
+        twilioErrorCode: finalStatus.twilioErrorCode,
+        twilioStatus: finalStatus.twilioStatus,
+      };
+    }
+  }
+
   if (!twilioResult.ok) {
-    console.error("[send-whatsapp-otp] twilio error", twilioResult.status, twilioResult.text);
-    return json(502, {
+    await invalidateCurrentCode();
+
+    console.error(
+      "[send-whatsapp-otp] twilio error",
+      twilioResult.status,
+      twilioResult.twilioErrorCode,
+      twilioResult.twilioStatus,
+      twilioResult.text,
+    );
+
+    if (twilioResult.twilioErrorCode === 63015) {
+      return json(200, {
+        error: "sandbox_join_required",
+        hint:
+          "Esse número ainda não entrou no sandbox do WhatsApp. No WhatsApp do telefone destinatário, envie `join <palavra-chave>` para +1 415 523 8886 e tente novamente. Se a adesão foi feita há mais de 3 dias, é preciso entrar de novo.",
+      });
+    }
+
+    if (twilioResult.twilioErrorCode === 63007) {
+      return json(200, {
+        error: "whatsapp_sender_not_available",
+        hint:
+          "O remetente WhatsApp configurado não existe nesta conta. É preciso usar um sender WhatsApp aprovado ou continuar no sandbox do Twilio.",
+      });
+    }
+
+    return json(200, {
       error: "twilio_error",
       status: twilioResult.status,
       details: twilioResult.text,
-      hint: twilioResult.text.includes('"code":63007')
-        ? "O remetente WhatsApp configurado não existe nesta conta Twilio. Use um sender WhatsApp aprovado ou entre no sandbox do Twilio antes do teste."
-        : undefined,
+      hint: twilioResult.payload?.error_message ?? "O provedor recusou a entrega da mensagem.",
     });
   }
 
