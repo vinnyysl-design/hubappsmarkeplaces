@@ -72,6 +72,8 @@ export default function VerifyPhone() {
               ? "Provedor de SMS não configurado. Avise o suporte."
               : code === "invalid_phone"
                 ? "Telefone inválido."
+          : code === "sms_trial_recipient_not_verified"
+                  ? "A conta de SMS está em modo teste e esse número ainda não foi autorizado no provedor."
                 : code === "sms_sender_not_available"
                   ? "Nenhum número SMS está disponível na conta conectada."
                   : (fallbackHint ??

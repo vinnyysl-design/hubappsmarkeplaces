@@ -346,6 +346,14 @@ Deno.serve(async (req) => {
       twilioResult.text,
     );
 
+    if (twilioResult.twilioErrorCode === 21608) {
+      return json(200, {
+        error: "sms_trial_recipient_not_verified",
+        hint:
+          "A conta de SMS está em modo de teste e só pode enviar para números previamente verificados no provedor. Verifique esse telefone na conta do provedor ou ative uma conta paga para liberar envios normais.",
+      });
+    }
+
     return json(200, {
       error: "twilio_error",
       status: twilioResult.status,
