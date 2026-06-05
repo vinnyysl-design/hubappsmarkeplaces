@@ -98,6 +98,7 @@ Deno.serve(async (req) => {
     .from("otp_codes")
     .select("created_at")
     .eq("user_id", userId)
+    .is("consumed_at", null)
     .gte("created_at", new Date(Date.now() - 60_000).toISOString())
     .limit(1);
   if (recent && recent.length > 0) {
