@@ -1,6 +1,6 @@
 // Edge Function: send-whatsapp-otp
 // Gera um código de 6 dígitos, salva hash + expiração na tabela otp_codes,
-// e envia via Twilio WhatsApp para o telefone informado.
+// e envia via SMS pelo Twilio para o telefone informado.
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 
@@ -22,7 +22,13 @@ function normalizePhone(p: string): string {
   return (p || "").replace(/[^0-9]/g, "");
 }
 
-const TWILIO_WHATSAPP_SANDBOX_FROM = "whatsapp:+14155238886";
+function normalizeTwilioPhone(value: string | null | undefined): string | null {
+  if (!value) return null;
+  const stripped = value.replace(/^whatsapp:/i, "").trim();
+  const digits = stripped.replace(/[^0-9]/g, "");
+  if (!digits) return null;
+  return `+${digits}`;
+}
 
 type TwilioMessageResponse = {
   sid?: string;
@@ -41,16 +47,20 @@ async function sha256Hex(input: string): Promise<string> {
 }
 
 Deno.serve(async (req) => {
-  if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
+  if (req.method === "OPTIONS")
+    return new Response("ok", { headers: corsHeaders });
   if (req.method !== "POST") return json(405, { error: "method_not_allowed" });
 
   const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
   const SERVICE_ROLE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
   const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
   const TWILIO_API_KEY = Deno.env.get("TWILIO_API_KEY");
-  const TWILIO_WHATSAPP_FROM = Deno.env.get("TWILIO_WHATSAPP_FROM"); // ex: whatsapp:+14155238886
+  const TWILIO_SMS_FROM = normalizeTwilioPhone(Deno.env.get("TWILIO_SMS_FROM"));
+  const TWILIO_WHATSAPP_FROM = normalizeTwilioPhone(
+    Deno.env.get("TWILIO_WHATSAPP_FROM"),
+  );
 
-  if (!LOVABLE_API_KEY || !TWILIO_API_KEY || !TWILIO_WHATSAPP_FROM) {
+  if (!LOVABLE_API_KEY || !TWILIO_API_KEY) {
     return json(500, { error: "twilio_not_configured" });
   }
 
@@ -62,7 +72,8 @@ Deno.serve(async (req) => {
   const userClient = createClient(SUPABASE_URL, SERVICE_ROLE, {
     global: { headers: { Authorization: `Bearer ${token}` } },
   });
-  const { data: userData, error: userErr } = await userClient.auth.getUser(token);
+  const { data: userData, error: userErr } =
+    await userClient.auth.getUser(token);
   if (userErr || !userData.user) return json(401, { error: "invalid_token" });
   const userId = userData.user.id;
 
@@ -102,7 +113,10 @@ Deno.serve(async (req) => {
     .gte("created_at", new Date(Date.now() - 60_000).toISOString())
     .limit(1);
   if (recent && recent.length > 0) {
-    return json(429, { error: "rate_limited", message: "Aguarde 1 minuto antes de pedir outro código." });
+    return json(429, {
+      error: "rate_limited",
+      message: "Aguarde 1 minuto antes de pedir outro código.",
+    });
   }
 
   // Gera código 6 dígitos
@@ -125,15 +139,13 @@ Deno.serve(async (req) => {
   });
   if (insErr) return json(500, { error: "db_error", message: insErr.message });
 
-  // Envia via Twilio WhatsApp (gateway Lovable)
-  // Garante prefixo "whatsapp:" tanto no From quanto no To (erro 21910 do Twilio)
-  const from = TWILIO_WHATSAPP_FROM.startsWith("whatsapp:")
-    ? TWILIO_WHATSAPP_FROM
-    : `whatsapp:${TWILIO_WHATSAPP_FROM.startsWith("+") ? "" : "+"}${TWILIO_WHATSAPP_FROM}`;
-  const to = `whatsapp:+${phone}`;
+  // Envia via SMS usando um número Twilio com capacidade de SMS.
+  const to = `+${phone}`;
   const msg = `Analytical X: seu código de verificação é ${code}. Expira em 5 minutos. Não compartilhe com ninguém.`;
 
   const gwUrl = "https://connector-gateway.lovable.dev/twilio/Messages.json";
+  const listNumbersUrl =
+    "https://connector-gateway.lovable.dev/twilio/IncomingPhoneNumbers.json?PageSize=20";
 
   const invalidateCurrentCode = async () => {
     await admin
@@ -172,7 +184,10 @@ Deno.serve(async (req) => {
 
     const twilioErrorCode = payload?.error_code ?? payload?.code ?? null;
     const twilioStatus = payload?.status ?? null;
-    const accepted = response.ok && twilioStatus !== "failed" && twilioErrorCode == null;
+    const accepted =
+      response.ok &&
+      !["failed", "undelivered", "canceled"].includes(twilioStatus ?? "") &&
+      twilioErrorCode == null;
 
     return {
       ok: accepted,
@@ -185,15 +200,71 @@ Deno.serve(async (req) => {
     };
   };
 
+  const resolveSmsFromNumber = async () => {
+    const response = await fetch(listNumbersUrl, {
+      method: "GET",
+      headers: {
+        Authorization: `Bearer ${LOVABLE_API_KEY}`,
+        "X-Connection-Api-Key": TWILIO_API_KEY,
+      },
+    });
+
+    const text = await response.text();
+    let payload: {
+      incoming_phone_numbers?: Array<{
+        phone_number?: string | null;
+        capabilities?: { sms?: boolean | null } | null;
+      }>;
+    } | null = null;
+
+    try {
+      payload = JSON.parse(text);
+    } catch {
+      payload = null;
+    }
+
+    if (!response.ok) {
+      return {
+        ok: false,
+        error: "sms_sender_lookup_failed",
+        hint: text || "Não foi possível listar os números SMS da conta.",
+      };
+    }
+
+    const smsNumbers = (payload?.incoming_phone_numbers ?? [])
+      .filter((item) => item.capabilities?.sms && item.phone_number)
+      .map((item) => normalizeTwilioPhone(item.phone_number))
+      .filter((item): item is string => Boolean(item));
+
+    const preferredFrom = [TWILIO_SMS_FROM, TWILIO_WHATSAPP_FROM]
+      .filter((item): item is string => Boolean(item))
+      .find((item) => smsNumbers.includes(item));
+
+    const selectedFrom = preferredFrom ?? smsNumbers[0] ?? null;
+
+    if (!selectedFrom) {
+      return {
+        ok: false,
+        error: "sms_sender_not_available",
+        hint: "Nenhum número com capacidade de SMS foi encontrado na conta conectada.",
+      };
+    }
+
+    return { ok: true, from: selectedFrom };
+  };
+
   const waitForTerminalStatus = async (sid: string) => {
     for (let attempt = 0; attempt < 4; attempt += 1) {
-      const response = await fetch(`https://connector-gateway.lovable.dev/twilio/Messages/${sid}.json`, {
-        method: "GET",
-        headers: {
-          Authorization: `Bearer ${LOVABLE_API_KEY}`,
-          "X-Connection-Api-Key": TWILIO_API_KEY,
+      const response = await fetch(
+        `https://connector-gateway.lovable.dev/twilio/Messages/${sid}.json`,
+        {
+          method: "GET",
+          headers: {
+            Authorization: `Bearer ${LOVABLE_API_KEY}`,
+            "X-Connection-Api-Key": TWILIO_API_KEY,
+          },
         },
-      });
+      );
 
       const text = await response.text();
       let payload: TwilioMessageResponse | null = null;
@@ -206,12 +277,33 @@ Deno.serve(async (req) => {
       const twilioErrorCode = payload?.error_code ?? payload?.code ?? null;
       const twilioStatus = payload?.status ?? null;
 
-      if (!response.ok || twilioErrorCode != null || twilioStatus === "failed") {
-        return { ok: false, status: response.status, text, payload, twilioErrorCode, twilioStatus };
+      if (
+        !response.ok ||
+        twilioErrorCode != null ||
+        ["failed", "undelivered", "canceled"].includes(twilioStatus ?? "")
+      ) {
+        return {
+          ok: false,
+          status: response.status,
+          text,
+          payload,
+          twilioErrorCode,
+          twilioStatus,
+        };
       }
 
-      if (twilioStatus && !["queued", "accepted", "sending", "scheduled"].includes(twilioStatus)) {
-        return { ok: true, status: response.status, text, payload, twilioErrorCode, twilioStatus };
+      if (
+        twilioStatus &&
+        !["queued", "accepted", "sending", "scheduled"].includes(twilioStatus)
+      ) {
+        return {
+          ok: true,
+          status: response.status,
+          text,
+          payload,
+          twilioErrorCode,
+          twilioStatus,
+        };
       }
 
       await new Promise((resolve) => setTimeout(resolve, 1200));
@@ -220,12 +312,13 @@ Deno.serve(async (req) => {
     return null;
   };
 
-  let twilioResult = await sendTwilioMessage(from);
-
-  if (!twilioResult.ok && twilioResult.twilioErrorCode === 63007 && from !== TWILIO_WHATSAPP_SANDBOX_FROM) {
-    console.warn("[send-whatsapp-otp] configured sender not found, retrying with Twilio WhatsApp sandbox");
-    twilioResult = await sendTwilioMessage(TWILIO_WHATSAPP_SANDBOX_FROM);
+  const fromResult = await resolveSmsFromNumber();
+  if (!fromResult.ok) {
+    await invalidateCurrentCode();
+    return json(200, { error: fromResult.error, hint: fromResult.hint });
   }
+
+  const twilioResult = await sendTwilioMessage(fromResult.from);
 
   if (twilioResult.ok && twilioResult.payload?.sid) {
     const finalStatus = await waitForTerminalStatus(twilioResult.payload.sid);
@@ -246,26 +339,18 @@ Deno.serve(async (req) => {
     await invalidateCurrentCode();
 
     console.error(
-      "[send-whatsapp-otp] twilio error",
+      "[send-whatsapp-otp] sms error",
       twilioResult.status,
       twilioResult.twilioErrorCode,
       twilioResult.twilioStatus,
       twilioResult.text,
     );
 
-    if (twilioResult.twilioErrorCode === 63015) {
+    if (twilioResult.twilioErrorCode === 21608) {
       return json(200, {
-        error: "sandbox_join_required",
+        error: "sms_trial_recipient_not_verified",
         hint:
-          "Esse número ainda não entrou no sandbox do WhatsApp. No WhatsApp do telefone destinatário, envie `join <palavra-chave>` para +1 415 523 8886 e tente novamente. Se a adesão foi feita há mais de 3 dias, é preciso entrar de novo.",
-      });
-    }
-
-    if (twilioResult.twilioErrorCode === 63007) {
-      return json(200, {
-        error: "whatsapp_sender_not_available",
-        hint:
-          "O remetente WhatsApp configurado não existe nesta conta. É preciso usar um sender WhatsApp aprovado ou continuar no sandbox do Twilio.",
+          "A conta de SMS está em modo de teste e só pode enviar para números previamente verificados no provedor. Verifique esse telefone na conta do provedor ou ative uma conta paga para liberar envios normais.",
       });
     }
 
@@ -273,7 +358,9 @@ Deno.serve(async (req) => {
       error: "twilio_error",
       status: twilioResult.status,
       details: twilioResult.text,
-      hint: twilioResult.payload?.error_message ?? "O provedor recusou a entrega da mensagem.",
+      hint:
+        twilioResult.payload?.error_message ??
+        "O provedor recusou a entrega da mensagem.",
     });
   }
 

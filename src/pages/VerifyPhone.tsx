@@ -19,7 +19,8 @@ function normalizePhone(p: string) {
 }
 
 export default function VerifyPhone() {
-  const { user, phone, phoneVerified, refreshProfile, logout, loading } = useAuth();
+  const { user, phone, phoneVerified, refreshProfile, logout, loading } =
+    useAuth();
   const navigate = useNavigate();
 
   const [step, setStep] = useState<"phone" | "code">(phone ? "code" : "phone");
@@ -52,27 +53,36 @@ export default function VerifyPhone() {
       return;
     }
     setSending(true);
-    const { data, error } = await supabase.functions.invoke("send-whatsapp-otp", {
-      body: { phone: norm },
-    });
+    const { data, error } = await supabase.functions.invoke(
+      "send-whatsapp-otp",
+      {
+        body: { phone: norm },
+      },
+    );
     setSending(false);
     if (error || (data && data.error)) {
       const code = (data as any)?.error ?? error?.message;
+      const fallbackHint = (data as any)?.hint as string | undefined;
       const msg =
         code === "phone_in_use"
           ? "Este número já está vinculado a uma conta."
           : code === "rate_limited"
-          ? "Aguarde 1 minuto antes de pedir outro código."
-          : code === "twilio_not_configured"
-          ? "Provedor de WhatsApp não configurado. Avise o suporte."
-          : code === "invalid_phone"
-          ? "Telefone inválido."
-          : code === "sandbox_join_required"
-          ? "Esse número ainda não entrou no sandbox do WhatsApp. No seu WhatsApp, envie 'join <palavra-chave>' para +1 415 523 8886 e depois tente novamente."
-          : code === "whatsapp_sender_not_available"
-          ? "O número da empresa ainda não está aprovado como remetente de WhatsApp nesta conta."
-          : "Não foi possível enviar o código. Tente novamente.";
-      toast({ title: "Erro ao enviar", description: msg, variant: "destructive" });
+            ? "Aguarde 1 minuto antes de pedir outro código."
+            : code === "twilio_not_configured"
+              ? "Provedor de SMS não configurado. Avise o suporte."
+              : code === "invalid_phone"
+                ? "Telefone inválido."
+          : code === "sms_trial_recipient_not_verified"
+                  ? "A conta de SMS está em modo teste e esse número ainda não foi autorizado no provedor."
+                : code === "sms_sender_not_available"
+                  ? "Nenhum número SMS está disponível na conta conectada."
+                  : (fallbackHint ??
+                    "Não foi possível enviar o código por SMS. Tente novamente.");
+      toast({
+        title: "Erro ao enviar",
+        description: msg,
+        variant: "destructive",
+      });
       return;
     }
     setSent(true);
@@ -80,7 +90,7 @@ export default function VerifyPhone() {
     setCooldown(60);
     toast({
       title: "Código enviado",
-      description: "Verifique seu WhatsApp. O código expira em 5 minutos.",
+      description: "Verifique seu SMS. O código expira em 5 minutos.",
     });
   };
 
@@ -101,14 +111,14 @@ export default function VerifyPhone() {
         errCode === "invalid_code"
           ? `Código inválido. Tentativas restantes: ${(data as any)?.remaining ?? "?"}`
           : errCode === "code_expired"
-          ? "Código expirado. Solicite outro."
-          : errCode === "too_many_attempts"
-          ? "Muitas tentativas. Solicite um novo código."
-          : errCode === "no_active_code"
-          ? "Nenhum código ativo. Solicite um novo."
-          : errCode === "phone_in_use"
-          ? "Este número já está vinculado a outra conta."
-          : "Falha na verificação. Tente novamente.";
+            ? "Código expirado. Solicite outro."
+            : errCode === "too_many_attempts"
+              ? "Muitas tentativas. Solicite um novo código."
+              : errCode === "no_active_code"
+                ? "Nenhum código ativo. Solicite um novo."
+                : errCode === "phone_in_use"
+                  ? "Este número já está vinculado a outra conta."
+                  : "Falha na verificação. Tente novamente.";
       toast({ title: "Erro", description: msg, variant: "destructive" });
       if (errCode === "code_expired" || errCode === "too_many_attempts") {
         setCode("");
@@ -145,11 +155,11 @@ export default function VerifyPhone() {
               </div>
             </div>
             <h1 className="text-xl font-bold text-foreground">
-              Verificação por WhatsApp
+              Verificação por SMS
             </h1>
             <p className="text-sm text-muted-foreground">
-              Confirme seu número para liberar o acesso e iniciar seu teste de 10
-              dias.
+              Confirme seu número para liberar o acesso e iniciar seu teste de
+              10 dias.
             </p>
           </div>
 
@@ -168,9 +178,13 @@ export default function VerifyPhone() {
                   Inclua o código do país se for fora do Brasil. Apenas números.
                 </p>
               </div>
-              <Button onClick={handleSend} className="w-full" disabled={sending}>
+              <Button
+                onClick={handleSend}
+                className="w-full"
+                disabled={sending}
+              >
                 {sending && <Loader2 className="animate-spin mr-2" size={16} />}
-                Enviar código por WhatsApp
+                Enviar código por SMS
               </Button>
             </div>
           )}
@@ -197,7 +211,9 @@ export default function VerifyPhone() {
                 className="w-full"
                 disabled={verifying || code.length !== 6}
               >
-                {verifying && <Loader2 className="animate-spin mr-2" size={16} />}
+                {verifying && (
+                  <Loader2 className="animate-spin mr-2" size={16} />
+                )}
                 Verificar
               </Button>
               <div className="flex items-center justify-between text-sm">
@@ -217,7 +233,9 @@ export default function VerifyPhone() {
                   disabled={cooldown > 0 || sending}
                   onClick={handleSend}
                 >
-                  {cooldown > 0 ? `Reenviar em ${cooldown}s` : "Reenviar código"}
+                  {cooldown > 0
+                    ? `Reenviar em ${cooldown}s`
+                    : "Reenviar código"}
                 </button>
               </div>
             </div>
