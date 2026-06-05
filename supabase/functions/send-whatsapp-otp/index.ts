@@ -47,7 +47,8 @@ async function sha256Hex(input: string): Promise<string> {
 }
 
 Deno.serve(async (req) => {
-  if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
+  if (req.method === "OPTIONS")
+    return new Response("ok", { headers: corsHeaders });
   if (req.method !== "POST") return json(405, { error: "method_not_allowed" });
 
   const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
@@ -55,7 +56,9 @@ Deno.serve(async (req) => {
   const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
   const TWILIO_API_KEY = Deno.env.get("TWILIO_API_KEY");
   const TWILIO_SMS_FROM = normalizeTwilioPhone(Deno.env.get("TWILIO_SMS_FROM"));
-  const TWILIO_WHATSAPP_FROM = normalizeTwilioPhone(Deno.env.get("TWILIO_WHATSAPP_FROM"));
+  const TWILIO_WHATSAPP_FROM = normalizeTwilioPhone(
+    Deno.env.get("TWILIO_WHATSAPP_FROM"),
+  );
 
   if (!LOVABLE_API_KEY || !TWILIO_API_KEY) {
     return json(500, { error: "twilio_not_configured" });
@@ -69,7 +72,8 @@ Deno.serve(async (req) => {
   const userClient = createClient(SUPABASE_URL, SERVICE_ROLE, {
     global: { headers: { Authorization: `Bearer ${token}` } },
   });
-  const { data: userData, error: userErr } = await userClient.auth.getUser(token);
+  const { data: userData, error: userErr } =
+    await userClient.auth.getUser(token);
   if (userErr || !userData.user) return json(401, { error: "invalid_token" });
   const userId = userData.user.id;
 
@@ -109,7 +113,10 @@ Deno.serve(async (req) => {
     .gte("created_at", new Date(Date.now() - 60_000).toISOString())
     .limit(1);
   if (recent && recent.length > 0) {
-    return json(429, { error: "rate_limited", message: "Aguarde 1 minuto antes de pedir outro código." });
+    return json(429, {
+      error: "rate_limited",
+      message: "Aguarde 1 minuto antes de pedir outro código.",
+    });
   }
 
   // Gera código 6 dígitos
@@ -137,7 +144,8 @@ Deno.serve(async (req) => {
   const msg = `Analytical X: seu código de verificação é ${code}. Expira em 5 minutos. Não compartilhe com ninguém.`;
 
   const gwUrl = "https://connector-gateway.lovable.dev/twilio/Messages.json";
-  const listNumbersUrl = "https://connector-gateway.lovable.dev/twilio/IncomingPhoneNumbers.json?PageSize=20";
+  const listNumbersUrl =
+    "https://connector-gateway.lovable.dev/twilio/IncomingPhoneNumbers.json?PageSize=20";
 
   const invalidateCurrentCode = async () => {
     await admin
@@ -247,13 +255,16 @@ Deno.serve(async (req) => {
 
   const waitForTerminalStatus = async (sid: string) => {
     for (let attempt = 0; attempt < 4; attempt += 1) {
-      const response = await fetch(`https://connector-gateway.lovable.dev/twilio/Messages/${sid}.json`, {
-        method: "GET",
-        headers: {
-          Authorization: `Bearer ${LOVABLE_API_KEY}`,
-          "X-Connection-Api-Key": TWILIO_API_KEY,
+      const response = await fetch(
+        `https://connector-gateway.lovable.dev/twilio/Messages/${sid}.json`,
+        {
+          method: "GET",
+          headers: {
+            Authorization: `Bearer ${LOVABLE_API_KEY}`,
+            "X-Connection-Api-Key": TWILIO_API_KEY,
+          },
         },
-      });
+      );
 
       const text = await response.text();
       let payload: TwilioMessageResponse | null = null;
@@ -266,12 +277,33 @@ Deno.serve(async (req) => {
       const twilioErrorCode = payload?.error_code ?? payload?.code ?? null;
       const twilioStatus = payload?.status ?? null;
 
-      if (!response.ok || twilioErrorCode != null || ["failed", "undelivered", "canceled"].includes(twilioStatus ?? "")) {
-        return { ok: false, status: response.status, text, payload, twilioErrorCode, twilioStatus };
+      if (
+        !response.ok ||
+        twilioErrorCode != null ||
+        ["failed", "undelivered", "canceled"].includes(twilioStatus ?? "")
+      ) {
+        return {
+          ok: false,
+          status: response.status,
+          text,
+          payload,
+          twilioErrorCode,
+          twilioStatus,
+        };
       }
 
-      if (twilioStatus && !["queued", "accepted", "sending", "scheduled"].includes(twilioStatus)) {
-        return { ok: true, status: response.status, text, payload, twilioErrorCode, twilioStatus };
+      if (
+        twilioStatus &&
+        !["queued", "accepted", "sending", "scheduled"].includes(twilioStatus)
+      ) {
+        return {
+          ok: true,
+          status: response.status,
+          text,
+          payload,
+          twilioErrorCode,
+          twilioStatus,
+        };
       }
 
       await new Promise((resolve) => setTimeout(resolve, 1200));
@@ -318,7 +350,9 @@ Deno.serve(async (req) => {
       error: "twilio_error",
       status: twilioResult.status,
       details: twilioResult.text,
-      hint: twilioResult.payload?.error_message ?? "O provedor recusou a entrega da mensagem.",
+      hint:
+        twilioResult.payload?.error_message ??
+        "O provedor recusou a entrega da mensagem.",
     });
   }
 
