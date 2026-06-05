@@ -58,20 +58,19 @@ export default function VerifyPhone() {
     setSending(false);
     if (error || (data && data.error)) {
       const code = (data as any)?.error ?? error?.message;
+      const fallbackHint = (data as any)?.hint as string | undefined;
       const msg =
         code === "phone_in_use"
           ? "Este número já está vinculado a uma conta."
           : code === "rate_limited"
           ? "Aguarde 1 minuto antes de pedir outro código."
           : code === "twilio_not_configured"
-          ? "Provedor de WhatsApp não configurado. Avise o suporte."
+          ? "Provedor de SMS não configurado. Avise o suporte."
           : code === "invalid_phone"
           ? "Telefone inválido."
-          : code === "sandbox_join_required"
-          ? "Esse número ainda não entrou no sandbox do WhatsApp. No seu WhatsApp, envie 'join <palavra-chave>' para +1 415 523 8886 e depois tente novamente."
-          : code === "whatsapp_sender_not_available"
-          ? "O número da empresa ainda não está aprovado como remetente de WhatsApp nesta conta."
-          : "Não foi possível enviar o código. Tente novamente.";
+          : code === "sms_sender_not_available"
+          ? "Nenhum número SMS está disponível na conta conectada."
+          : fallbackHint ?? "Não foi possível enviar o código por SMS. Tente novamente.";
       toast({ title: "Erro ao enviar", description: msg, variant: "destructive" });
       return;
     }
@@ -80,7 +79,7 @@ export default function VerifyPhone() {
     setCooldown(60);
     toast({
       title: "Código enviado",
-      description: "Verifique seu WhatsApp. O código expira em 5 minutos.",
+      description: "Verifique seu SMS. O código expira em 5 minutos.",
     });
   };
 
@@ -145,7 +144,7 @@ export default function VerifyPhone() {
               </div>
             </div>
             <h1 className="text-xl font-bold text-foreground">
-              Verificação por WhatsApp
+              Verificação por SMS
             </h1>
             <p className="text-sm text-muted-foreground">
               Confirme seu número para liberar o acesso e iniciar seu teste de 10
@@ -170,7 +169,7 @@ export default function VerifyPhone() {
               </div>
               <Button onClick={handleSend} className="w-full" disabled={sending}>
                 {sending && <Loader2 className="animate-spin mr-2" size={16} />}
-                Enviar código por WhatsApp
+                Enviar código por SMS
               </Button>
             </div>
           )}
