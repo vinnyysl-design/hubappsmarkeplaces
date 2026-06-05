@@ -67,6 +67,10 @@ export default function VerifyPhone() {
           ? "Provedor de WhatsApp não configurado. Avise o suporte."
           : code === "invalid_phone"
           ? "Telefone inválido."
+          : code === "sandbox_join_required"
+          ? "Esse número ainda não entrou no sandbox do WhatsApp. No seu WhatsApp, envie 'join <palavra-chave>' para +1 415 523 8886 e depois tente novamente."
+          : code === "whatsapp_sender_not_available"
+          ? "O número da empresa ainda não está aprovado como remetente de WhatsApp nesta conta."
           : "Não foi possível enviar o código. Tente novamente.";
       toast({ title: "Erro ao enviar", description: msg, variant: "destructive" });
       return;
