@@ -121,7 +121,7 @@ Deno.serve(async (req) => {
   const gwUrl = "https://connector-gateway.lovable.dev/twilio/Messages.json";
   const form = new URLSearchParams({
     To: to,
-    From: TWILIO_WHATSAPP_FROM,
+    From: from,
     Body: msg,
   });
 
