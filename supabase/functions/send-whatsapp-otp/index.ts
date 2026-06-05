@@ -63,8 +63,12 @@ Deno.serve(async (req) => {
     return json(400, { error: "invalid_json" });
   }
 
-  const phone = normalizePhone(body.phone ?? "");
-  if (phone.length < 10 || phone.length > 15) {
+  let phone = normalizePhone(body.phone ?? "");
+  // Auto-adiciona DDI 55 se for um número BR (10 ou 11 dígitos sem código do país)
+  if ((phone.length === 10 || phone.length === 11) && !phone.startsWith("55")) {
+    phone = "55" + phone;
+  }
+  if (phone.length < 11 || phone.length > 15) {
     return json(400, { error: "invalid_phone" });
   }
 
