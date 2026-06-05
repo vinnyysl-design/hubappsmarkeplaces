@@ -27,6 +27,7 @@ const TWILIO_WHATSAPP_SANDBOX_FROM = "whatsapp:+14155238886";
 type TwilioMessageResponse = {
   sid?: string;
   status?: string;
+  code?: number | null;
   error_code?: number | null;
   error_message?: string | null;
 };
@@ -133,6 +134,15 @@ Deno.serve(async (req) => {
 
   const gwUrl = "https://connector-gateway.lovable.dev/twilio/Messages.json";
 
+  const invalidateCurrentCode = async () => {
+    await admin
+      .from("otp_codes")
+      .update({ consumed_at: new Date().toISOString() })
+      .eq("user_id", userId)
+      .eq("phone", phone)
+      .is("consumed_at", null);
+  };
+
   const sendTwilioMessage = async (fromAddress: string) => {
     const form = new URLSearchParams({
       To: to,
@@ -159,7 +169,7 @@ Deno.serve(async (req) => {
       payload = null;
     }
 
-    const twilioErrorCode = payload?.error_code ?? null;
+    const twilioErrorCode = payload?.error_code ?? payload?.code ?? null;
     const twilioStatus = payload?.status ?? null;
     const accepted = response.ok && twilioStatus !== "failed" && twilioErrorCode == null;
 
@@ -174,6 +184,41 @@ Deno.serve(async (req) => {
     };
   };
 
+  const waitForTerminalStatus = async (sid: string) => {
+    for (let attempt = 0; attempt < 4; attempt += 1) {
+      const response = await fetch(`https://connector-gateway.lovable.dev/twilio/Messages/${sid}.json`, {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${LOVABLE_API_KEY}`,
+          "X-Connection-Api-Key": TWILIO_API_KEY,
+        },
+      });
+
+      const text = await response.text();
+      let payload: TwilioMessageResponse | null = null;
+      try {
+        payload = JSON.parse(text) as TwilioMessageResponse;
+      } catch {
+        payload = null;
+      }
+
+      const twilioErrorCode = payload?.error_code ?? payload?.code ?? null;
+      const twilioStatus = payload?.status ?? null;
+
+      if (!response.ok || twilioErrorCode != null || twilioStatus === "failed") {
+        return { ok: false, status: response.status, text, payload, twilioErrorCode, twilioStatus };
+      }
+
+      if (twilioStatus && !["queued", "accepted", "sending", "scheduled"].includes(twilioStatus)) {
+        return { ok: true, status: response.status, text, payload, twilioErrorCode, twilioStatus };
+      }
+
+      await new Promise((resolve) => setTimeout(resolve, 1200));
+    }
+
+    return null;
+  };
+
   let twilioResult = await sendTwilioMessage(from);
 
   if (!twilioResult.ok && twilioResult.twilioErrorCode === 63007 && from !== TWILIO_WHATSAPP_SANDBOX_FROM) {
@@ -181,7 +226,24 @@ Deno.serve(async (req) => {
     twilioResult = await sendTwilioMessage(TWILIO_WHATSAPP_SANDBOX_FROM);
   }
 
+  if (twilioResult.ok && twilioResult.payload?.sid) {
+    const finalStatus = await waitForTerminalStatus(twilioResult.payload.sid);
+    if (finalStatus && !finalStatus.ok) {
+      twilioResult = {
+        ...twilioResult,
+        ok: false,
+        status: finalStatus.status,
+        text: finalStatus.text,
+        payload: finalStatus.payload,
+        twilioErrorCode: finalStatus.twilioErrorCode,
+        twilioStatus: finalStatus.twilioStatus,
+      };
+    }
+  }
+
   if (!twilioResult.ok) {
+    await invalidateCurrentCode();
+
     console.error(
       "[send-whatsapp-otp] twilio error",
       twilioResult.status,
