@@ -111,6 +111,10 @@ Deno.serve(async (req) => {
   if (insErr) return json(500, { error: "db_error", message: insErr.message });
 
   // Envia via Twilio WhatsApp (gateway Lovable)
+  // Garante prefixo "whatsapp:" tanto no From quanto no To (erro 21910 do Twilio)
+  const from = TWILIO_WHATSAPP_FROM.startsWith("whatsapp:")
+    ? TWILIO_WHATSAPP_FROM
+    : `whatsapp:${TWILIO_WHATSAPP_FROM.startsWith("+") ? "" : "+"}${TWILIO_WHATSAPP_FROM}`;
   const to = `whatsapp:+${phone}`;
   const msg = `Analytical X: seu código de verificação é ${code}. Expira em 5 minutos. Não compartilhe com ninguém.`;
 
