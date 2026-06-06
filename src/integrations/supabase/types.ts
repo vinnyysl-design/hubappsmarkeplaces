@@ -14,6 +14,21 @@ export type Database = {
   }
   public: {
     Tables: {
+      disposable_email_domains: {
+        Row: {
+          created_at: string
+          domain: string
+        }
+        Insert: {
+          created_at?: string
+          domain: string
+        }
+        Update: {
+          created_at?: string
+          domain?: string
+        }
+        Relationships: []
+      }
       otp_codes: {
         Row: {
           attempts: number
@@ -124,6 +139,7 @@ export type Database = {
           created_at: string
           display_name: string | null
           email: string | null
+          email_normalized: string | null
           id: string
           phone: string | null
           phone_verified: boolean
@@ -138,6 +154,7 @@ export type Database = {
           created_at?: string
           display_name?: string | null
           email?: string | null
+          email_normalized?: string | null
           id: string
           phone?: string | null
           phone_verified?: boolean
@@ -152,6 +169,7 @@ export type Database = {
           created_at?: string
           display_name?: string | null
           email?: string | null
+          email_normalized?: string | null
           id?: string
           phone?: string | null
           phone_verified?: boolean
@@ -161,6 +179,36 @@ export type Database = {
           trial_started_at?: string | null
           trial_status?: string
           updated_at?: string
+        }
+        Relationships: []
+      }
+      signup_fingerprints: {
+        Row: {
+          created_at: string
+          email_normalized: string | null
+          fingerprint: string | null
+          id: string
+          ip_address: string | null
+          user_agent: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          email_normalized?: string | null
+          fingerprint?: string | null
+          id?: string
+          ip_address?: string | null
+          user_agent?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          email_normalized?: string | null
+          fingerprint?: string | null
+          id?: string
+          ip_address?: string | null
+          user_agent?: string | null
+          user_id?: string
         }
         Relationships: []
       }
@@ -268,9 +316,24 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      suspicious_accounts: {
+        Row: {
+          account_count: number | null
+          emails: string[] | null
+          fingerprint: string | null
+          first_seen: string | null
+          ips: string[] | null
+          last_seen: string | null
+          user_ids: string[] | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
+      check_fingerprint_duplicate: {
+        Args: { _fingerprint: string }
+        Returns: Json
+      }
       enforce_trial_status: {
         Args: { _user_id: string }
         Returns: {
@@ -295,7 +358,9 @@ export type Database = {
         Args: { _phone: string; _user_id: string }
         Returns: undefined
       }
+      normalize_email: { Args: { _email: string }; Returns: string }
       normalize_phone: { Args: { _phone: string }; Returns: string }
+      validate_signup_email: { Args: { _email: string }; Returns: Json }
     }
     Enums: {
       app_role: "admin" | "user"
