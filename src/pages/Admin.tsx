@@ -150,6 +150,11 @@ export default function Admin() {
           <VisionKnowledgePanel />
         </div>
 
+        <div className="mb-8">
+          <SuspiciousAccountsPanel />
+        </div>
+
+
         <h2 className="text-lg font-semibold mb-3">Usuários</h2>
         <div className="bg-card border border-border rounded-xl overflow-hidden">
           {loading ? (
