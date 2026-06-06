@@ -16,6 +16,7 @@ import { toast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
 import AdminAnalytics from "@/components/AdminAnalytics";
 import VisionKnowledgePanel from "@/components/VisionKnowledgePanel";
+import SuspiciousAccountsPanel from "@/components/SuspiciousAccountsPanel";
 import PaymentsPanel, {
   RegisterPaymentButton,
   getPaymentStatus,
