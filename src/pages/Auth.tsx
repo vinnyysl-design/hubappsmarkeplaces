@@ -135,28 +135,39 @@ export default function Auth() {
     e.preventDefault();
     const nameP = nameSchema.safeParse(signupName);
     const emailP = emailSchema.safeParse(signupEmail);
-    const phoneP = phoneSchema.safeParse(signupPhone);
     const pwP = passwordSchema.safeParse(signupPassword);
-    if (!nameP.success || !emailP.success || !phoneP.success || !pwP.success) {
+    // telefone agora é opcional
+    const phoneP = signupPhone.trim() ? phoneSchema.safeParse(signupPhone) : null;
+    if (
+      !nameP.success ||
+      !emailP.success ||
+      !pwP.success ||
+      (phoneP && !phoneP.success)
+    ) {
       const msg =
         (!nameP.success && nameP.error.issues[0].message) ||
         (!emailP.success && emailP.error.issues[0].message) ||
-        (!phoneP.success && phoneP.error.issues[0].message) ||
+        (phoneP && !phoneP.success && phoneP.error.issues[0].message) ||
         (!pwP.success && pwP.error.issues[0].message);
       toast({ title: "Dados inválidos", description: msg as string, variant: "destructive" });
       return;
     }
     setSubmitting(true);
-    const { error } = await signup(emailP.data, pwP.data, nameP.data, phoneP.data);
+    const { error } = await signup(
+      emailP.data,
+      pwP.data,
+      nameP.data,
+      phoneP?.success ? phoneP.data : undefined
+    );
     setSubmitting(false);
     if (error) {
       toast({ title: "Erro no cadastro", description: error, variant: "destructive" });
       return;
     }
     toast({
-      title: "Cadastro realizado!",
+      title: "Conta criada!",
       description:
-        "Enviamos um email de confirmação. Confirme seu email e faça login.",
+        "Enviamos um link de confirmação para seu email. Confirme para ativar seus 10 dias grátis.",
     });
     setTab("login");
     setLoginEmail(signupEmail);
