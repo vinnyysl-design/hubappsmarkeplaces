@@ -16,6 +16,7 @@ import { toast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
 import AdminAnalytics from "@/components/AdminAnalytics";
 import VisionKnowledgePanel from "@/components/VisionKnowledgePanel";
+import SuspiciousAccountsPanel from "@/components/SuspiciousAccountsPanel";
 import PaymentsPanel, {
   RegisterPaymentButton,
   getPaymentStatus,
@@ -149,6 +150,11 @@ export default function Admin() {
         <div className="mb-8">
           <VisionKnowledgePanel />
         </div>
+
+        <div className="mb-8">
+          <SuspiciousAccountsPanel />
+        </div>
+
 
         <h2 className="text-lg font-semibold mb-3">Usuários</h2>
         <div className="bg-card border border-border rounded-xl overflow-hidden">
