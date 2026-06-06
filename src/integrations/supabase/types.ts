@@ -330,6 +330,10 @@ export type Database = {
       }
     }
     Functions: {
+      activate_trial_after_email_confirm: {
+        Args: { _user_id: string }
+        Returns: undefined
+      }
       check_fingerprint_duplicate: {
         Args: { _fingerprint: string }
         Returns: Json
