@@ -151,6 +151,10 @@ const Index = () => {
             )}
           </div>
         )}
+        {!isBlocked && !isAdmin && trialStatus === "ativo" && trialEndsAt && (() => {
+          const left = Math.max(0, Math.ceil((new Date(trialEndsAt).getTime() - Date.now()) / 86400000));
+          return <TrialBanner daysLeft={left} onSubscribe={handleSubscribe} paying={paying} />;
+        })()}
         <MetricCards total={apps.length} ativos={ativos} beta={beta} categorias={numCategorias} />
 
         {/* Filters */}
