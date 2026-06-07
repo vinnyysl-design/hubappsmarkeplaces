@@ -9,6 +9,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "@/hooks/use-toast";
 import logoSrc from "@/assets/logo-x.png";
+import SupportButton from "@/components/SupportButton";
 
 const emailSchema = z.string().trim().email({ message: "Email inválido" }).max(255);
 const passwordSchema = z
@@ -337,6 +338,7 @@ export default function Auth() {
           </div>
         </div>
       </div>
+      <SupportButton phoneNumber="5511915264364" />
     </div>
   );
 }
