@@ -17,6 +17,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import AdminAnalytics from "@/components/AdminAnalytics";
 import VisionKnowledgePanel from "@/components/VisionKnowledgePanel";
 import SuspiciousAccountsPanel from "@/components/SuspiciousAccountsPanel";
+import TrialUsersPanel from "@/components/TrialUsersPanel";
 import PaymentsPanel, {
   RegisterPaymentButton,
   getPaymentStatus,
