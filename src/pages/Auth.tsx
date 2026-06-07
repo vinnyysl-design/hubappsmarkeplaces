@@ -338,7 +338,7 @@ export default function Auth() {
           </div>
         </div>
       </div>
-      <SupportButton phoneNumber="5511999999999" />
+      <SupportButton phoneNumber="5511915264364" />
     </div>
   );
 }
