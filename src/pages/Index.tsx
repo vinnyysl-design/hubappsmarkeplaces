@@ -12,6 +12,7 @@ import WelcomeDialog from "@/components/WelcomeDialog";
 import TermsDialog, { TERMS_VERSION } from "@/components/TermsDialog";
 import VisionAgent from "@/components/VisionAgent";
 import SupportButton from "@/components/SupportButton";
+import TrialBanner from "@/components/TrialBanner";
 import apps from "@/data/apps.json";
 import { usePageViewTracker } from "@/hooks/useTracking";
 import { useAuth } from "@/contexts/AuthContext";
@@ -20,7 +21,7 @@ const WHATSAPP_NUMBER = "5511915264364";
 
 const Index = () => {
   usePageViewTracker();
-  const { status, isAdmin, refreshProfile, termsAcceptedAt, termsVersion, isAuthenticated } = useAuth();
+  const { status, isAdmin, refreshProfile, termsAcceptedAt, termsVersion, isAuthenticated, trialStatus, trialEndsAt } = useAuth();
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -150,6 +151,10 @@ const Index = () => {
             )}
           </div>
         )}
+        {!isBlocked && !isAdmin && trialStatus === "ativo" && trialEndsAt && (() => {
+          const left = Math.max(0, Math.ceil((new Date(trialEndsAt).getTime() - Date.now()) / 86400000));
+          return <TrialBanner daysLeft={left} onSubscribe={handleSubscribe} paying={paying} />;
+        })()}
         <MetricCards total={apps.length} ativos={ativos} beta={beta} categorias={numCategorias} />
 
         {/* Filters */}

@@ -17,6 +17,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import AdminAnalytics from "@/components/AdminAnalytics";
 import VisionKnowledgePanel from "@/components/VisionKnowledgePanel";
 import SuspiciousAccountsPanel from "@/components/SuspiciousAccountsPanel";
+import TrialUsersPanel from "@/components/TrialUsersPanel";
 import PaymentsPanel, {
   RegisterPaymentButton,
   getPaymentStatus,
@@ -152,8 +153,14 @@ export default function Admin() {
         </div>
 
         <div className="mb-8">
+          <TrialUsersPanel />
+        </div>
+
+        <div className="mb-8">
           <SuspiciousAccountsPanel />
         </div>
+
+
 
 
         <h2 className="text-lg font-semibold mb-3">Usuários</h2>
