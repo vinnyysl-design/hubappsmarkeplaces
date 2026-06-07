@@ -153,8 +153,14 @@ export default function Admin() {
         </div>
 
         <div className="mb-8">
+          <TrialUsersPanel />
+        </div>
+
+        <div className="mb-8">
           <SuspiciousAccountsPanel />
         </div>
+
+
 
 
         <h2 className="text-lg font-semibold mb-3">Usuários</h2>
