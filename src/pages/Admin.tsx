@@ -4,6 +4,12 @@ import { ArrowLeft, Loader2, Shield, ShieldOff } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
+import {
   Table,
   TableBody,
   TableCell,
@@ -137,138 +143,168 @@ export default function Admin() {
           </Button>
         </div>
 
-        <div className="mb-8">
-          <AdminAnalytics />
-        </div>
+        <Accordion type="multiple" className="space-y-4">
+          <AccordionItem value="analytics" className="border border-border rounded-xl px-4 bg-card">
+            <AccordionTrigger className="hover:no-underline text-foreground font-semibold">
+              📊 Resumo / Analytics
+            </AccordionTrigger>
+            <AccordionContent>
+              <AdminAnalytics />
+            </AccordionContent>
+          </AccordionItem>
 
-        <div className="mb-8">
-          <PaymentsPanel
-            onPaymentsLoaded={setPaymentsMap}
-            refreshSignal={paymentsRefresh}
-          />
-        </div>
+          <AccordionItem value="payments" className="border border-border rounded-xl px-4 bg-card">
+            <AccordionTrigger className="hover:no-underline text-foreground font-semibold">
+              💳 Pagamentos
+            </AccordionTrigger>
+            <AccordionContent>
+              <PaymentsPanel
+                onPaymentsLoaded={setPaymentsMap}
+                refreshSignal={paymentsRefresh}
+              />
+            </AccordionContent>
+          </AccordionItem>
 
-        <div className="mb-8">
-          <VisionKnowledgePanel />
-        </div>
+          <AccordionItem value="vision" className="border border-border rounded-xl px-4 bg-card">
+            <AccordionTrigger className="hover:no-underline text-foreground font-semibold">
+              🧠 Base de Conhecimento
+            </AccordionTrigger>
+            <AccordionContent>
+              <VisionKnowledgePanel />
+            </AccordionContent>
+          </AccordionItem>
 
-        <div className="mb-8">
-          <TrialUsersPanel />
-        </div>
+          <AccordionItem value="trial" className="border border-border rounded-xl px-4 bg-card">
+            <AccordionTrigger className="hover:no-underline text-foreground font-semibold">
+              🎁 Usuários em Trial
+            </AccordionTrigger>
+            <AccordionContent>
+              <TrialUsersPanel />
+            </AccordionContent>
+          </AccordionItem>
 
-        <div className="mb-8">
-          <SuspiciousAccountsPanel />
-        </div>
+          <AccordionItem value="suspicious" className="border border-border rounded-xl px-4 bg-card">
+            <AccordionTrigger className="hover:no-underline text-foreground font-semibold">
+              ⚠️ Contas Suspeitas
+            </AccordionTrigger>
+            <AccordionContent>
+              <SuspiciousAccountsPanel />
+            </AccordionContent>
+          </AccordionItem>
 
-
-
-
-        <h2 className="text-lg font-semibold mb-3">Usuários</h2>
-        <div className="bg-card border border-border rounded-xl overflow-hidden">
-          {loading ? (
-            <div className="p-12 flex justify-center">
-              <Loader2 className="animate-spin text-primary" />
-            </div>
-          ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Nome</TableHead>
-                  <TableHead>Email</TableHead>
-                  <TableHead>Cadastrado em</TableHead>
-                  <TableHead>Papel</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Último pagamento</TableHead>
-                  <TableHead>Próx. vencimento</TableHead>
-                  <TableHead className="text-right">Ações</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {rows.map((row) => {
-                  const isAdmin = adminIds.has(row.id);
-                  const isSelf = row.id === currentUser?.id;
-                  const payInfo = paymentsMap[row.id];
-                  const payStatus = getPaymentStatus(payInfo);
-                  return (
-                    <TableRow key={row.id}>
-                      <TableCell className="font-medium">
-                        {row.display_name ?? "—"}
-                        {isSelf && (
-                          <span className="ml-2 text-xs text-muted-foreground">
-                            (você)
-                          </span>
-                        )}
-                      </TableCell>
-                      <TableCell className="text-muted-foreground">
-                        {row.email}
-                      </TableCell>
-                      <TableCell className="text-xs text-muted-foreground whitespace-nowrap">
-                        {new Date(row.created_at).toLocaleDateString("pt-BR")}
-                      </TableCell>
-                      <TableCell>
-                        <Badge variant={isAdmin ? "default" : "secondary"}>
-                          {isAdmin ? "admin" : "user"}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>
-                        <Badge
-                          variant={row.status === "ativo" ? "outline" : "destructive"}
-                        >
-                          {row.status}
-                        </Badge>
-                      </TableCell>
-                      <TableCell className="text-xs whitespace-nowrap">
-                        {formatDateBR(payInfo?.last_paid_at ?? null)}
-                      </TableCell>
-                      <TableCell className="whitespace-nowrap">
-                        <div className="flex flex-col gap-0.5">
-                          <span className="text-xs">
-                            {formatDateBR(payInfo?.next_due_date ?? null)}
-                          </span>
-                          <Badge
-                            variant={payStatus.variant}
-                            className="text-[10px] w-fit"
-                          >
-                            {payStatus.label}
-                          </Badge>
-                        </div>
-                      </TableCell>
-                      <TableCell className="text-right space-x-2 whitespace-nowrap">
-                        <RegisterPaymentButton
-                          userId={row.id}
-                          onRegistered={() =>
-                            setPaymentsRefresh((n) => n + 1)
-                          }
-                        />
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          disabled={savingId === row.id || isSelf}
-                          onClick={() => toggleAdmin(row)}
-                        >
-                          {isAdmin ? (
-                            <ShieldOff size={14} className="mr-1" />
-                          ) : (
-                            <Shield size={14} className="mr-1" />
-                          )}
-                          {isAdmin ? "Remover admin" : "Tornar admin"}
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant={row.status === "ativo" ? "destructive" : "default"}
-                          disabled={savingId === row.id || isSelf}
-                          onClick={() => toggleStatus(row)}
-                        >
-                          {row.status === "ativo" ? "Bloquear" : "Liberar"}
-                        </Button>
-                      </TableCell>
-                    </TableRow>
-                  );
-                })}
-              </TableBody>
-            </Table>
-          )}
-        </div>
+          <AccordionItem value="users" className="border border-border rounded-xl px-4 bg-card">
+            <AccordionTrigger className="hover:no-underline text-foreground font-semibold">
+              👥 Todos os Usuários
+            </AccordionTrigger>
+            <AccordionContent>
+              <div className="bg-card border border-border rounded-xl overflow-hidden -mx-4">
+                {loading ? (
+                  <div className="p-12 flex justify-center">
+                    <Loader2 className="animate-spin text-primary" />
+                  </div>
+                ) : (
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Nome</TableHead>
+                        <TableHead>Email</TableHead>
+                        <TableHead>Cadastrado em</TableHead>
+                        <TableHead>Papel</TableHead>
+                        <TableHead>Status</TableHead>
+                        <TableHead>Último pagamento</TableHead>
+                        <TableHead>Próx. vencimento</TableHead>
+                        <TableHead className="text-right">Ações</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {rows.map((row) => {
+                        const isAdmin = adminIds.has(row.id);
+                        const isSelf = row.id === currentUser?.id;
+                        const payInfo = paymentsMap[row.id];
+                        const payStatus = getPaymentStatus(payInfo);
+                        return (
+                          <TableRow key={row.id}>
+                            <TableCell className="font-medium">
+                              {row.display_name ?? "—"}
+                              {isSelf && (
+                                <span className="ml-2 text-xs text-muted-foreground">
+                                  (você)
+                                </span>
+                              )}
+                            </TableCell>
+                            <TableCell className="text-muted-foreground">
+                              {row.email}
+                            </TableCell>
+                            <TableCell className="text-xs text-muted-foreground whitespace-nowrap">
+                              {new Date(row.created_at).toLocaleDateString("pt-BR")}
+                            </TableCell>
+                            <TableCell>
+                              <Badge variant={isAdmin ? "default" : "secondary"}>
+                                {isAdmin ? "admin" : "user"}
+                              </Badge>
+                            </TableCell>
+                            <TableCell>
+                              <Badge
+                                variant={row.status === "ativo" ? "outline" : "destructive"}
+                              >
+                                {row.status}
+                              </Badge>
+                            </TableCell>
+                            <TableCell className="text-xs whitespace-nowrap">
+                              {formatDateBR(payInfo?.last_paid_at ?? null)}
+                            </TableCell>
+                            <TableCell className="whitespace-nowrap">
+                              <div className="flex flex-col gap-0.5">
+                                <span className="text-xs">
+                                  {formatDateBR(payInfo?.next_due_date ?? null)}
+                                </span>
+                                <Badge
+                                  variant={payStatus.variant}
+                                  className="text-[10px] w-fit"
+                                >
+                                  {payStatus.label}
+                                </Badge>
+                              </div>
+                            </TableCell>
+                            <TableCell className="text-right space-x-2 whitespace-nowrap">
+                              <RegisterPaymentButton
+                                userId={row.id}
+                                onRegistered={() =>
+                                  setPaymentsRefresh((n) => n + 1)
+                                }
+                              />
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                disabled={savingId === row.id || isSelf}
+                                onClick={() => toggleAdmin(row)}
+                              >
+                                {isAdmin ? (
+                                  <ShieldOff size={14} className="mr-1" />
+                                ) : (
+                                  <Shield size={14} className="mr-1" />
+                                )}
+                                {isAdmin ? "Remover admin" : "Tornar admin"}
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant={row.status === "ativo" ? "destructive" : "default"}
+                                disabled={savingId === row.id || isSelf}
+                                onClick={() => toggleStatus(row)}
+                              >
+                                {row.status === "ativo" ? "Bloquear" : "Liberar"}
+                              </Button>
+                            </TableCell>
+                          </TableRow>
+                        );
+                      })}
+                    </TableBody>
+                  </Table>
+                )}
+              </div>
+            </AccordionContent>
+          </AccordionItem>
+        </Accordion>
       </div>
     </div>
   );
