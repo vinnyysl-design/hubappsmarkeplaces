@@ -276,6 +276,22 @@ export default function Admin() {
                                 {row.status}
                               </Badge>
                             </TableCell>
+                            <TableCell>
+                              <Select
+                                value={row.plan}
+                                onValueChange={(v) => changePlan(row, v as PlanType)}
+                                disabled={savingId === row.id}
+                              >
+                                <SelectTrigger className="h-8 w-[110px] text-xs">
+                                  <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="trial">Trial</SelectItem>
+                                  <SelectItem value="pagante">Pagante</SelectItem>
+                                  <SelectItem value="cortesia">Cortesia</SelectItem>
+                                </SelectContent>
+                              </Select>
+                            </TableCell>
                             <TableCell className="text-xs whitespace-nowrap">
                               {formatDateBR(payInfo?.last_paid_at ?? null)}
                             </TableCell>
