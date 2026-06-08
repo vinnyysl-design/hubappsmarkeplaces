@@ -21,7 +21,7 @@ const WHATSAPP_NUMBER = "5511915264364";
 
 const Index = () => {
   usePageViewTracker();
-  const { status, isAdmin, refreshProfile, termsAcceptedAt, termsVersion, isAuthenticated, trialStatus, trialEndsAt } = useAuth();
+  const { status, isAdmin, refreshProfile, termsAcceptedAt, termsVersion, isAuthenticated, trialStatus, trialEndsAt, plan } = useAuth();
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -151,7 +151,7 @@ const Index = () => {
             )}
           </div>
         )}
-        {!isBlocked && !isAdmin && trialStatus === "ativo" && trialEndsAt && (() => {
+        {!isBlocked && !isAdmin && plan === "trial" && trialStatus === "ativo" && trialEndsAt && (() => {
           const left = Math.max(0, Math.ceil((new Date(trialEndsAt).getTime() - Date.now()) / 86400000));
           return <TrialBanner daysLeft={left} onSubscribe={handleSubscribe} paying={paying} />;
         })()}

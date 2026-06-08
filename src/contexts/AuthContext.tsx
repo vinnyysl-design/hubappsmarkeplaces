@@ -18,6 +18,7 @@ import { validateAccess } from "@/services/api";
 export type UserStatus = "ativo" | "bloqueado";
 export type AppRole = "admin" | "user";
 export type TrialStatus = "pendente" | "ativo" | "expirado";
+export type UserPlan = "trial" | "pagante" | "cortesia";
 
 interface AuthContextValue {
   user: User | null;
@@ -31,6 +32,7 @@ interface AuthContextValue {
   trialStatus: TrialStatus | null;
   trialStartedAt: string | null;
   trialEndsAt: string | null;
+  plan: UserPlan | null;
   emailConfirmed: boolean;
   needsEmailVerification: boolean;
   /** @deprecated mantido por compatibilidade — agora reflete needsEmailVerification */
@@ -82,6 +84,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [trialStatus, setTrialStatus] = useState<TrialStatus | null>(null);
   const [trialStartedAt, setTrialStartedAt] = useState<string | null>(null);
   const [trialEndsAt, setTrialEndsAt] = useState<string | null>(null);
+  const [plan, setPlan] = useState<UserPlan | null>(null);
   const [loading, setLoading] = useState(true);
 
   const loadProfile = useCallback(async (uid: string, emailConfirmed: boolean) => {
@@ -100,7 +103,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       supabase
         .from("profiles")
         .select(
-          "status, terms_accepted_at, terms_version, phone, phone_verified, trial_status, trial_started_at"
+          "status, terms_accepted_at, terms_version, phone, phone_verified, trial_status, trial_started_at, plan"
         )
         .eq("id", uid)
         .maybeSingle(),
@@ -118,6 +121,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setPhoneVerified(Boolean((profile as any)?.phone_verified));
     setTrialStatus(((profile as any)?.trial_status as TrialStatus) ?? null);
     setTrialStartedAt((profile as any)?.trial_started_at ?? null);
+    setPlan(((profile as any)?.plan as UserPlan) ?? null);
   }, []);
 
   useEffect(() => {
@@ -318,6 +322,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         trialStatus,
         trialStartedAt,
         trialEndsAt,
+        plan,
         emailConfirmed,
         needsEmailVerification,
         needsPhoneVerification: needsEmailVerification,

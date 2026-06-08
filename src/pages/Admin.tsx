@@ -18,6 +18,13 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { toast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
 import AdminAnalytics from "@/components/AdminAnalytics";
@@ -37,7 +44,10 @@ interface ProfileRow {
   display_name: string | null;
   status: "ativo" | "bloqueado";
   created_at: string;
+  plan: "trial" | "pagante" | "cortesia";
 }
+
+type PlanType = "trial" | "pagante" | "cortesia";
 
 export default function Admin() {
   const { user: currentUser } = useAuth();
@@ -54,7 +64,7 @@ export default function Admin() {
       await Promise.all([
         supabase
           .from("profiles")
-          .select("id,email,display_name,status,created_at")
+          .select("id,email,display_name,status,created_at,plan")
           .order("created_at", { ascending: false }),
         supabase.from("user_roles").select("user_id,role").eq("role", "admin"),
       ]);
@@ -65,7 +75,7 @@ export default function Admin() {
         variant: "destructive",
       });
     } else {
-      setRows(profiles ?? []);
+      setRows((profiles as ProfileRow[]) ?? []);
       setAdminIds(new Set((roles ?? []).map((r) => r.user_id)));
     }
     setLoading(false);
@@ -120,6 +130,21 @@ export default function Admin() {
       }
     }
     setSavingId(null);
+  };
+
+  const changePlan = async (row: ProfileRow, next: PlanType) => {
+    setSavingId(row.id);
+    const { error } = await supabase
+      .from("profiles")
+      .update({ plan: next })
+      .eq("id", row.id);
+    setSavingId(null);
+    if (error) {
+      toast({ title: "Erro", description: error.message, variant: "destructive" });
+      return;
+    }
+    setRows((prev) => prev.map((r) => (r.id === row.id ? { ...r, plan: next } : r)));
+    toast({ title: "Plano atualizado", description: `${row.email}: ${next}` });
   };
 
   return (
@@ -211,6 +236,7 @@ export default function Admin() {
                         <TableHead>Cadastrado em</TableHead>
                         <TableHead>Papel</TableHead>
                         <TableHead>Status</TableHead>
+                        <TableHead>Plano</TableHead>
                         <TableHead>Último pagamento</TableHead>
                         <TableHead>Próx. vencimento</TableHead>
                         <TableHead className="text-right">Ações</TableHead>
@@ -249,6 +275,22 @@ export default function Admin() {
                               >
                                 {row.status}
                               </Badge>
+                            </TableCell>
+                            <TableCell>
+                              <Select
+                                value={row.plan}
+                                onValueChange={(v) => changePlan(row, v as PlanType)}
+                                disabled={savingId === row.id}
+                              >
+                                <SelectTrigger className="h-8 w-[110px] text-xs">
+                                  <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="trial">Trial</SelectItem>
+                                  <SelectItem value="pagante">Pagante</SelectItem>
+                                  <SelectItem value="cortesia">Cortesia</SelectItem>
+                                </SelectContent>
+                              </Select>
                             </TableCell>
                             <TableCell className="text-xs whitespace-nowrap">
                               {formatDateBR(payInfo?.last_paid_at ?? null)}
