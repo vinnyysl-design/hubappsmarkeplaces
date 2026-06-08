@@ -143,6 +143,7 @@ export type Database = {
           id: string
           phone: string | null
           phone_verified: boolean
+          plan: Database["public"]["Enums"]["user_plan"]
           status: Database["public"]["Enums"]["user_status"]
           terms_accepted_at: string | null
           terms_version: string | null
@@ -158,6 +159,7 @@ export type Database = {
           id: string
           phone?: string | null
           phone_verified?: boolean
+          plan?: Database["public"]["Enums"]["user_plan"]
           status?: Database["public"]["Enums"]["user_status"]
           terms_accepted_at?: string | null
           terms_version?: string | null
@@ -173,6 +175,7 @@ export type Database = {
           id?: string
           phone?: string | null
           phone_verified?: boolean
+          plan?: Database["public"]["Enums"]["user_plan"]
           status?: Database["public"]["Enums"]["user_status"]
           terms_accepted_at?: string | null
           terms_version?: string | null
@@ -368,6 +371,7 @@ export type Database = {
     }
     Enums: {
       app_role: "admin" | "user"
+      user_plan: "trial" | "pagante" | "cortesia"
       user_status: "ativo" | "bloqueado"
     }
     CompositeTypes: {
@@ -497,6 +501,7 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["admin", "user"],
+      user_plan: ["trial", "pagante", "cortesia"],
       user_status: ["ativo", "bloqueado"],
     },
   },
