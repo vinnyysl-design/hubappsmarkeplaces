@@ -125,6 +125,21 @@ export default function Admin() {
     setSavingId(null);
   };
 
+  const changePlan = async (row: ProfileRow, next: PlanType) => {
+    setSavingId(row.id);
+    const { error } = await supabase
+      .from("profiles")
+      .update({ plan: next })
+      .eq("id", row.id);
+    setSavingId(null);
+    if (error) {
+      toast({ title: "Erro", description: error.message, variant: "destructive" });
+      return;
+    }
+    setRows((prev) => prev.map((r) => (r.id === row.id ? { ...r, plan: next } : r)));
+    toast({ title: "Plano atualizado", description: `${row.email}: ${next}` });
+  };
+
   return (
     <div className="min-h-screen bg-background">
       <div className="max-w-6xl mx-auto px-4 py-8">
