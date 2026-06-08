@@ -21,7 +21,7 @@ const WHATSAPP_NUMBER = "5511915264364";
 
 const Index = () => {
   usePageViewTracker();
-  const { status, isAdmin, refreshProfile, termsAcceptedAt, termsVersion, isAuthenticated, trialStatus, trialEndsAt } = useAuth();
+  const { status, isAdmin, refreshProfile, termsAcceptedAt, termsVersion, isAuthenticated, trialStatus, trialEndsAt, plan } = useAuth();
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
