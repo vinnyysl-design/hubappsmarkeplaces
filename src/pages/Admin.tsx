@@ -37,7 +37,10 @@ interface ProfileRow {
   display_name: string | null;
   status: "ativo" | "bloqueado";
   created_at: string;
+  plan: "trial" | "pagante" | "cortesia";
 }
+
+type PlanType = "trial" | "pagante" | "cortesia";
 
 export default function Admin() {
   const { user: currentUser } = useAuth();
