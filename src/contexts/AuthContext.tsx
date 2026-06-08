@@ -322,6 +322,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         trialStatus,
         trialStartedAt,
         trialEndsAt,
+        plan,
         emailConfirmed,
         needsEmailVerification,
         needsPhoneVerification: needsEmailVerification,
