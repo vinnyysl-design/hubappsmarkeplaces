@@ -37,7 +37,8 @@ export default function TrialUsersPanel() {
     setLoading(true);
     const { data } = await supabase
       .from("profiles")
-      .select("id,email,display_name,trial_started_at,trial_status,status")
+      .select("id,email,display_name,trial_started_at,trial_status,status,plan")
+      .eq("plan", "trial")
       .in("trial_status", ["ativo", "pendente", "expirado"])
       .order("trial_started_at", { ascending: false, nullsFirst: false });
     setRows((data as any) ?? []);
