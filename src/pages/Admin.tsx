@@ -236,6 +236,7 @@ export default function Admin() {
                         <TableHead>Cadastrado em</TableHead>
                         <TableHead>Papel</TableHead>
                         <TableHead>Status</TableHead>
+                        <TableHead>Plano</TableHead>
                         <TableHead>Último pagamento</TableHead>
                         <TableHead>Próx. vencimento</TableHead>
                         <TableHead className="text-right">Ações</TableHead>
