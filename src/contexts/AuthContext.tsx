@@ -18,6 +18,7 @@ import { validateAccess } from "@/services/api";
 export type UserStatus = "ativo" | "bloqueado";
 export type AppRole = "admin" | "user";
 export type TrialStatus = "pendente" | "ativo" | "expirado";
+export type UserPlan = "trial" | "pagante" | "cortesia";
 
 interface AuthContextValue {
   user: User | null;
