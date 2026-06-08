@@ -32,6 +32,7 @@ interface AuthContextValue {
   trialStatus: TrialStatus | null;
   trialStartedAt: string | null;
   trialEndsAt: string | null;
+  plan: UserPlan | null;
   emailConfirmed: boolean;
   needsEmailVerification: boolean;
   /** @deprecated mantido por compatibilidade — agora reflete needsEmailVerification */
