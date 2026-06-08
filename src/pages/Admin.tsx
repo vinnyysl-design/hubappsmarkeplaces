@@ -68,7 +68,7 @@ export default function Admin() {
         variant: "destructive",
       });
     } else {
-      setRows(profiles ?? []);
+      setRows((profiles as ProfileRow[]) ?? []);
       setAdminIds(new Set((roles ?? []).map((r) => r.user_id)));
     }
     setLoading(false);
