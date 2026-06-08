@@ -103,7 +103,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       supabase
         .from("profiles")
         .select(
-          "status, terms_accepted_at, terms_version, phone, phone_verified, trial_status, trial_started_at"
+          "status, terms_accepted_at, terms_version, phone, phone_verified, trial_status, trial_started_at, plan"
         )
         .eq("id", uid)
         .maybeSingle(),
@@ -121,6 +121,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setPhoneVerified(Boolean((profile as any)?.phone_verified));
     setTrialStatus(((profile as any)?.trial_status as TrialStatus) ?? null);
     setTrialStartedAt((profile as any)?.trial_started_at ?? null);
+    setPlan(((profile as any)?.plan as UserPlan) ?? null);
   }, []);
 
   useEffect(() => {
