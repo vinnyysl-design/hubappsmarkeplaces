@@ -84,6 +84,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [trialStatus, setTrialStatus] = useState<TrialStatus | null>(null);
   const [trialStartedAt, setTrialStartedAt] = useState<string | null>(null);
   const [trialEndsAt, setTrialEndsAt] = useState<string | null>(null);
+  const [plan, setPlan] = useState<UserPlan | null>(null);
   const [loading, setLoading] = useState(true);
 
   const loadProfile = useCallback(async (uid: string, emailConfirmed: boolean) => {
