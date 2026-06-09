@@ -158,6 +158,7 @@ const Index = () => {
         })()}
         {!isBlocked && !isAdmin && plan === "pagante" && trialEndsAt && (() => {
           const left = Math.max(0, Math.ceil((new Date(trialEndsAt).getTime() - Date.now()) / 86400000));
+          if (left > 5) return null;
           return <RenewalBanner daysLeft={left} dueDateISO={trialEndsAt} onSubscribe={handleSubscribe} paying={paying} />;
         })()}
         <MetricCards total={apps.length} ativos={ativos} beta={beta} categorias={numCategorias} />
