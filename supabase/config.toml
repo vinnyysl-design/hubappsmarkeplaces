@@ -1,12 +1,11 @@
 project_id = "nhgehigwwxcqsovjzxch"
 
-[functions.validate-user]
-verify_jwt = false
-
-[functions.app-version]
-verify_jwt = false
-
-
-
-[functions.process-email-queue]
-verify_jwt = true
+[functions]
+  [functions.app-version]
+    verify_jwt = false
+  [functions.auth-email-hook]
+    verify_jwt = false
+  [functions.process-email-queue]
+    verify_jwt = true
+  [functions.validate-user]
+    verify_jwt = false
