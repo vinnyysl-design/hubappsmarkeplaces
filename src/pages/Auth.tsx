@@ -334,7 +334,7 @@ export default function Auth() {
           </Tabs>
 
           <div className="pt-4 border-t border-border text-center text-xs text-muted-foreground">
-            <p>© 2026 Analytical X · Vinicius Lima</p>
+            <p>© 2026 Analytical X · Todos os direitos reservados</p>
           </div>
         </div>
       </div>
