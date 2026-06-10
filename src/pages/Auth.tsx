@@ -208,7 +208,7 @@ export default function Auth() {
               <img
                 src={logoSrc}
                 alt="Analytical X"
-                className="h-28 w-auto object-contain"
+                className="h-[50px] w-[50px] object-contain"
               />
             </div>
             <BrandTitle />
