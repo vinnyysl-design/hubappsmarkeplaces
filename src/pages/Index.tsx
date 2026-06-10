@@ -233,7 +233,7 @@ const Index = () => {
               <span>@analytical.x.com.br</span>
             </a>
           </div>
-          <p>© 2026 Analytical X | Desenvolvido por Vinicius Lima · CNPJ: 47.192.694/0001-70 · Todos os direitos reservados</p>
+          <p>© 2026 Analytical X · Todos os direitos reservados</p>
         </footer>
       </div>
       {!isBlocked && <VisionAgent />}
