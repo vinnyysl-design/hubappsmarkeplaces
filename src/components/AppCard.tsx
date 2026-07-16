@@ -1,4 +1,4 @@
-import { ExternalLink, BarChart3, Package, Rocket, DollarSign, RotateCcw, Landmark, ArrowUpRight, Lock, Eye } from "lucide-react";
+import { ExternalLink, BarChart3, Package, Rocket, DollarSign, RotateCcw, Landmark, ArrowUpRight, Lock, Eye, Image as ImageIcon } from "lucide-react";
 import { Link } from "react-router-dom";
 import { trackToolClick } from "@/hooks/useTracking";
 import { useAuth } from "@/contexts/AuthContext";
@@ -14,6 +14,7 @@ interface App {
   github: string;
   icone: string;
   external?: boolean;
+  sso?: boolean;
 }
 
 const iconMap: Record<string, React.ReactNode> = {
@@ -26,6 +27,7 @@ const iconMap: Record<string, React.ReactNode> = {
   "⚖️": <BarChart3 size={22} />,
   "📊": <BarChart3 size={22} />,
   "👁️": <Eye size={22} />,
+  "🎨": <ImageIcon size={22} />,
 };
 
 const TERMS_VERSION = "1.0";

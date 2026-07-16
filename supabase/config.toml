@@ -9,3 +9,5 @@ project_id = "nhgehigwwxcqsovjzxch"
     verify_jwt = true
   [functions.validate-user]
     verify_jwt = false
+  [functions.sso-image-generator]
+    verify_jwt = true

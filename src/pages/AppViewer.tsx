@@ -1,9 +1,10 @@
-import { useEffect, useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useParams, Link, Navigate } from "react-router-dom";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Loader2 } from "lucide-react";
 import apps from "@/data/apps.json";
 import { useAuth } from "@/contexts/AuthContext";
 import { trackToolClick } from "@/hooks/useTracking";
+import { supabase } from "@/integrations/supabase/client";
 
 interface App {
   slug: string;
@@ -15,6 +16,7 @@ interface App {
   url: string;
   github: string;
   icone: string;
+  sso?: boolean;
 }
 
 const AppViewer = () => {
@@ -25,6 +27,10 @@ const AppViewer = () => {
     () => (apps as App[]).find((a) => a.slug === slug),
     [slug]
   );
+
+  const [ssoUrl, setSsoUrl] = useState<string | null>(null);
+  const [ssoError, setSsoError] = useState<string | null>(null);
+  const [ssoLoading, setSsoLoading] = useState(false);
 
   useEffect(() => {
     if (app) {
@@ -38,10 +44,39 @@ const AppViewer = () => {
     }
   }, [app, user?.id]);
 
+  useEffect(() => {
+    if (!app?.sso) return;
+    let cancelled = false;
+    setSsoLoading(true);
+    setSsoError(null);
+    (async () => {
+      const { data, error } = await supabase.functions.invoke(
+        "sso-image-generator",
+        { body: {} }
+      );
+      if (cancelled) return;
+      if (error || !data?.url) {
+        console.error("[sso-image-generator]", error, data);
+        setSsoError(
+          data?.error === "user_blocked"
+            ? "Sua conta está bloqueada. Regularize sua assinatura para acessar."
+            : "Não foi possível gerar o acesso à ferramenta. Tente novamente."
+        );
+      } else {
+        setSsoUrl(data.url as string);
+      }
+      setSsoLoading(false);
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [app?.sso, app?.slug]);
+
   if (!app) return <Navigate to="/" replace />;
 
-  // Add hub marker so the app can detect it's embedded and skip its own redirect.
+  // Fonte da URL a exibir no iframe
   const embedUrl = (() => {
+    if (app.sso) return ssoUrl ?? "";
     try {
       const u = new URL(app.url);
       u.searchParams.set("from", "hub");
@@ -68,12 +103,36 @@ const AppViewer = () => {
           </h1>
         </div>
       </header>
-      <iframe
-        src={embedUrl}
-        title={app.nome}
-        className="flex-1 w-full border-0"
-        allow="clipboard-read; clipboard-write; fullscreen"
-      />
+
+      {app.sso && ssoLoading && (
+        <div className="flex-1 flex items-center justify-center text-muted-foreground gap-2">
+          <Loader2 className="animate-spin" size={18} />
+          Liberando acesso à ferramenta…
+        </div>
+      )}
+
+      {app.sso && ssoError && (
+        <div className="flex-1 flex items-center justify-center px-6">
+          <div className="max-w-md text-center">
+            <p className="text-sm text-destructive mb-3">{ssoError}</p>
+            <Link
+              to="/"
+              className="text-sm text-primary hover:underline"
+            >
+              Voltar ao Hub
+            </Link>
+          </div>
+        </div>
+      )}
+
+      {embedUrl && !ssoError && !ssoLoading && (
+        <iframe
+          src={embedUrl}
+          title={app.nome}
+          className="flex-1 w-full border-0"
+          allow="clipboard-read; clipboard-write; fullscreen"
+        />
+      )}
     </div>
   );
 };
