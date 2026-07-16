@@ -4,9 +4,11 @@
  * Gera um token HMAC-SHA256 assinado com HUB_SSO_SECRET e retorna a URL
  * de acesso ao gerador de imagens (https://geradordeimagens.analyticalx.com.br).
  *
- * Payload do token:
- *   { email, plan, cycle_start, extra_credits, exp }
- * Formato final: base64url(payload) + "." + base64url(hmac)
+ * O payload é montado SEMPRE com os dados atuais do banco (profiles + payments),
+ * garantindo que plano (trial | pagante | cortesia), início do ciclo e demais
+ * atributos reflitam o cadastro real do cliente a cada acesso — sem cache.
+ *
+ * Formato final do token: base64url(payload) + "." + base64url(hmac)
  */
 
 import { createClient } from "npm:@supabase/supabase-js@2";
@@ -20,6 +22,20 @@ const corsHeaders = {
 
 const TARGET_URL = "https://geradordeimagens.analyticalx.com.br";
 const TOKEN_TTL_SECONDS = 60 * 60 * 8; // 8h
+
+// Quotas base por plano — enviadas no payload para a ferramenta não precisar
+// adivinhar. A ferramenta continua sendo a fonte de verdade do consumo, mas
+// recebe do Hub o plano vigente e o teto do ciclo.
+const PLAN_BASE_USES: Record<string, number> = {
+  trial: 1,
+  pagante: 2,
+  cortesia: 2,
+};
+const PLAN_CYCLE_DAYS: Record<string, number> = {
+  trial: 10,
+  pagante: 30,
+  cortesia: 30, // reset mensal (calendário)
+};
 
 function b64url(bytes: Uint8Array): string {
   let str = "";
@@ -84,72 +100,134 @@ Deno.serve(async (req) => {
     const userId = claims.claims.sub as string;
     const userEmail = (claims.claims.email as string) ?? null;
 
-    // Verifica status/plan e força reavaliação (bloqueio, expiração de trial etc.)
+    // Reavalia trial/bloqueio antes de emitir o token
     const { data: trialData } = await supabase.rpc("enforce_trial_status", {
       _user_id: userId,
     });
     const trial = Array.isArray(trialData) ? trialData[0] : trialData;
-    const currentStatus = (trial as any)?.status as string | undefined;
+    const enforcedStatus = (trial as any)?.status as string | undefined;
+    const enforcedTrialEndsAt = (trial as any)?.trial_ends_at as string | undefined;
 
+    // Busca o perfil ATUAL do banco (fonte de verdade do plano)
     const { data: profile, error: profileErr } = await supabase
       .from("profiles")
-      .select("email, status, plan, trial_started_at, updated_at")
+      .select(
+        "email, status, plan, trial_status, trial_started_at, updated_at"
+      )
       .eq("id", userId)
       .maybeSingle();
 
     if (profileErr || !profile) {
+      console.error("[sso] profile_not_found", { userId, profileErr });
       return new Response(
         JSON.stringify({ error: "profile_not_found" }),
         { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
-    const effectiveStatus = currentStatus ?? profile.status;
+    const effectiveStatus = enforcedStatus ?? (profile.status as string);
     if (effectiveStatus === "bloqueado") {
+      console.log("[sso] blocked user tried access", { userId, email: profile.email });
       return new Response(
         JSON.stringify({ error: "user_blocked" }),
         { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
-    const plan = (profile.plan as string) ?? "trial";
+    // Plano vem SEMPRE do banco (trial | pagante | cortesia).
+    // Fallback só se coluna estiver nula (usuário legado).
+    const plan = ((profile.plan as string) ?? "trial") as
+      | "trial"
+      | "pagante"
+      | "cortesia";
 
-    // Determina cycle_start conforme o plano
+    // Busca último pagamento aprovado (necessário para calcular ciclo de pagantes)
+    const { data: lastPayment } = await supabase
+      .from("payments")
+      .select("paid_at, next_due_date")
+      .eq("user_id", userId)
+      .not("paid_at", "is", null)
+      .order("paid_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    // cycle_start conforme o plano — SEMPRE recalculado a partir do banco
     let cycleStart: string | null = null;
+    let cycleEnd: string | null = null;
+
     if (plan === "trial") {
       cycleStart = profile.trial_started_at ?? profile.updated_at ?? null;
+      if (cycleStart) {
+        const d = new Date(cycleStart);
+        d.setUTCDate(d.getUTCDate() + PLAN_CYCLE_DAYS.trial);
+        cycleEnd = d.toISOString();
+      }
+      if (enforcedTrialEndsAt) cycleEnd = enforcedTrialEndsAt;
     } else if (plan === "pagante") {
-      const { data: lastPayment } = await supabase
-        .from("payments")
-        .select("paid_at")
-        .eq("user_id", userId)
-        .order("paid_at", { ascending: false })
-        .limit(1)
-        .maybeSingle();
       cycleStart =
         (lastPayment as any)?.paid_at ??
         profile.trial_started_at ??
         profile.updated_at ??
         null;
+      if ((lastPayment as any)?.next_due_date) {
+        cycleEnd = (lastPayment as any).next_due_date;
+      } else if (cycleStart) {
+        const d = new Date(cycleStart);
+        d.setUTCDate(d.getUTCDate() + PLAN_CYCLE_DAYS.pagante);
+        cycleEnd = d.toISOString();
+      }
     } else if (plan === "cortesia") {
-      // início do mês atual (UTC) — reset mensal
+      // Reset mensal — início do mês corrente (UTC)
       const now = new Date();
-      cycleStart = new Date(
+      const start = new Date(
         Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1)
-      ).toISOString();
-    } else {
-      cycleStart = profile.trial_started_at ?? profile.updated_at ?? null;
+      );
+      const end = new Date(
+        Date.UTC(now.getUTCFullYear(), now.getUTCMonth() + 1, 1)
+      );
+      cycleStart = start.toISOString();
+      cycleEnd = end.toISOString();
     }
 
     if (!cycleStart) cycleStart = new Date().toISOString();
 
+    const baseUses = PLAN_BASE_USES[plan] ?? 1;
+    const cycleDays = PLAN_CYCLE_DAYS[plan] ?? 30;
+
     const payload = {
-      email: userEmail ?? profile.email,
-      plan,
+      // Identificação
+      user_id: userId,
+      email: (userEmail ?? profile.email ?? "").toLowerCase().trim(),
+
+      // Plano — fonte única de verdade: banco do Hub
+      plan,                    // "trial" | "pagante" | "cortesia"
+      status: effectiveStatus, // "ativo" | "bloqueado"
+
+      // Ciclo vigente (a ferramenta usa para reset de cota)
       cycle_start: cycleStart,
+      cycle_end: cycleEnd,
+      cycle_days: cycleDays,
+
+      // Cota base do plano no ciclo (extras via webhook são somados à parte)
+      base_uses: baseUses,
       extra_credits: 0,
+
+      // Metadados auxiliares
+      trial_status: profile.trial_status ?? null,
+      trial_started_at: profile.trial_started_at ?? null,
+      issued_at: Math.floor(Date.now() / 1000),
       exp: Math.floor(Date.now() / 1000) + TOKEN_TTL_SECONDS,
     };
+
+    console.log("[sso] issuing token", {
+      user_id: userId,
+      email: payload.email,
+      plan: payload.plan,
+      status: payload.status,
+      cycle_start: payload.cycle_start,
+      cycle_end: payload.cycle_end,
+      base_uses: payload.base_uses,
+    });
 
     const payloadB64 = b64url(new TextEncoder().encode(JSON.stringify(payload)));
     const sigBytes = await hmacSha256(HUB_SSO_SECRET, payloadB64);
@@ -159,7 +237,14 @@ Deno.serve(async (req) => {
     const url = `${TARGET_URL}/?token=${signedToken}`;
 
     return new Response(
-      JSON.stringify({ url, plan, cycle_start: cycleStart }),
+      JSON.stringify({
+        url,
+        plan: payload.plan,
+        status: payload.status,
+        cycle_start: payload.cycle_start,
+        cycle_end: payload.cycle_end,
+        base_uses: payload.base_uses,
+      }),
       { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   } catch (err) {
