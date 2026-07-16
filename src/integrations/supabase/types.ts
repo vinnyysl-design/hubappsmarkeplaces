@@ -456,6 +456,7 @@ export type Database = {
         Args: { message_id: number; queue_name: string }
         Returns: boolean
       }
+      email_queue_dispatch: { Args: never; Returns: undefined }
       enforce_trial_status: {
         Args: { _user_id: string }
         Returns: {
