@@ -130,5 +130,19 @@
     "icone": "👁️",
     "version": "1.0.0",
     "aiKnowledge": "O que faz: agente de IA especialista que analisa anúncios (título, descrição, fotos, ficha técnica, preço) e dá recomendações para aumentar conversão e qualidade no Mercado Livre e outros marketplaces.\n\nComo usar:\n1. Cole o link do anúncio ou faça upload das informações.\n2. O Vision X gera análise completa: pontos fortes, fracos e plano de melhorias.\n3. Aplique as sugestões e revise periodicamente.\n\nRelatórios disponíveis: análise qualitativa do anúncio, checklist de SEO, sugestão de título/descrição, recomendações de fotos.\n\nQuando usar: ao publicar um anúncio novo, ao revisar campeões de venda ou para destravar SKUs com baixa conversão."
+  },
+  {
+    "slug": "gerador-imagens",
+    "nome": "Gerador de Imagens",
+    "descricao": "Crie carrosséis e imagens de produto com IA — cotas por plano e packs extras.",
+    "categoria": "Marketing",
+    "status": "Ativo",
+    "tag": "Novo",
+    "url": "https://geradordeimagens.analyticalx.com.br",
+    "github": "",
+    "icone": "🎨",
+    "sso": true,
+    "version": "1.0.0",
+    "aiKnowledge": "O que faz: gera carrosséis e imagens de produto com IA para anúncios e redes sociais.\n\nCotas por plano:\n- Trial (10 dias): 1 uso no período.\n- Pagante (mensal): 2 usos por ciclo de 30 dias corridos a partir do pagamento.\n- Cortesia: 2 usos por mês-calendário.\n\nExtras: é possível comprar packs avulsos dentro da própria ferramenta para gerar além do limite do plano.\n\nComo usar:\n1. Abra a ferramenta pelo Hub (o acesso é liberado automaticamente pelo seu plano).\n2. Escolha o modelo/carrossel e envie o briefing ou as fotos do produto.\n3. Baixe as imagens geradas."
   }
 ]
