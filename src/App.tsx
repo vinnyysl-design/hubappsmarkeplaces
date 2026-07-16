@@ -12,6 +12,7 @@ import ResetPassword from "./pages/ResetPassword.tsx";
 import Admin from "./pages/Admin.tsx";
 import AppViewer from "./pages/AppViewer.tsx";
 import VerifyPhone from "./pages/VerifyPhone.tsx";
+import ComprarPack from "./pages/ComprarPack.tsx";
 
 const queryClient = new QueryClient();
 
@@ -47,6 +48,14 @@ const App = () => (
               element={
                 <ProtectedRoute requireActive>
                   <AppViewer />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/comprar-pack"
+              element={
+                <ProtectedRoute>
+                  <ComprarPack />
                 </ProtectedRoute>
               }
             />
