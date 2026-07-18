@@ -9,6 +9,7 @@ import ThemeToggle from "@/components/ThemeToggle";
 import UserMenu from "@/components/UserMenu";
 import WhatsNewDialog from "@/components/WhatsNewDialog";
 import WelcomeDialog from "@/components/WelcomeDialog";
+import ReviewDialog from "@/components/ReviewDialog";
 import TermsDialog, { TERMS_VERSION } from "@/components/TermsDialog";
 import VisionAgent from "@/components/VisionAgent";
 import SupportButton from "@/components/SupportButton";
@@ -106,6 +107,7 @@ const Index = () => {
     <div className="min-h-screen bg-background">
       <WhatsNewDialog />
       <WelcomeDialog />
+      <ReviewDialog />
       <TermsDialog open={needsTerms} onAccepted={() => refreshProfile()} />
       <div className="max-w-6xl mx-auto px-4 py-8">
         <div className="flex justify-end items-center gap-2 mb-4">
