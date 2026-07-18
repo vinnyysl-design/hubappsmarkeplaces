@@ -107,6 +107,7 @@ const Index = () => {
     <div className="min-h-screen bg-background">
       <WhatsNewDialog />
       <WelcomeDialog />
+      <ReviewDialog />
       <TermsDialog open={needsTerms} onAccepted={() => refreshProfile()} />
       <div className="max-w-6xl mx-auto px-4 py-8">
         <div className="flex justify-end items-center gap-2 mb-4">
