@@ -1,4 +1,4 @@
-import logoSrc from "@/assets/logo-analyticalx.jpeg";
+import logoSrc from "@/assets/logo-analyticalx.png.asset.json";
 
 const HeroSection = () => {
   return (
