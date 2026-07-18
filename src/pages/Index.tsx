@@ -9,6 +9,7 @@ import ThemeToggle from "@/components/ThemeToggle";
 import UserMenu from "@/components/UserMenu";
 import WhatsNewDialog from "@/components/WhatsNewDialog";
 import WelcomeDialog from "@/components/WelcomeDialog";
+import ReviewDialog from "@/components/ReviewDialog";
 import TermsDialog, { TERMS_VERSION } from "@/components/TermsDialog";
 import VisionAgent from "@/components/VisionAgent";
 import SupportButton from "@/components/SupportButton";
