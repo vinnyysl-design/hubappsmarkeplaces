@@ -10,7 +10,7 @@ const HeroSection = () => {
           <span className="text-xs font-medium text-primary tracking-wide uppercase">Plataforma ativa</span>
         </div>
         <div className="flex items-center gap-4 mb-2">
-          <img src={logoSrc} alt="Analytical X" className="h-14 w-auto rounded-md" />
+          <img src={logoSrc.url} alt="Analytical X" className="h-14 w-auto rounded-md" />
           <h1 className="text-4xl md:text-5xl font-extrabold text-foreground tracking-tight leading-tight">
             Analytical{" "}
             <span className="bg-gradient-to-br from-[hsl(220,80%,45%)] via-[hsl(280,60%,50%)] to-[hsl(175,70%,45%)] bg-clip-text text-transparent">X</span>
