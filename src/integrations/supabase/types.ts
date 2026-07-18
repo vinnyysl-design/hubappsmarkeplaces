@@ -272,6 +272,21 @@ export type Database = {
         }
         Relationships: []
       }
+      review_dismissals: {
+        Row: {
+          dismissed_at: string
+          user_id: string
+        }
+        Insert: {
+          dismissed_at?: string
+          user_id: string
+        }
+        Update: {
+          dismissed_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       signup_fingerprints: {
         Row: {
           created_at: string
@@ -352,6 +367,36 @@ export type Database = {
           tool_id?: string
           tool_name?: string
           tool_url?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      user_reviews: {
+        Row: {
+          comment: string | null
+          created_at: string
+          email: string
+          id: string
+          rating: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          comment?: string | null
+          created_at?: string
+          email: string
+          id?: string
+          rating: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          comment?: string | null
+          created_at?: string
+          email?: string
+          id?: string
+          rating?: number
+          updated_at?: string
           user_id?: string
         }
         Relationships: []
