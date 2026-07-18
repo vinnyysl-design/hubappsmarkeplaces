@@ -31,6 +31,7 @@ import AdminAnalytics from "@/components/AdminAnalytics";
 import VisionKnowledgePanel from "@/components/VisionKnowledgePanel";
 import SuspiciousAccountsPanel from "@/components/SuspiciousAccountsPanel";
 import TrialUsersPanel from "@/components/TrialUsersPanel";
+import ReviewsPanel from "@/components/ReviewsPanel";
 import PaymentsPanel, {
   RegisterPaymentButton,
   getPaymentStatus,
