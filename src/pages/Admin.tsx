@@ -31,6 +31,7 @@ import AdminAnalytics from "@/components/AdminAnalytics";
 import VisionKnowledgePanel from "@/components/VisionKnowledgePanel";
 import SuspiciousAccountsPanel from "@/components/SuspiciousAccountsPanel";
 import TrialUsersPanel from "@/components/TrialUsersPanel";
+import ReviewsPanel from "@/components/ReviewsPanel";
 import PaymentsPanel, {
   RegisterPaymentButton,
   getPaymentStatus,
@@ -207,6 +208,15 @@ export default function Admin() {
               <TrialUsersPanel />
             </AccordionContent>
           </AccordionItem>
+          <AccordionItem value="reviews" className="border border-border rounded-xl px-4 bg-card">
+            <AccordionTrigger className="hover:no-underline text-foreground font-semibold">
+              ⭐ Avaliações dos Usuários
+            </AccordionTrigger>
+            <AccordionContent>
+              <ReviewsPanel />
+            </AccordionContent>
+          </AccordionItem>
+
 
           <AccordionItem value="suspicious" className="border border-border rounded-xl px-4 bg-card">
             <AccordionTrigger className="hover:no-underline text-foreground font-semibold">
