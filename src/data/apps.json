@@ -22,7 +22,7 @@
   },
   {
     "slug": "fulfillment",
-    "nome": "Dashboard Fulfillment Estratégico",
+    "nome": "Dashboard Full",
     "descricao": "Painel estratégico para acompanhamento e gestão de fulfillment.",
     "categoria": "Operação",
     "status": "Ativo",
@@ -33,14 +33,12 @@
     "version": "1.0.0",
     "aiKnowledge": "O que faz: monitora a operação de Full (Mercado Envios Full, FBA, Shopee Full) — estoque, sell-through, dias de cobertura e custo de armazenagem.\n\nComo usar:\n1. Exporte o relatório de estoque Full e o de vendas dos últimos 30/60/90 dias.\n2. Faça upload dos arquivos na ferramenta.\n3. Analise os KPIs: cobertura em dias, giro, risco de ruptura, risco de excesso (long term storage).\n\nRelatórios disponíveis: cobertura por SKU, ranking de risco de ruptura, ranking de excesso (custo de armazenagem alto), recomendação de reposição/retirada.\n\nQuando usar: semanalmente para planejar reposição e evitar tarifas de estoque parado.",
     "canais": [
-      "Mercado Livre Full",
-      "Amazon FBA",
-      "Shopee Full"
+      "Mercado Livre"
     ]
   },
   {
     "slug": "adsengine",
-    "nome": "AdsEngine",
+    "nome": "Ads",
     "descricao": "Gerencie e otimize suas campanhas de anúncios com inteligência.",
     "categoria": "Marketing",
     "status": "Ativo",
@@ -52,13 +50,12 @@
     "aiKnowledge": "O que faz: centraliza, analisa e otimiza campanhas de Product Ads do Mercado Livre (e outros canais), apontando o que escalar, pausar ou ajustar de lance.\n\nComo usar:\n1. Exporte o relatório de campanhas/itens patrocinados do canal.\n2. Suba o CSV/Excel na ferramenta.\n3. Veja ACOS, TACOS, ROAS, CPA e cliques por campanha/SKU.\n4. Siga as recomendações automáticas (escalar, pausar, ajustar lance, mudar estratégia).\n\nRelatórios disponíveis: performance por campanha, por SKU, evolução temporal de ACOS/TACOS, sugestões de otimização.\n\nQuando usar: revisão diária ou semanal de mídia paga.",
     "canais": [
       "Mercado Livre",
-      "Shopee",
-      "Amazon"
+      "Shopee"
     ]
   },
   {
     "slug": "precificacao",
-    "nome": "Precificação Estratégica",
+    "nome": "Precificação",
     "descricao": "Calculadora inteligente para definir preços com margem e competitividade.",
     "categoria": "Simuladores",
     "status": "Ativo",
@@ -78,7 +75,7 @@
   },
   {
     "slug": "devolucoes",
-    "nome": "Gestão de Devolução Inteligente",
+    "nome": "Devolução",
     "descricao": "Monitore devoluções, identifique motivos e reduza perdas com dados.",
     "categoria": "Devoluções",
     "status": "Ativo",
@@ -90,9 +87,7 @@
     "aiKnowledge": "O que faz: cruza dados de devoluções por SKU e motivo, mostra taxa de devolução e o impacto financeiro.\n\nComo usar:\n1. Exporte o relatório de devoluções/reclamações do canal.\n2. Faça upload na ferramenta.\n3. Veja ranking de SKUs mais devolvidos, principais motivos e custo total de devolução.\n\nRelatórios disponíveis: taxa de devolução por SKU, motivos mais comuns, impacto financeiro mensal, evolução temporal.\n\nQuando usar: para identificar problemas de anúncio, qualidade ou logística e priorizar correções.",
     "canais": [
       "Mercado Livre",
-      "Shopee",
-      "Amazon",
-      "Magalu"
+      "Shopee"
     ]
   },
   {
@@ -109,15 +104,12 @@
     "aiKnowledge": "O que faz: consolida vendas, custos, taxas e impostos para mostrar a rentabilidade real da operação (DRE gerencial).\n\nComo usar:\n1. Exporte o relatório de vendas e o de repasses do canal.\n2. Importe os arquivos na ferramenta.\n3. Acesse o painel para ver faturamento bruto, líquido, CMV, margem de contribuição e lucro.\n\nRelatórios disponíveis: DRE mensal, margem por SKU, margem por canal, evolução de receita e lucro, breakdown de custos.\n\nQuando usar: fechamento mensal e tomada de decisão sobre mix de produtos e canais.",
     "canais": [
       "Mercado Livre",
-      "Shopee",
-      "Amazon",
-      "Magalu",
-      "TikTok Shop"
+      "Shopee"
     ]
   },
   {
     "slug": "inteligencia-mercado",
-    "nome": "Inteligência de Mercado",
+    "nome": "Inteligência",
     "descricao": "Ferramenta para análise de tamanho de mercado e apoio à tomada de decisão estratégica.",
     "categoria": "Relatórios",
     "status": "Beta",
@@ -129,9 +121,7 @@
     "version": "1.0.0",
     "aiKnowledge": "O que faz: estima o tamanho de mercado de uma categoria/segmento e mostra share de concorrentes, ajudando decisões de entrada/expansão.\n\nComo usar:\n1. Informe a categoria, palavra-chave ou nicho que quer analisar.\n2. A ferramenta retorna estimativa de volume de vendas, ticket médio, principais players e share aproximado.\n\nRelatórios disponíveis: tamanho de mercado, ranking de concorrentes, ticket médio da categoria, oportunidades de gap.\n\nQuando usar: ao avaliar lançamento de produto, entrada em nova categoria ou estudo competitivo.",
     "canais": [
-      "Mercado Livre",
-      "Shopee",
-      "Amazon"
+      "Todos os canais"
     ]
   },
   {
@@ -152,7 +142,7 @@
   },
   {
     "slug": "conciliacao",
-    "nome": "Conciliação Financeira",
+    "nome": "Conciliação",
     "descricao": "Automatize a conciliação de repasses e identifique divergências financeiras com agilidade.",
     "categoria": "Relatórios",
     "status": "Ativo",
@@ -163,15 +153,12 @@
     "version": "1.0.0",
     "aiKnowledge": "O que faz: cruza vendas com repasses dos marketplaces e aponta divergências (taxas erradas, frete cobrado a mais, repasses faltantes).\n\nComo usar:\n1. Exporte o relatório de vendas e o de repasses (liberações) do canal.\n2. Faça upload dos dois arquivos na ferramenta.\n3. Veja vendas conciliadas, pendentes e divergências com valor exato a contestar.\n\nRelatórios disponíveis: conciliação por pedido, divergências por tipo (taxa, frete, comissão), total a recuperar.\n\nQuando usar: mensalmente para recuperar valores e validar repasses dos marketplaces.",
     "canais": [
-      "Mercado Livre",
-      "Shopee",
-      "Amazon",
-      "Magalu"
+      "Mercado Livre"
     ]
   },
   {
     "slug": "vision-x",
-    "nome": "Vision X — Especialista em Análise de Anúncios",
+    "nome": "Vision X",
     "descricao": "Agente especialista em análise de anúncios para otimizar campanhas e maximizar resultados.",
     "categoria": "Marketing",
     "status": "Ativo",
@@ -182,9 +169,7 @@
     "version": "1.0.0",
     "aiKnowledge": "O que faz: agente de IA especialista que analisa anúncios (título, descrição, fotos, ficha técnica, preço) e dá recomendações para aumentar conversão e qualidade no Mercado Livre e outros marketplaces.\n\nComo usar:\n1. Cole o link do anúncio ou faça upload das informações.\n2. O Vision X gera análise completa: pontos fortes, fracos e plano de melhorias.\n3. Aplique as sugestões e revise periodicamente.\n\nRelatórios disponíveis: análise qualitativa do anúncio, checklist de SEO, sugestão de título/descrição, recomendações de fotos.\n\nQuando usar: ao publicar um anúncio novo, ao revisar campeões de venda ou para destravar SKUs com baixa conversão.",
     "canais": [
-      "Mercado Livre",
-      "Shopee",
-      "Amazon"
+      "Mercado Livre"
     ]
   },
   {
