@@ -13,6 +13,7 @@ import ReviewDialog from "@/components/ReviewDialog";
 import TermsDialog, { TERMS_VERSION } from "@/components/TermsDialog";
 import VisionAgent from "@/components/VisionAgent";
 import SupportButton from "@/components/SupportButton";
+import ReviewButton from "@/components/ReviewButton";
 import TrialBanner from "@/components/TrialBanner";
 import RenewalBanner from "@/components/RenewalBanner";
 import apps from "@/data/apps.json";
@@ -240,6 +241,7 @@ const Index = () => {
       </div>
       {!isBlocked && <VisionAgent />}
       <SupportButton phoneNumber={WHATSAPP_NUMBER} />
+      <ReviewButton />
     </div>
   );
 };

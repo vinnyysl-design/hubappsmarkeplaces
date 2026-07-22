@@ -19,6 +19,12 @@ export default function ReviewDialog() {
   const [checked, setChecked] = useState(false);
 
   useEffect(() => {
+    const handler = () => setOpen(true);
+    window.addEventListener("open-review-dialog", handler);
+    return () => window.removeEventListener("open-review-dialog", handler);
+  }, []);
+
+  useEffect(() => {
     if (!isAuthenticated || !user || checked) return;
     let cancelled = false;
     (async () => {
