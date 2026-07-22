@@ -15,6 +15,7 @@ interface App {
   icone: string;
   external?: boolean;
   sso?: boolean;
+  canais?: string[];
 }
 
 const iconMap: Record<string, React.ReactNode> = {
@@ -98,7 +99,20 @@ const AppCard = ({ app }: { app: App }) => {
       </div>
 
       <h3 className="text-base font-semibold text-foreground mb-1.5 leading-snug">{app.nome}</h3>
-      <p className="text-sm text-muted-foreground flex-1 mb-4 leading-relaxed">{app.descricao}</p>
+      <p className="text-sm text-muted-foreground flex-1 mb-3 leading-relaxed">{app.descricao}</p>
+
+      {app.canais && app.canais.length > 0 && (
+        <div className="flex flex-wrap gap-1 mb-3">
+          {app.canais.map((c) => (
+            <span
+              key={c}
+              className="inline-block px-1.5 py-0.5 rounded text-[10px] font-medium bg-muted text-muted-foreground border border-border"
+            >
+              {c}
+            </span>
+          ))}
+        </div>
+      )}
 
       <div className="flex flex-wrap items-center gap-1.5 mt-auto">
         <span className="inline-block px-2 py-0.5 rounded-md text-[11px] font-medium bg-[hsl(var(--badge-cat-bg))] text-[hsl(var(--badge-cat-text))]">
