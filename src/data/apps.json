@@ -22,7 +22,7 @@
   },
   {
     "slug": "fulfillment",
-    "nome": "Dashboard Full",
+    "nome": "Dashboard Fulfillment Estratégico",
     "descricao": "Painel estratégico para acompanhamento e gestão de fulfillment.",
     "categoria": "Operação",
     "status": "Ativo",
@@ -38,7 +38,7 @@
   },
   {
     "slug": "adsengine",
-    "nome": "Ads",
+    "nome": "AdsEngine",
     "descricao": "Gerencie e otimize suas campanhas de anúncios com inteligência.",
     "categoria": "Marketing",
     "status": "Ativo",
@@ -55,7 +55,7 @@
   },
   {
     "slug": "precificacao",
-    "nome": "Precificação",
+    "nome": "Precificação Estratégica",
     "descricao": "Calculadora inteligente para definir preços com margem e competitividade.",
     "categoria": "Simuladores",
     "status": "Ativo",
@@ -75,7 +75,7 @@
   },
   {
     "slug": "devolucoes",
-    "nome": "Devolução",
+    "nome": "Gestão de Devolução Inteligente",
     "descricao": "Monitore devoluções, identifique motivos e reduza perdas com dados.",
     "categoria": "Devoluções",
     "status": "Ativo",
@@ -109,7 +109,7 @@
   },
   {
     "slug": "inteligencia-mercado",
-    "nome": "Inteligência",
+    "nome": "Inteligência de Mercado",
     "descricao": "Ferramenta para análise de tamanho de mercado e apoio à tomada de decisão estratégica.",
     "categoria": "Relatórios",
     "status": "Beta",
@@ -142,7 +142,7 @@
   },
   {
     "slug": "conciliacao",
-    "nome": "Conciliação",
+    "nome": "Conciliação Financeira",
     "descricao": "Automatize a conciliação de repasses e identifique divergências financeiras com agilidade.",
     "categoria": "Relatórios",
     "status": "Ativo",
@@ -158,7 +158,7 @@
   },
   {
     "slug": "vision-x",
-    "nome": "Vision X",
+    "nome": "Vision X — Especialista em Análise de Anúncios",
     "descricao": "Agente especialista em análise de anúncios para otimizar campanhas e maximizar resultados.",
     "categoria": "Marketing",
     "status": "Ativo",
