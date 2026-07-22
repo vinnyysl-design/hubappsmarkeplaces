@@ -103,14 +103,30 @@ const AppCard = ({ app }: { app: App }) => {
 
       {app.canais && app.canais.length > 0 && (
         <div className="flex flex-wrap gap-1 mb-3">
-          {app.canais.map((c) => (
-            <span
-              key={c}
-              className="inline-block px-1.5 py-0.5 rounded text-[10px] font-medium bg-muted text-muted-foreground border border-border"
-            >
-              {c}
-            </span>
-          ))}
+          {app.canais.map((c) => {
+            const colorClass =
+              c === "Mercado Livre"
+                ? "bg-yellow-400/20 text-yellow-400 border-yellow-400/30"
+                : c === "Shopee"
+                ? "bg-orange-500/20 text-orange-400 border-orange-500/30"
+                : c === "TikTok Shop" || c === "TikTok"
+                ? "bg-slate-400/20 text-slate-300 border-slate-400/30"
+                : c === "Amazon"
+                ? "bg-white/15 text-white border-white/25"
+                : c === "Magalu"
+                ? "bg-blue-500/20 text-blue-300 border-blue-500/30"
+                : c === "Todos os canais"
+                ? "bg-primary/10 text-primary border-primary/20"
+                : "bg-muted text-muted-foreground border border-border";
+            return (
+              <span
+                key={c}
+                className={`inline-block px-1.5 py-0.5 rounded text-[10px] font-medium border ${colorClass}`}
+              >
+                {c}
+              </span>
+            );
+          })}
         </div>
       )}
 
