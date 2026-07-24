@@ -182,7 +182,9 @@ export type Database = {
           created_at: string
           created_by: string | null
           id: string
+          mp_authorized_payment_id: string | null
           mp_payment_id: string | null
+          mp_preapproval_id: string | null
           mp_preference_id: string | null
           next_due_date: string
           notes: string | null
@@ -196,7 +198,9 @@ export type Database = {
           created_at?: string
           created_by?: string | null
           id?: string
+          mp_authorized_payment_id?: string | null
           mp_payment_id?: string | null
+          mp_preapproval_id?: string | null
           mp_preference_id?: string | null
           next_due_date: string
           notes?: string | null
@@ -210,7 +214,9 @@ export type Database = {
           created_at?: string
           created_by?: string | null
           id?: string
+          mp_authorized_payment_id?: string | null
           mp_payment_id?: string | null
+          mp_preapproval_id?: string | null
           mp_preference_id?: string | null
           next_due_date?: string
           notes?: string | null
@@ -228,10 +234,15 @@ export type Database = {
           email: string | null
           email_normalized: string | null
           id: string
+          mp_preapproval_id: string | null
+          mp_preapproval_status: string | null
           phone: string | null
           phone_verified: boolean
           plan: Database["public"]["Enums"]["user_plan"]
           status: Database["public"]["Enums"]["user_status"]
+          subscription_ends_at: string | null
+          subscription_plan_id: string | null
+          subscription_started_at: string | null
           terms_accepted_at: string | null
           terms_version: string | null
           trial_started_at: string | null
@@ -244,10 +255,15 @@ export type Database = {
           email?: string | null
           email_normalized?: string | null
           id: string
+          mp_preapproval_id?: string | null
+          mp_preapproval_status?: string | null
           phone?: string | null
           phone_verified?: boolean
           plan?: Database["public"]["Enums"]["user_plan"]
           status?: Database["public"]["Enums"]["user_status"]
+          subscription_ends_at?: string | null
+          subscription_plan_id?: string | null
+          subscription_started_at?: string | null
           terms_accepted_at?: string | null
           terms_version?: string | null
           trial_started_at?: string | null
@@ -260,10 +276,15 @@ export type Database = {
           email?: string | null
           email_normalized?: string | null
           id?: string
+          mp_preapproval_id?: string | null
+          mp_preapproval_status?: string | null
           phone?: string | null
           phone_verified?: boolean
           plan?: Database["public"]["Enums"]["user_plan"]
           status?: Database["public"]["Enums"]["user_status"]
+          subscription_ends_at?: string | null
+          subscription_plan_id?: string | null
+          subscription_started_at?: string | null
           terms_accepted_at?: string | null
           terms_version?: string | null
           trial_started_at?: string | null

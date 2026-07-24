@@ -1,14 +1,18 @@
 /**
  * Edge Function: mp-webhook
  *
- * Recebe notificações do Mercado Pago.
+ * Trata notificações do Mercado Pago:
  *
- * - Assinatura mensal: registra em `payments` (idempotente via mp_payment_id)
- *   e libera o usuário (status = 'ativo' por 30 dias).
- * - Pack de imagens (metadata.kind === "image_pack"): NÃO altera assinatura;
- *   credita usos no Gerador de Imagens via POST assinado (HMAC-SHA256).
+ * 1) topic = "preapproval" → status da assinatura recorrente mudou
+ *    (pending → authorized → paused/cancelled). Atualiza profiles.
  *
- * Endpoint público (sem JWT) — Mercado Pago não envia auth header.
+ * 2) topic = "authorized_payment" (ou "subscription_authorized_payment")
+ *    → cobrança mensal recorrente aprovada/rejeitada. Registra em payments
+ *    e estende next_due_date.
+ *
+ * 3) topic = "payment" → pagamento único (packs de imagem) — fluxo legado.
+ *
+ * Endpoint público (sem JWT).
  */
 
 import { createClient } from "npm:@supabase/supabase-js@2";
@@ -22,7 +26,6 @@ const corsHeaders = {
 const IMAGE_TOOL_WEBHOOK =
   "https://geradordeimagens.analyticalx.com.br/api/public/hub/credits";
 
-// Fallback caso a metadata não venha completa (raro, mas seguro)
 const PACK_USES: Record<string, number> = {
   "pack-5": 5,
   "pack-8": 8,
@@ -44,6 +47,13 @@ async function hmacHex(secret: string, body: string): Promise<string> {
     .join("");
 }
 
+function json(body: unknown, status = 200) {
+  return new Response(JSON.stringify(body), {
+    status,
+    headers: { ...corsHeaders, "Content-Type": "application/json" },
+  });
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response("ok", { headers: corsHeaders });
@@ -55,80 +65,178 @@ Deno.serve(async (req) => {
     const SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const HUB_WEBHOOK_SECRET = Deno.env.get("HUB_WEBHOOK_SECRET");
 
-    if (!MP_TOKEN) {
-      return new Response("missing token", { status: 500, headers: corsHeaders });
-    }
+    if (!MP_TOKEN) return json({ ok: false, error: "missing_token" }, 500);
 
     const url = new URL(req.url);
-    let paymentId =
-      url.searchParams.get("data.id") ||
-      url.searchParams.get("id") ||
-      null;
+    let resourceId =
+      url.searchParams.get("data.id") || url.searchParams.get("id") || null;
     let topic =
-      url.searchParams.get("type") ||
-      url.searchParams.get("topic") ||
-      null;
+      url.searchParams.get("type") || url.searchParams.get("topic") || null;
 
     let body: any = null;
     if (req.method === "POST") {
       body = await req.json().catch(() => null);
       if (body) {
-        paymentId = body?.data?.id ?? body?.id ?? paymentId;
+        resourceId = body?.data?.id ?? body?.id ?? resourceId;
         topic = body?.type ?? body?.topic ?? topic;
       }
     }
+    const topicStr = String(topic ?? "").toLowerCase();
+    console.log("MP webhook:", { topic: topicStr, resourceId });
 
-    console.log("MP webhook:", { topic, paymentId });
-
-    if (!paymentId || (topic && !String(topic).includes("payment"))) {
-      return new Response(JSON.stringify({ ok: true, ignored: true }), {
-        status: 200,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
-
-    const mpRes = await fetch(
-      `https://api.mercadopago.com/v1/payments/${paymentId}`,
-      { headers: { Authorization: `Bearer ${MP_TOKEN}` } }
-    );
-
-    if (!mpRes.ok) {
-      const txt = await mpRes.text();
-      console.error("MP payment lookup failed:", mpRes.status, txt);
-      return new Response(JSON.stringify({ ok: false, error: "lookup_failed" }), {
-        status: 200,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
-
-    const payment = await mpRes.json();
-    const status = payment?.status;
-    const userId =
-      payment?.external_reference ||
-      payment?.metadata?.user_id ||
-      null;
-    const amount = Number(payment?.transaction_amount ?? 0);
-    const method = payment?.payment_method_id ?? payment?.payment_type_id ?? null;
-    const metadata = payment?.metadata ?? {};
-    const kind = String(metadata?.kind ?? "subscription");
-
-    if (status !== "approved") {
-      console.log("Payment not approved, skipping:", status);
-      return new Response(JSON.stringify({ ok: true, status }), {
-        status: 200,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
+    if (!resourceId) return json({ ok: true, ignored: true });
 
     const supabase = createClient(SUPABASE_URL, SERVICE_KEY);
+    const mpHeaders = { Authorization: `Bearer ${MP_TOKEN}` };
 
-    // ============ PACK DE IMAGENS ============
-    if (kind === "image_pack") {
+    // ==================== PREAPPROVAL (status assinatura) ====================
+    if (topicStr.includes("preapproval") && !topicStr.includes("authorized")) {
+      const r = await fetch(`https://api.mercadopago.com/preapproval/${resourceId}`, {
+        headers: mpHeaders,
+      });
+      if (!r.ok) {
+        console.error("preapproval lookup failed", r.status, await r.text());
+        return json({ ok: false, error: "lookup_failed" });
+      }
+      const pre = await r.json();
+      const status = String(pre?.status ?? "");
+      const ext = String(pre?.external_reference ?? "");
+      const userId = ext.split("|")[0] || null;
+      const planId = ext.split("|")[1] || null;
+      const startDate = pre?.auto_recurring?.start_date ?? null;
+      const endDate = pre?.auto_recurring?.end_date ?? null;
+
+      if (!userId) return json({ ok: false, error: "no_user_id" });
+
+      const patch: Record<string, unknown> = {
+        mp_preapproval_id: String(resourceId),
+        mp_preapproval_status: status,
+      };
+      if (planId) patch.subscription_plan_id = planId;
+      if (startDate) patch.subscription_started_at = startDate;
+      if (endDate) patch.subscription_ends_at = endDate;
+
+      if (status === "authorized") {
+        patch.plan = "pagante";
+        patch.status = "ativo";
+      } else if (status === "cancelled" || status === "paused") {
+        // Cartão cancelado / assinatura pausada → bloqueia
+        patch.status = "bloqueado";
+      }
+
+      const { error: upErr } = await supabase
+        .from("profiles")
+        .update(patch)
+        .eq("id", userId);
+      if (upErr) console.error("profile update error", upErr);
+
+      return json({ ok: true, kind: "preapproval", status });
+    }
+
+    // ================== AUTHORIZED PAYMENT (cobrança mensal) ==================
+    if (topicStr.includes("authorized_payment") || topicStr.includes("subscription_authorized_payment")) {
+      const r = await fetch(
+        `https://api.mercadopago.com/authorized_payments/${resourceId}`,
+        { headers: mpHeaders },
+      );
+      if (!r.ok) {
+        console.error("authorized_payment lookup failed", r.status, await r.text());
+        return json({ ok: false, error: "lookup_failed" });
+      }
+      const ap = await r.json();
+      const status = String(ap?.status ?? "");
+      const paymentStatus = String(ap?.payment?.status ?? ap?.status ?? "");
+      const preapprovalId = String(ap?.preapproval_id ?? "");
+      const amount = Number(ap?.transaction_amount ?? 0);
+      const paymentId = ap?.payment?.id ?? ap?.id ?? resourceId;
+
+      // Localiza usuário pelo preapproval_id
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("id, subscription_plan_id")
+        .eq("mp_preapproval_id", preapprovalId)
+        .maybeSingle();
+
+      if (!profile?.id) {
+        console.error("authorized_payment: profile not found", preapprovalId);
+        return json({ ok: false, error: "profile_not_found" });
+      }
+
+      // Falha na cobrança → bloqueia
+      if (paymentStatus === "rejected" || status === "rejected" || status === "recycling") {
+        await supabase
+          .from("profiles")
+          .update({ status: "bloqueado" })
+          .eq("id", profile.id);
+        return json({ ok: true, kind: "authorized_payment", blocked: true, status: paymentStatus });
+      }
+
+      if (paymentStatus !== "approved" && status !== "processed") {
+        return json({ ok: true, kind: "authorized_payment", status: paymentStatus, skipped: true });
+      }
+
+      // Idempotência: não duplica pagamento
+      const { data: existing } = await supabase
+        .from("payments")
+        .select("id")
+        .eq("mp_authorized_payment_id", String(resourceId))
+        .maybeSingle();
+      if (existing) return json({ ok: true, duplicate: true });
+
+      const today = new Date().toISOString().slice(0, 10);
+      const nextDue = new Date();
+      nextDue.setDate(nextDue.getDate() + 30);
+      const nextDueStr = nextDue.toISOString().slice(0, 10);
+
+      const { error: insErr } = await supabase.from("payments").insert({
+        user_id: profile.id,
+        amount,
+        paid_at: today,
+        next_due_date: nextDueStr,
+        mp_payment_id: paymentId ? String(paymentId) : null,
+        mp_authorized_payment_id: String(resourceId),
+        mp_preapproval_id: preapprovalId,
+        payment_method: "recurring_card",
+        notes: `Cobrança recorrente (plano ${profile.subscription_plan_id ?? "?"})`,
+      });
+      if (insErr) console.error("insert recurring payment error", insErr);
+
+      await supabase
+        .from("profiles")
+        .update({ status: "ativo", plan: "pagante" })
+        .eq("id", profile.id);
+
+      return json({ ok: true, kind: "authorized_payment", recorded: true });
+    }
+
+    // ==================== PAYMENT ÚNICO (packs de imagem) ====================
+    if (topicStr.includes("payment")) {
+      const mpRes = await fetch(
+        `https://api.mercadopago.com/v1/payments/${resourceId}`,
+        { headers: mpHeaders },
+      );
+      if (!mpRes.ok) {
+        const txt = await mpRes.text();
+        console.error("MP payment lookup failed:", mpRes.status, txt);
+        return json({ ok: false, error: "lookup_failed" });
+      }
+      const payment = await mpRes.json();
+      const status = payment?.status;
+      const userId = payment?.external_reference || payment?.metadata?.user_id || null;
+      const amount = Number(payment?.transaction_amount ?? 0);
+      const method = payment?.payment_method_id ?? payment?.payment_type_id ?? null;
+      const metadata = payment?.metadata ?? {};
+      const kind = String(metadata?.kind ?? "");
+
+      if (status !== "approved") return json({ ok: true, status });
+
+      // Apenas trata packs — assinatura agora é via preapproval
+      if (kind !== "image_pack") {
+        return json({ ok: true, ignored: true, reason: "not_pack" });
+      }
+
       const packId = String(metadata?.pack_id ?? "");
-      const uses =
-        Number(metadata?.uses) ||
-        PACK_USES[packId] ||
-        0;
+      const uses = Number(metadata?.uses) || PACK_USES[packId] || 0;
 
       let email = String(metadata?.email ?? "") || null;
       if (!email && userId) {
@@ -141,120 +249,29 @@ Deno.serve(async (req) => {
       }
       if (!email && payment?.payer?.email) email = payment.payer.email;
 
-      if (!email || !uses) {
-        console.error("Pack payment missing email/uses:", { email, uses, packId });
-        return new Response(JSON.stringify({ ok: false, error: "invalid_pack_data" }), {
-          status: 200,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
-      }
+      if (!email || !uses) return json({ ok: false, error: "invalid_pack_data" });
+      if (!HUB_WEBHOOK_SECRET) return json({ ok: false, error: "missing_secret" });
 
-      if (!HUB_WEBHOOK_SECRET) {
-        console.error("HUB_WEBHOOK_SECRET not configured");
-        return new Response(JSON.stringify({ ok: false, error: "missing_secret" }), {
-          status: 200,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
-      }
-
-      const payload = {
-        event_id: `mp-payment-${paymentId}`,
-        email,
-        uses,
-      };
+      const payload = { event_id: `mp-payment-${resourceId}`, email, uses };
       const rawBody = JSON.stringify(payload);
       const signature = await hmacHex(HUB_WEBHOOK_SECRET, rawBody);
 
       const credRes = await fetch(IMAGE_TOOL_WEBHOOK, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "x-hub-signature": signature,
-        },
+        headers: { "Content-Type": "application/json", "x-hub-signature": signature },
         body: rawBody,
       });
-
       const credText = await credRes.text();
       console.log("Image pack credit response:", credRes.status, credText);
-
       if (!credRes.ok) {
-        return new Response(
-          JSON.stringify({ ok: false, error: "credit_failed", status: credRes.status, body: credText }),
-          { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-        );
+        return json({ ok: false, error: "credit_failed", status: credRes.status, body: credText });
       }
-
-      return new Response(
-        JSON.stringify({ ok: true, credited: uses, pack: packId, email }),
-        { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
+      return json({ ok: true, credited: uses, pack: packId, email });
     }
 
-    // ============ ASSINATURA MENSAL ============
-    if (!userId) {
-      console.error("Payment approved but no user_id in external_reference");
-      return new Response(JSON.stringify({ ok: false, error: "no_user_id" }), {
-        status: 200,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
-
-    const { data: existing } = await supabase
-      .from("payments")
-      .select("id")
-      .eq("mp_payment_id", String(paymentId))
-      .maybeSingle();
-
-    if (existing) {
-      console.log("Payment already recorded:", paymentId);
-      return new Response(JSON.stringify({ ok: true, duplicate: true }), {
-        status: 200,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
-
-    const months = Math.max(1, Math.min(24, Number(metadata?.months) || 1));
-    const planId = String(metadata?.plan_id ?? "mensal");
-    const today = new Date().toISOString().slice(0, 10);
-    const nextDue = new Date();
-    nextDue.setDate(nextDue.getDate() + 30 * months);
-    const nextDueStr = nextDue.toISOString().slice(0, 10);
-
-    const { error: insErr } = await supabase.from("payments").insert({
-      user_id: userId,
-      amount,
-      paid_at: today,
-      next_due_date: nextDueStr,
-      mp_payment_id: String(paymentId),
-      payment_method: method,
-      notes: `Pagamento via Mercado Pago (plano ${planId}, ${months} ${months === 1 ? "mês" : "meses"})`,
-    });
-
-    if (insErr) {
-      console.error("Insert payment error:", insErr);
-      return new Response(JSON.stringify({ ok: false, error: insErr.message }), {
-        status: 200,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
-
-    const { error: upErr } = await supabase
-      .from("profiles")
-      .update({ status: "ativo", plan: "pagante" })
-      .eq("id", userId);
-
-    if (upErr) console.error("Update profile error:", upErr);
-
-    console.log("Subscription payment processed:", userId);
-    return new Response(JSON.stringify({ ok: true, activated: true }), {
-      status: 200,
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
+    return json({ ok: true, ignored: true, topic: topicStr });
   } catch (err) {
     console.error("mp-webhook error:", err);
-    return new Response(JSON.stringify({ ok: false, error: String(err) }), {
-      status: 200,
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
+    return json({ ok: false, error: String(err) });
   }
 });
