@@ -1,7 +1,7 @@
 import { useState, useMemo, useEffect } from "react";
 import { Search, SlidersHorizontal, Lock, CreditCard, FileCheck } from "lucide-react";
 import HeroSection from "@/components/HeroSection";
-import { supabase } from "@/integrations/supabase/client";
+
 import { toast } from "@/hooks/use-toast";
 import MetricCards from "@/components/MetricCards";
 import AppCard from "@/components/AppCard";
