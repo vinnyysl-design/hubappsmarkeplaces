@@ -1,7 +1,7 @@
 import { useState, useMemo, useEffect } from "react";
-import { Search, SlidersHorizontal, Lock, CreditCard, Loader2, FileCheck } from "lucide-react";
+import { Search, SlidersHorizontal, Lock, CreditCard, FileCheck } from "lucide-react";
 import HeroSection from "@/components/HeroSection";
-import { supabase } from "@/integrations/supabase/client";
+
 import { toast } from "@/hooks/use-toast";
 import MetricCards from "@/components/MetricCards";
 import AppCard from "@/components/AppCard";
@@ -16,6 +16,7 @@ import SupportButton from "@/components/SupportButton";
 import ReviewButton from "@/components/ReviewButton";
 import TrialBanner from "@/components/TrialBanner";
 import RenewalBanner from "@/components/RenewalBanner";
+import PlansDialog from "@/components/PlansDialog";
 import apps from "@/data/apps.json";
 import { usePageViewTracker } from "@/hooks/useTracking";
 import { useAuth } from "@/contexts/AuthContext";
@@ -63,27 +64,10 @@ const Index = () => {
   const isBlocked = (status === "bloqueado" || needsTerms) && !isAdmin;
   const [busca, setBusca] = useState("");
   const [categoria, setCategoria] = useState("Todos");
-  const [paying, setPaying] = useState(false);
+  const [plansOpen, setPlansOpen] = useState(false);
+  const paying = false;
 
-  const handleSubscribe = async () => {
-    setPaying(true);
-    try {
-      const { data, error } = await supabase.functions.invoke("create-mp-preference", {
-        body: { return_url: window.location.origin },
-      });
-      if (error) throw error;
-      const url = data?.init_point || data?.sandbox_init_point;
-      if (!url) throw new Error("URL de checkout não recebida");
-      window.location.href = url;
-    } catch (err: any) {
-      toast({
-        title: "Erro ao iniciar pagamento",
-        description: err?.message ?? "Tente novamente em instantes.",
-        variant: "destructive",
-      });
-      setPaying(false);
-    }
-  };
+  const handleSubscribe = () => setPlansOpen(true);
 
   const categorias = useMemo(
     () => ["Todos", ...Array.from(new Set(apps.map((a) => a.categoria))).sort()],
@@ -110,6 +94,7 @@ const Index = () => {
       <WelcomeDialog />
       <ReviewDialog />
       <TermsDialog open={needsTerms} onAccepted={() => refreshProfile()} />
+      <PlansDialog open={plansOpen} onOpenChange={setPlansOpen} />
       <div className="max-w-6xl mx-auto px-4 py-8">
         <div className="flex justify-end items-center gap-2 mb-4">
           <ThemeToggle />
@@ -132,9 +117,9 @@ const Index = () => {
                 <>
                   <p className="font-semibold mb-1">Seu acesso aos apps está bloqueado.</p>
                   <p className="text-destructive/80">
-                    Para liberar todos os apps do Hub, assine o plano mensal por{" "}
-                    <strong>R$ 100,00/mês</strong>. Após o pagamento (Pix ou cartão), seu acesso é
-                    liberado automaticamente por 30 dias.
+                    Escolha um plano para liberar todos os apps do Hub — mensal, trimestral,
+                    semestral ou anual (com desconto de até 25%). Pagamento via Pix ou cartão em
+                    até 12x. Liberação automática após a confirmação.
                   </p>
                 </>
               )}
@@ -142,15 +127,10 @@ const Index = () => {
             {!needsTerms && (
               <button
                 onClick={handleSubscribe}
-                disabled={paying}
-                className="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg bg-primary text-primary-foreground text-sm font-semibold hover:opacity-90 transition disabled:opacity-60 whitespace-nowrap"
+                className="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg bg-primary text-primary-foreground text-sm font-semibold hover:opacity-90 transition whitespace-nowrap"
               >
-                {paying ? (
-                  <Loader2 size={16} className="animate-spin" />
-                ) : (
-                  <CreditCard size={16} />
-                )}
-                {paying ? "Redirecionando..." : "Assinar por R$ 100/mês"}
+                <CreditCard size={16} />
+                Ver planos
               </button>
             )}
           </div>

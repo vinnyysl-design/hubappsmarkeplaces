@@ -4,7 +4,9 @@
  * Cria uma preference no Mercado Pago (Checkout Pro).
  *
  * Modos:
- * 1) Assinatura mensal (default): R$ 100,00
+ * 1) Assinatura (pagamento único do período): body { plan_id: "mensal" | "trimestral" | "semestral" | "anual" }
+ *    - default: "mensal" (compatibilidade retro)
+ *    - Parcelamento em até 12x no cartão
  * 2) Pack de imagens: body { pack_id: "pack-5" | "pack-8" | "pack-10" | "pack-20" }
  */
 
@@ -17,8 +19,18 @@ const corsHeaders = {
   "Access-Control-Allow-Methods": "POST, OPTIONS",
 };
 
-const SUBSCRIPTION_AMOUNT = 100.0;
-const SUBSCRIPTION_TITLE = "Assinatura mensal Analytical X Hub";
+interface SubscriptionPlan {
+  months: number;
+  amount: number;
+  title: string;
+}
+
+const SUBSCRIPTION_PLANS: Record<string, SubscriptionPlan> = {
+  mensal:      { months: 1,  amount: 100.0, title: "Assinatura Analytical X Hub - 1 mês" },
+  trimestral:  { months: 3,  amount: 279.0, title: "Assinatura Analytical X Hub - 3 meses" },
+  semestral:   { months: 6,  amount: 510.0, title: "Assinatura Analytical X Hub - 6 meses" },
+  anual:       { months: 12, amount: 900.0, title: "Assinatura Analytical X Hub - 12 meses" },
+};
 
 const IMAGE_PACKS: Record<string, { uses: number; amount: number; title: string }> = {
   "pack-5":  { uses: 5,  amount: 24.99, title: "Pack 5 usos - Gerador de Imagens" },
@@ -84,14 +96,25 @@ Deno.serve(async (req) => {
       );
     }
 
+    // Assinatura: aceita plan_id novo; se não vier, mantém compatibilidade com mensal
+    const planId = typeof body?.plan_id === "string" ? body.plan_id : "mensal";
+    const plan = !pack ? SUBSCRIPTION_PLANS[planId] : null;
+
+    if (!pack && !plan) {
+      return new Response(
+        JSON.stringify({ error: "invalid_plan" }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
     const webhookUrl = `${SUPABASE_URL}/functions/v1/mp-webhook`;
 
-    const itemId = pack ? packId! : "subscription-monthly";
-    const itemTitle = pack ? pack.title : SUBSCRIPTION_TITLE;
-    const amount = pack ? pack.amount : SUBSCRIPTION_AMOUNT;
+    const itemId = pack ? packId! : `subscription-${planId}`;
+    const itemTitle = pack ? pack.title : plan!.title;
+    const amount = pack ? pack.amount : plan!.amount;
     const description = pack
       ? `${pack.uses} usos avulsos no Gerador de Imagens`
-      : "Acesso completo ao Hub de apps por 30 dias";
+      : `Acesso completo ao Hub de apps por ${plan!.months} ${plan!.months === 1 ? "mês" : "meses"}`;
 
     const metadata: Record<string, unknown> = { user_id: userId };
     if (pack) {
@@ -101,9 +124,11 @@ Deno.serve(async (req) => {
       if (userEmail) metadata.email = userEmail;
     } else {
       metadata.kind = "subscription";
+      metadata.plan_id = planId;
+      metadata.months = plan!.months;
     }
 
-    const preferencePayload = {
+    const preferencePayload: Record<string, unknown> = {
       items: [
         {
           id: itemId,
@@ -125,6 +150,11 @@ Deno.serve(async (req) => {
       auto_return: "approved",
       statement_descriptor: "ANALYTICAL X",
       metadata,
+      // Parcelamento em até 12x no cartão (assinatura). Packs ficam em 1x.
+      payment_methods: {
+        installments: pack ? 1 : 12,
+        default_installments: pack ? 1 : 12,
+      },
     };
 
     const mpRes = await fetch("https://api.mercadopago.com/checkout/preferences", {
@@ -152,6 +182,8 @@ Deno.serve(async (req) => {
         sandbox_init_point: mpData.sandbox_init_point,
         kind: pack ? "image_pack" : "subscription",
         pack_id: packId,
+        plan_id: pack ? null : planId,
+        months: pack ? null : plan!.months,
       }),
       { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );

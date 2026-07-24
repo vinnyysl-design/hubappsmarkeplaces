@@ -213,9 +213,11 @@ Deno.serve(async (req) => {
       });
     }
 
+    const months = Math.max(1, Math.min(24, Number(metadata?.months) || 1));
+    const planId = String(metadata?.plan_id ?? "mensal");
     const today = new Date().toISOString().slice(0, 10);
     const nextDue = new Date();
-    nextDue.setDate(nextDue.getDate() + 30);
+    nextDue.setDate(nextDue.getDate() + 30 * months);
     const nextDueStr = nextDue.toISOString().slice(0, 10);
 
     const { error: insErr } = await supabase.from("payments").insert({
@@ -225,7 +227,7 @@ Deno.serve(async (req) => {
       next_due_date: nextDueStr,
       mp_payment_id: String(paymentId),
       payment_method: method,
-      notes: "Pagamento via Mercado Pago (Checkout Pro)",
+      notes: `Pagamento via Mercado Pago (plano ${planId}, ${months} ${months === 1 ? "mês" : "meses"})`,
     });
 
     if (insErr) {
@@ -238,7 +240,7 @@ Deno.serve(async (req) => {
 
     const { error: upErr } = await supabase
       .from("profiles")
-      .update({ status: "ativo" })
+      .update({ status: "ativo", plan: "pagante" })
       .eq("id", userId);
 
     if (upErr) console.error("Update profile error:", upErr);
