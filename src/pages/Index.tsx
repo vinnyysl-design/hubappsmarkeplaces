@@ -16,6 +16,7 @@ import SupportButton from "@/components/SupportButton";
 import ReviewButton from "@/components/ReviewButton";
 import TrialBanner from "@/components/TrialBanner";
 import RenewalBanner from "@/components/RenewalBanner";
+import PlansDialog from "@/components/PlansDialog";
 import apps from "@/data/apps.json";
 import { usePageViewTracker } from "@/hooks/useTracking";
 import { useAuth } from "@/contexts/AuthContext";
@@ -63,27 +64,10 @@ const Index = () => {
   const isBlocked = (status === "bloqueado" || needsTerms) && !isAdmin;
   const [busca, setBusca] = useState("");
   const [categoria, setCategoria] = useState("Todos");
-  const [paying, setPaying] = useState(false);
+  const [plansOpen, setPlansOpen] = useState(false);
+  const paying = false;
 
-  const handleSubscribe = async () => {
-    setPaying(true);
-    try {
-      const { data, error } = await supabase.functions.invoke("create-mp-preference", {
-        body: { return_url: window.location.origin },
-      });
-      if (error) throw error;
-      const url = data?.init_point || data?.sandbox_init_point;
-      if (!url) throw new Error("URL de checkout não recebida");
-      window.location.href = url;
-    } catch (err: any) {
-      toast({
-        title: "Erro ao iniciar pagamento",
-        description: err?.message ?? "Tente novamente em instantes.",
-        variant: "destructive",
-      });
-      setPaying(false);
-    }
-  };
+  const handleSubscribe = () => setPlansOpen(true);
 
   const categorias = useMemo(
     () => ["Todos", ...Array.from(new Set(apps.map((a) => a.categoria))).sort()],
