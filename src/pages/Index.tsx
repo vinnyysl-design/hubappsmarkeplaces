@@ -116,9 +116,9 @@ const Index = () => {
                 <>
                   <p className="font-semibold mb-1">Seu acesso aos apps está bloqueado.</p>
                   <p className="text-destructive/80">
-                    Para liberar todos os apps do Hub, assine o plano mensal por{" "}
-                    <strong>R$ 100,00/mês</strong>. Após o pagamento (Pix ou cartão), seu acesso é
-                    liberado automaticamente por 30 dias.
+                    Escolha um plano para liberar todos os apps do Hub — mensal, trimestral,
+                    semestral ou anual (com desconto de até 25%). Pagamento via Pix ou cartão em
+                    até 12x. Liberação automática após a confirmação.
                   </p>
                 </>
               )}
@@ -126,15 +126,10 @@ const Index = () => {
             {!needsTerms && (
               <button
                 onClick={handleSubscribe}
-                disabled={paying}
-                className="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg bg-primary text-primary-foreground text-sm font-semibold hover:opacity-90 transition disabled:opacity-60 whitespace-nowrap"
+                className="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg bg-primary text-primary-foreground text-sm font-semibold hover:opacity-90 transition whitespace-nowrap"
               >
-                {paying ? (
-                  <Loader2 size={16} className="animate-spin" />
-                ) : (
-                  <CreditCard size={16} />
-                )}
-                {paying ? "Redirecionando..." : "Assinar por R$ 100/mês"}
+                <CreditCard size={16} />
+                Ver planos
               </button>
             )}
           </div>
