@@ -38,16 +38,16 @@ export default function PlansDialog({ open, onOpenChange }: Props) {
   const handleChoose = async (plan: Plan) => {
     setLoadingId(plan.id);
     try {
-      const { data, error } = await supabase.functions.invoke("create-mp-preference", {
+      const { data, error } = await supabase.functions.invoke("create-mp-subscription", {
         body: { plan_id: plan.id, return_url: window.location.origin },
       });
       if (error) throw error;
-      const url = data?.init_point || data?.sandbox_init_point;
+      const url = data?.init_point;
       if (!url) throw new Error("URL de checkout não recebida");
       window.location.href = url;
     } catch (err: any) {
       toast({
-        title: "Erro ao iniciar pagamento",
+        title: "Erro ao iniciar assinatura",
         description: err?.message ?? "Tente novamente em instantes.",
         variant: "destructive",
       });
@@ -61,8 +61,9 @@ export default function PlansDialog({ open, onOpenChange }: Props) {
         <DialogHeader>
           <DialogTitle className="text-2xl">Escolha seu plano</DialogTitle>
           <DialogDescription>
-            Pagamento único do período via Pix ou cartão de crédito (parcelamos em até 12x).
-            Quanto maior o período, maior o desconto.
+            Assinatura recorrente no cartão de crédito. Você paga apenas a mensalidade
+            do seu plano, debitada automaticamente todo mês — sem precisar ter o valor
+            cheio disponível no limite.
           </DialogDescription>
         </DialogHeader>
 
@@ -92,24 +93,26 @@ export default function PlansDialog({ open, onOpenChange }: Props) {
                     <span className="text-xs font-medium text-muted-foreground">/mês</span>
                   </p>
                   <p className="text-xs text-muted-foreground mt-1">
-                    Total: <strong className="text-foreground">{brl(plan.total)}</strong>
-                    {plan.months > 1 && (
+                    {plan.months === 1 ? (
+                      "Renova automaticamente todo mês"
+                    ) : (
                       <>
-                        {" · "}até {plan.months}x de {brl(plan.total / plan.months)} sem juros
+                        Cobrado {brl(plan.monthly)} por mês durante{" "}
+                        <strong className="text-foreground">{plan.months} meses</strong>
                       </>
                     )}
                   </p>
                   {plan.discount > 0 && (
                     <p className="text-xs font-semibold text-emerald-500 mt-1">
-                      Economia de {plan.discount}%
+                      Economia de {plan.discount}% vs. mensal
                     </p>
                   )}
                 </div>
 
                 <ul className="mt-4 space-y-1.5 text-xs text-muted-foreground flex-1">
                   <li className="flex items-start gap-1.5"><Check size={13} className="mt-0.5 text-primary shrink-0" /> Acesso completo a todos os apps</li>
-                  <li className="flex items-start gap-1.5"><Check size={13} className="mt-0.5 text-primary shrink-0" /> Liberação por {plan.months} {plan.months === 1 ? "mês" : "meses"}</li>
-                  <li className="flex items-start gap-1.5"><Check size={13} className="mt-0.5 text-primary shrink-0" /> Pix ou cartão em até 12x</li>
+                  <li className="flex items-start gap-1.5"><Check size={13} className="mt-0.5 text-primary shrink-0" /> Débito automático no cartão</li>
+                  <li className="flex items-start gap-1.5"><Check size={13} className="mt-0.5 text-primary shrink-0" /> Cancele quando quiser</li>
                 </ul>
 
                 <button
@@ -130,8 +133,8 @@ export default function PlansDialog({ open, onOpenChange }: Props) {
         </div>
 
         <p className="text-[11px] text-muted-foreground text-center mt-4">
-          Pagamento processado pelo Mercado Pago. Ao final do período contratado, você pode renovar
-          escolhendo qualquer plano novamente.
+          Assinatura processada pelo Mercado Pago. Se o cartão for cancelado ou a cobrança
+          falhar, o acesso é bloqueado automaticamente até a próxima cobrança ser aprovada.
         </p>
       </DialogContent>
     </Dialog>
