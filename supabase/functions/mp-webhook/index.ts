@@ -240,7 +240,7 @@ Deno.serve(async (req) => {
 
     const { error: upErr } = await supabase
       .from("profiles")
-      .update({ status: "ativo" })
+      .update({ status: "ativo", plan: "pagante" })
       .eq("id", userId);
 
     if (upErr) console.error("Update profile error:", upErr);
