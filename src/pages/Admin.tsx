@@ -47,9 +47,16 @@ interface ProfileRow {
   status: "ativo" | "bloqueado";
   created_at: string;
   plan: "trial" | "pagante" | "cortesia";
+  mp_next_payment_date: string | null;
+  mp_preapproval_status: string | null;
 }
 
 type PlanType = "trial" | "pagante" | "cortesia";
+
+/** Formata timestamp (com hora) vindo do Mercado Pago */
+const formatTsBR = (ts: string | null) =>
+  ts ? new Date(ts).toLocaleDateString("pt-BR") : "—";
+
 
 export default function Admin() {
   const { user: currentUser } = useAuth();
