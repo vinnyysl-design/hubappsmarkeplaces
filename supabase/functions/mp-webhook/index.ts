@@ -130,6 +130,32 @@ Deno.serve(async (req) => {
         .eq("id", userId);
       if (upErr) console.error("profile update error", upErr);
 
+      // Ao autorizar, garante vigência (next_due_date) para não bloquear o pagante
+      if (status === "authorized") {
+        const { data: last } = await supabase
+          .from("payments")
+          .select("id, next_due_date")
+          .eq("user_id", userId)
+          .order("next_due_date", { ascending: false })
+          .limit(1)
+          .maybeSingle();
+
+        const today = new Date();
+        if (!last?.next_due_date || new Date(last.next_due_date as string) < today) {
+          const next = new Date();
+          next.setDate(next.getDate() + 31);
+          await supabase.from("payments").insert({
+            user_id: userId,
+            amount: Number(pre?.auto_recurring?.transaction_amount ?? 0),
+            paid_at: today.toISOString().slice(0, 10),
+            next_due_date: next.toISOString().slice(0, 10),
+            mp_preapproval_id: String(resourceId),
+            payment_method: "recurring_card",
+            notes: `Assinatura autorizada (plano ${planId ?? "?"})`,
+          });
+        }
+      }
+
       return json({ ok: true, kind: "preapproval", status });
     }
 

@@ -20,12 +20,63 @@ import PlansDialog from "@/components/PlansDialog";
 import apps from "@/data/apps.json";
 import { usePageViewTracker } from "@/hooks/useTracking";
 import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
 
 const WHATSAPP_NUMBER = "5511915264364";
 
 const Index = () => {
   usePageViewTracker();
   const { status, isAdmin, refreshProfile, termsAcceptedAt, termsVersion, isAuthenticated, trialStatus, trialEndsAt, plan } = useAuth();
+
+  // Retorno da assinatura recorrente (Mercado Pago) — sincroniza status
+  useEffect(() => {
+    if (!isAuthenticated) return;
+    const params = new URLSearchParams(window.location.search);
+    const subscription = params.get("subscription");
+    const preapprovalId = params.get("preapproval_id");
+    if (!subscription && !preapprovalId) return;
+
+    toast({
+      title: "Assinatura recebida!",
+      description: "Estamos liberando seu acesso, aguarde alguns segundos.",
+    });
+
+    let tries = 0;
+    const run = async () => {
+      tries++;
+      try {
+        await supabase.functions.invoke("sync-mp-subscription", {
+          body: preapprovalId ? { preapproval_id: preapprovalId } : {},
+        });
+      } catch (_) {
+        /* ignora e tenta novamente */
+      }
+      await refreshProfile();
+    };
+    run();
+    const interval = setInterval(async () => {
+      await run();
+      if (tries >= 5) clearInterval(interval);
+    }, 5000);
+
+    window.history.replaceState({}, "", window.location.pathname);
+    return () => clearInterval(interval);
+  }, [isAuthenticated, refreshProfile]);
+
+  // Rede de segurança: se o usuário está bloqueado, revalida a assinatura no MP
+  useEffect(() => {
+    if (!isAuthenticated || isAdmin || status !== "bloqueado") return;
+    (async () => {
+      try {
+        const { data } = await supabase.functions.invoke("sync-mp-subscription", { body: {} });
+        if (data?.status === "authorized") await refreshProfile();
+      } catch (_) {
+        /* silencioso */
+      }
+    })();
+  }, [isAuthenticated, isAdmin, status, refreshProfile]);
+
+
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
