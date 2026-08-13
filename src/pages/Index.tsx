@@ -20,6 +20,7 @@ import PlansDialog from "@/components/PlansDialog";
 import apps from "@/data/apps.json";
 import { usePageViewTracker } from "@/hooks/useTracking";
 import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
 
 const WHATSAPP_NUMBER = "5511915264364";
 
