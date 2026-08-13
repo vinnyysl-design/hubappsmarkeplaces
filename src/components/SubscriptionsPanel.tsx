@@ -73,8 +73,14 @@ export default function SubscriptionsPanel() {
     setLoading(false);
   };
 
+  // Sincroniza com o Mercado Pago ao abrir, para as datas nunca ficarem defasadas
   useEffect(() => {
-    load();
+    (async () => {
+      setSyncing(true);
+      await supabase.functions.invoke("mp-subscriptions-cron", { body: {} });
+      setSyncing(false);
+      load();
+    })();
   }, []);
 
   const sync = async () => {
@@ -99,7 +105,7 @@ export default function SubscriptionsPanel() {
       <div className="flex items-center justify-between gap-3">
         <p className="text-xs text-muted-foreground max-w-2xl">
           A cobrança dos meses seguintes é feita automaticamente pelo Mercado Pago (débito
-          recorrente no cartão). Uma rotina diária confere cada assinatura, importa as cobranças
+          recorrente no cartão). Os dados abaixo são atualizados ao abrir este painel e por uma rotina automática a cada 6 horas, que confere cada assinatura, importa as cobranças
           aprovadas, estende o acesso e bloqueia quem tiver cartão cancelado ou cobrança recusada.
         </p>
         <Button size="sm" variant="outline" onClick={sync} disabled={syncing}>
@@ -149,7 +155,15 @@ export default function SubscriptionsPanel() {
                       </Badge>
                     </TableCell>
                     <TableCell className="text-xs whitespace-nowrap">
-                      {fmt(r.mp_next_payment_date)}
+                      {r.mp_next_payment_date ? (
+                        fmt(r.mp_next_payment_date)
+                      ) : r.mp_preapproval_status === "authorized" ? (
+                        <span className="text-muted-foreground">aguardando MP</span>
+                      ) : (
+                        <span className="text-muted-foreground">
+                          sem cobrança (cartão não autorizado)
+                        </span>
+                      )}
                     </TableCell>
                     <TableCell className="text-xs whitespace-nowrap">
                       {r.subscription_ends_at ? fmt(r.subscription_ends_at) : "sem fim (renova)"}
