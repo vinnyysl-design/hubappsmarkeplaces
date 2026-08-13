@@ -191,6 +191,16 @@ export default function Admin() {
             </AccordionContent>
           </AccordionItem>
 
+          <AccordionItem value="subscriptions" className="border border-border rounded-xl px-4 bg-card">
+            <AccordionTrigger className="hover:no-underline text-foreground font-semibold">
+              🔁 Assinaturas Recorrentes
+            </AccordionTrigger>
+            <AccordionContent>
+              <SubscriptionsPanel />
+            </AccordionContent>
+          </AccordionItem>
+
+
           <AccordionItem value="vision" className="border border-border rounded-xl px-4 bg-card">
             <AccordionTrigger className="hover:no-underline text-foreground font-semibold">
               🧠 Base de Conhecimento
