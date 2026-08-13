@@ -73,7 +73,10 @@ export default function Admin() {
       await Promise.all([
         supabase
           .from("profiles")
-          .select("id,email,display_name,status,created_at,plan")
+          .select(
+            "id,email,display_name,status,created_at,plan,mp_next_payment_date,mp_preapproval_status",
+          )
+
           .order("created_at", { ascending: false }),
         supabase.from("user_roles").select("user_id,role").eq("role", "admin"),
       ]);
