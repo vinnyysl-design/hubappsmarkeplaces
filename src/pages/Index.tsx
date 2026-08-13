@@ -27,6 +27,41 @@ const Index = () => {
   usePageViewTracker();
   const { status, isAdmin, refreshProfile, termsAcceptedAt, termsVersion, isAuthenticated, trialStatus, trialEndsAt, plan } = useAuth();
 
+  // Retorno da assinatura recorrente (Mercado Pago) — sincroniza status
+  useEffect(() => {
+    if (!isAuthenticated) return;
+    const params = new URLSearchParams(window.location.search);
+    const subscription = params.get("subscription");
+    const preapprovalId = params.get("preapproval_id");
+    if (!subscription && !preapprovalId) return;
+
+    toast({
+      title: "Assinatura recebida!",
+      description: "Estamos liberando seu acesso, aguarde alguns segundos.",
+    });
+
+    let tries = 0;
+    const run = async () => {
+      tries++;
+      try {
+        await supabase.functions.invoke("sync-mp-subscription", {
+          body: preapprovalId ? { preapproval_id: preapprovalId } : {},
+        });
+      } catch (_) {
+        /* ignora e tenta novamente */
+      }
+      await refreshProfile();
+    };
+    run();
+    const interval = setInterval(async () => {
+      await run();
+      if (tries >= 5) clearInterval(interval);
+    }, 5000);
+
+    window.history.replaceState({}, "", window.location.pathname);
+    return () => clearInterval(interval);
+  }, [isAuthenticated, refreshProfile]);
+
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const payment = params.get("payment");
