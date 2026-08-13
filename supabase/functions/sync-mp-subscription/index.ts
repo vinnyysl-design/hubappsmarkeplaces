@@ -85,6 +85,7 @@ Deno.serve(async (req) => {
     const patch: Record<string, unknown> = {
       mp_preapproval_id: String(preapprovalId),
       mp_preapproval_status: status,
+      mp_next_payment_date: pre?.next_payment_date ?? null,
     };
     if (planId) patch.subscription_plan_id = planId;
     if (pre?.auto_recurring?.start_date) patch.subscription_started_at = pre.auto_recurring.start_date;

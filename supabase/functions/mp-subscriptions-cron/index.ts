@@ -35,8 +35,30 @@ Deno.serve(async (req) => {
 
   const auth = req.headers.get("Authorization") ?? "";
   const cronHeader = req.headers.get("x-cron-secret") ?? "";
-  const authorized =
+  let authorized =
     (CRON_SECRET && cronHeader === CRON_SECRET) || auth === `Bearer ${SERVICE_KEY}`;
+
+  // Também permite que um admin logado dispare a reconciliação manualmente
+  if (!authorized && auth.startsWith("Bearer ")) {
+    try {
+      const anon = createClient(SUPABASE_URL, Deno.env.get("SUPABASE_ANON_KEY")!, {
+        global: { headers: { Authorization: auth } },
+      });
+      const { data: claims } = await anon.auth.getClaims(auth.replace("Bearer ", ""));
+      const uid = claims?.claims?.sub as string | undefined;
+      if (uid) {
+        const check = createClient(SUPABASE_URL, SERVICE_KEY);
+        const { data: isAdmin } = await check.rpc("has_role", {
+          _user_id: uid,
+          _role: "admin",
+        });
+        authorized = isAdmin === true;
+      }
+    } catch (_e) {
+      authorized = false;
+    }
+  }
+
   if (!authorized) return json({ error: "unauthorized" }, 401);
   if (!MP_TOKEN) return json({ error: "missing_mp_token" }, 500);
 
@@ -64,7 +86,11 @@ Deno.serve(async (req) => {
       const status = String(pre?.status ?? "");
       const amount = Number(pre?.auto_recurring?.transaction_amount ?? 0);
 
-      const patch: Record<string, unknown> = { mp_preapproval_status: status };
+      const patch: Record<string, unknown> = {
+        mp_preapproval_status: status,
+        mp_next_payment_date: pre?.next_payment_date ?? null,
+      };
+      if (pre?.auto_recurring?.end_date) patch.subscription_ends_at = pre.auto_recurring.end_date;
       if (status === "authorized") {
         patch.plan = "pagante";
       } else if (status === "cancelled" || status === "paused") {
@@ -73,7 +99,7 @@ Deno.serve(async (req) => {
       await supabase.from("profiles").update(patch).eq("id", p.id);
 
       if (status !== "authorized") {
-        results.push({ user: p.id, status });
+        results.push({ user: p.id, status, next_payment_date: pre?.next_payment_date ?? null });
         continue;
       }
 
@@ -133,7 +159,14 @@ Deno.serve(async (req) => {
         await supabase.from("profiles").update({ status: "ativo" }).eq("id", p.id);
       }
 
-      results.push({ user: p.id, status, imported });
+      results.push({
+        user: p.id,
+        status,
+        imported,
+        amount,
+        next_payment_date: pre?.next_payment_date ?? null,
+        end_date: pre?.auto_recurring?.end_date ?? null,
+      });
     } catch (err) {
       results.push({ user: p.id, error: String(err) });
     }

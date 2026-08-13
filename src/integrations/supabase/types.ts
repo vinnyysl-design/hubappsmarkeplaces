@@ -234,6 +234,7 @@ export type Database = {
           email: string | null
           email_normalized: string | null
           id: string
+          mp_next_payment_date: string | null
           mp_preapproval_id: string | null
           mp_preapproval_status: string | null
           phone: string | null
@@ -255,6 +256,7 @@ export type Database = {
           email?: string | null
           email_normalized?: string | null
           id: string
+          mp_next_payment_date?: string | null
           mp_preapproval_id?: string | null
           mp_preapproval_status?: string | null
           phone?: string | null
@@ -276,6 +278,7 @@ export type Database = {
           email?: string | null
           email_normalized?: string | null
           id?: string
+          mp_next_payment_date?: string | null
           mp_preapproval_id?: string | null
           mp_preapproval_status?: string | null
           phone?: string | null
