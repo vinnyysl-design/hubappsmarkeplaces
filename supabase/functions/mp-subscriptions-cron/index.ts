@@ -73,7 +73,7 @@ Deno.serve(async (req) => {
       await supabase.from("profiles").update(patch).eq("id", p.id);
 
       if (status !== "authorized") {
-        results.push({ user: p.id, status });
+        results.push({ user: p.id, status, next_payment_date: pre?.next_payment_date ?? null });
         continue;
       }
 
@@ -133,7 +133,14 @@ Deno.serve(async (req) => {
         await supabase.from("profiles").update({ status: "ativo" }).eq("id", p.id);
       }
 
-      results.push({ user: p.id, status, imported });
+      results.push({
+        user: p.id,
+        status,
+        imported,
+        amount,
+        next_payment_date: pre?.next_payment_date ?? null,
+        end_date: pre?.auto_recurring?.end_date ?? null,
+      });
     } catch (err) {
       results.push({ user: p.id, error: String(err) });
     }
