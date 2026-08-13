@@ -47,9 +47,16 @@ interface ProfileRow {
   status: "ativo" | "bloqueado";
   created_at: string;
   plan: "trial" | "pagante" | "cortesia";
+  mp_next_payment_date: string | null;
+  mp_preapproval_status: string | null;
 }
 
 type PlanType = "trial" | "pagante" | "cortesia";
+
+/** Formata timestamp (com hora) vindo do Mercado Pago */
+const formatTsBR = (ts: string | null) =>
+  ts ? new Date(ts).toLocaleDateString("pt-BR") : "—";
+
 
 export default function Admin() {
   const { user: currentUser } = useAuth();
@@ -66,7 +73,10 @@ export default function Admin() {
       await Promise.all([
         supabase
           .from("profiles")
-          .select("id,email,display_name,status,created_at,plan")
+          .select(
+            "id,email,display_name,status,created_at,plan,mp_next_payment_date,mp_preapproval_status",
+          )
+
           .order("created_at", { ascending: false }),
         supabase.from("user_roles").select("user_id,role").eq("role", "admin"),
       ]);
@@ -319,16 +329,25 @@ export default function Admin() {
                             <TableCell className="whitespace-nowrap">
                               <div className="flex flex-col gap-0.5">
                                 <span className="text-xs">
-                                  {formatDateBR(payInfo?.next_due_date ?? null)}
+                                  {row.mp_next_payment_date
+                                    ? formatTsBR(row.mp_next_payment_date)
+                                    : formatDateBR(payInfo?.next_due_date ?? null)}
                                 </span>
-                                <Badge
-                                  variant={payStatus.variant}
-                                  className="text-[10px] w-fit"
-                                >
-                                  {payStatus.label}
-                                </Badge>
+                                {row.mp_next_payment_date ? (
+                                  <Badge variant="outline" className="text-[10px] w-fit">
+                                    cobrança automática
+                                  </Badge>
+                                ) : (
+                                  <Badge
+                                    variant={payStatus.variant}
+                                    className="text-[10px] w-fit"
+                                  >
+                                    {payStatus.label}
+                                  </Badge>
+                                )}
                               </div>
                             </TableCell>
+
                             <TableCell className="text-right space-x-2 whitespace-nowrap">
                               <RegisterPaymentButton
                                 userId={row.id}
