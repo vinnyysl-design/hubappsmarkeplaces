@@ -63,6 +63,21 @@ const Index = () => {
     return () => clearInterval(interval);
   }, [isAuthenticated, refreshProfile]);
 
+  // Rede de segurança: se o usuário está bloqueado, revalida a assinatura no MP
+  useEffect(() => {
+    if (!isAuthenticated || isAdmin || status !== "bloqueado") return;
+    (async () => {
+      try {
+        const { data } = await supabase.functions.invoke("sync-mp-subscription", { body: {} });
+        if (data?.status === "authorized") await refreshProfile();
+      } catch (_) {
+        /* silencioso */
+      }
+    })();
+  }, [isAuthenticated, isAdmin, status, refreshProfile]);
+
+
+
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const payment = params.get("payment");
