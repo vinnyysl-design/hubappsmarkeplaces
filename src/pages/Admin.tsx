@@ -252,6 +252,16 @@ export default function Admin() {
             </AccordionContent>
           </AccordionItem>
 
+          <AccordionItem value="contacts" className="border border-border rounded-xl px-4 bg-card">
+            <AccordionTrigger className="hover:no-underline text-foreground font-semibold">
+              📱 Contatos dos Clientes
+            </AccordionTrigger>
+            <AccordionContent>
+              <ContactsPanel />
+            </AccordionContent>
+          </AccordionItem>
+
+
           <AccordionItem value="users" className="border border-border rounded-xl px-4 bg-card">
             <AccordionTrigger className="hover:no-underline text-foreground font-semibold">
               👥 Todos os Usuários
