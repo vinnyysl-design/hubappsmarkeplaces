@@ -24,9 +24,17 @@ const nameSchema = z
 const phoneSchema = z
   .string()
   .trim()
-  .min(8, { message: "Telefone inválido" })
+  .min(1, { message: "Informe seu telefone (WhatsApp)" })
   .max(20, { message: "Telefone muito longo" })
-  .regex(/^[0-9()+\-\s]+$/, { message: "Telefone contém caracteres inválidos" });
+  .regex(/^[0-9()+\-\s]+$/, { message: "Telefone contém caracteres inválidos" })
+  .refine(
+    (v) => {
+      const d = v.replace(/\D/g, "").replace(/^55/, "");
+      return d.length === 10 || d.length === 11;
+    },
+    { message: "Telefone inválido. Use DDD + número, ex: (11) 99999-9999" }
+  );
+
 
 // Reusable branded "Analytical X" wordmark with gradient X (matches HeroSection)
 const BrandTitle = ({ className = "" }: { className?: string }) => (
