@@ -288,7 +288,10 @@ export default function Auth() {
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="signup-phone">
-                    Telefone <span className="text-muted-foreground font-normal">(opcional)</span>
+                    Telefone / WhatsApp{" "}
+                    <span className="text-muted-foreground font-normal">
+                      (com DDD)
+                    </span>
                   </Label>
                   <Input
                     id="signup-phone"
@@ -297,7 +300,9 @@ export default function Auth() {
                     placeholder="(11) 99999-9999"
                     value={signupPhone}
                     onChange={(e) => setSignupPhone(e.target.value)}
+                    required
                   />
+
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="signup-password">Senha</Label>
