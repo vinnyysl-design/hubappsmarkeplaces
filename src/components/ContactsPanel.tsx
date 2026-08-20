@@ -84,9 +84,11 @@ export default function ContactsPanel() {
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
     return rows.filter((r) => {
-      if (planFilter !== "todos" && r.plan !== planFilter) return false;
       if (planFilter === "sem_telefone" && r.phone) return false;
+      if (planFilter !== "todos" && planFilter !== "sem_telefone" && r.plan !== planFilter)
+        return false;
       if (!q) return true;
+
       return (
         (r.display_name ?? "").toLowerCase().includes(q) ||
         (r.email ?? "").toLowerCase().includes(q) ||
