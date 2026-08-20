@@ -278,7 +278,8 @@ export default function Admin() {
                       <TableRow>
                         <TableHead>Nome</TableHead>
                         <TableHead>Email</TableHead>
-                        <TableHead>Cadastrado em</TableHead>
+                        <TableHead>Telefone</TableHead>
+
                         <TableHead>Papel</TableHead>
                         <TableHead>Status</TableHead>
                         <TableHead>Plano</TableHead>
