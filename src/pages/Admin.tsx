@@ -308,6 +308,21 @@ export default function Admin() {
                             <TableCell className="text-muted-foreground">
                               {row.email}
                             </TableCell>
+                            <TableCell className="whitespace-nowrap text-xs">
+                              {toWhatsAppNumber(row.phone) ? (
+                                <a
+                                  href={`https://wa.me/${toWhatsAppNumber(row.phone)}`}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="text-primary hover:underline"
+                                >
+                                  {formatPhoneBR(row.phone)}
+                                </a>
+                              ) : (
+                                <span className="text-muted-foreground">—</span>
+                              )}
+                            </TableCell>
+
                             <TableCell className="text-xs text-muted-foreground whitespace-nowrap">
                               {new Date(row.created_at).toLocaleDateString("pt-BR")}
                             </TableCell>
