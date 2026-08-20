@@ -33,6 +33,7 @@ import SuspiciousAccountsPanel from "@/components/SuspiciousAccountsPanel";
 import TrialUsersPanel from "@/components/TrialUsersPanel";
 import SubscriptionsPanel from "@/components/SubscriptionsPanel";
 import ReviewsPanel from "@/components/ReviewsPanel";
+import ContactsPanel, { formatPhoneBR, toWhatsAppNumber } from "@/components/ContactsPanel";
 import PaymentsPanel, {
   RegisterPaymentButton,
   getPaymentStatus,
@@ -44,12 +45,14 @@ interface ProfileRow {
   id: string;
   email: string | null;
   display_name: string | null;
+  phone: string | null;
   status: "ativo" | "bloqueado";
   created_at: string;
   plan: "trial" | "pagante" | "cortesia";
   mp_next_payment_date: string | null;
   mp_preapproval_status: string | null;
 }
+
 
 type PlanType = "trial" | "pagante" | "cortesia";
 
@@ -74,8 +77,9 @@ export default function Admin() {
         supabase
           .from("profiles")
           .select(
-            "id,email,display_name,status,created_at,plan,mp_next_payment_date,mp_preapproval_status",
+            "id,email,display_name,phone,status,created_at,plan,mp_next_payment_date,mp_preapproval_status",
           )
+
 
           .order("created_at", { ascending: false }),
         supabase.from("user_roles").select("user_id,role").eq("role", "admin"),
@@ -248,6 +252,16 @@ export default function Admin() {
             </AccordionContent>
           </AccordionItem>
 
+          <AccordionItem value="contacts" className="border border-border rounded-xl px-4 bg-card">
+            <AccordionTrigger className="hover:no-underline text-foreground font-semibold">
+              📱 Contatos dos Clientes
+            </AccordionTrigger>
+            <AccordionContent>
+              <ContactsPanel />
+            </AccordionContent>
+          </AccordionItem>
+
+
           <AccordionItem value="users" className="border border-border rounded-xl px-4 bg-card">
             <AccordionTrigger className="hover:no-underline text-foreground font-semibold">
               👥 Todos os Usuários
@@ -264,8 +278,10 @@ export default function Admin() {
                       <TableRow>
                         <TableHead>Nome</TableHead>
                         <TableHead>Email</TableHead>
+                        <TableHead>Telefone</TableHead>
                         <TableHead>Cadastrado em</TableHead>
                         <TableHead>Papel</TableHead>
+
                         <TableHead>Status</TableHead>
                         <TableHead>Plano</TableHead>
                         <TableHead>Último pagamento</TableHead>
@@ -292,6 +308,21 @@ export default function Admin() {
                             <TableCell className="text-muted-foreground">
                               {row.email}
                             </TableCell>
+                            <TableCell className="whitespace-nowrap text-xs">
+                              {toWhatsAppNumber(row.phone) ? (
+                                <a
+                                  href={`https://wa.me/${toWhatsAppNumber(row.phone)}`}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="text-primary hover:underline"
+                                >
+                                  {formatPhoneBR(row.phone)}
+                                </a>
+                              ) : (
+                                <span className="text-muted-foreground">—</span>
+                              )}
+                            </TableCell>
+
                             <TableCell className="text-xs text-muted-foreground whitespace-nowrap">
                               {new Date(row.created_at).toLocaleDateString("pt-BR")}
                             </TableCell>
