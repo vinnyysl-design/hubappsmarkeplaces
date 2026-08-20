@@ -33,6 +33,7 @@ import SuspiciousAccountsPanel from "@/components/SuspiciousAccountsPanel";
 import TrialUsersPanel from "@/components/TrialUsersPanel";
 import SubscriptionsPanel from "@/components/SubscriptionsPanel";
 import ReviewsPanel from "@/components/ReviewsPanel";
+import ContactsPanel, { formatPhoneBR, toWhatsAppNumber } from "@/components/ContactsPanel";
 import PaymentsPanel, {
   RegisterPaymentButton,
   getPaymentStatus,
@@ -44,12 +45,14 @@ interface ProfileRow {
   id: string;
   email: string | null;
   display_name: string | null;
+  phone: string | null;
   status: "ativo" | "bloqueado";
   created_at: string;
   plan: "trial" | "pagante" | "cortesia";
   mp_next_payment_date: string | null;
   mp_preapproval_status: string | null;
 }
+
 
 type PlanType = "trial" | "pagante" | "cortesia";
 
