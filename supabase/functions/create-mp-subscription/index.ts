@@ -113,26 +113,37 @@ Deno.serve(async (req) => {
       autoRecurring.end_date = endDate.toISOString();
     }
 
-    const preapprovalPayload = {
+    const basePayload: Record<string, unknown> = {
       reason: plan.reason,
       external_reference: `${userId}|${planId}`,
-      payer_email: userEmail,
       back_url: `${origin}/?subscription=success`,
       status: "pending",
       auto_recurring: autoRecurring,
       notification_url: webhookUrl,
     };
 
-    const mpRes = await fetch("https://api.mercadopago.com/preapproval", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${MP_TOKEN}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(preapprovalPayload),
-    });
+    const createPreapproval = (payload: Record<string, unknown>) =>
+      fetch("https://api.mercadopago.com/preapproval", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${MP_TOKEN}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(payload),
+      });
 
-    const mpData = await mpRes.json();
+    // 1ª tentativa: SEM payer_email — assim o Mercado Pago aceita qualquer conta
+    // logada no checkout (evita "Seu e-mail não corresponde ao da assinatura").
+    let mpRes = await createPreapproval(basePayload);
+    let mpData = await mpRes.json();
+
+    // Fallback: se o MP exigir o e-mail, reenvia com o e-mail da conta do hub.
+    if (!mpRes.ok) {
+      console.warn("MP preapproval sem payer_email falhou, tentando com e-mail:", mpData);
+      mpRes = await createPreapproval({ ...basePayload, payer_email: userEmail });
+      mpData = await mpRes.json();
+    }
+
     if (!mpRes.ok) {
       console.error("MP preapproval error:", mpRes.status, mpData);
       return new Response(
