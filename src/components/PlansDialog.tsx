@@ -3,6 +3,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { Check, Loader2, Sparkles, CreditCard } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 
 export type PlanId = "mensal" | "trimestral" | "semestral" | "anual";
 
@@ -34,12 +36,27 @@ const brl = (v: number) =>
 
 export default function PlansDialog({ open, onOpenChange }: Props) {
   const [loadingId, setLoadingId] = useState<PlanId | null>(null);
+  const [mercadoPagoEmail, setMercadoPagoEmail] = useState("");
 
   const handleChoose = async (plan: Plan) => {
+    const payerEmail = mercadoPagoEmail.trim().toLowerCase();
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(payerEmail)) {
+      toast({
+        title: "Informe o e-mail do Mercado Pago",
+        description: "Use o mesmo e-mail da conta que será aberta para concluir a assinatura.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setLoadingId(plan.id);
     try {
       const { data, error } = await supabase.functions.invoke("create-mp-subscription", {
-        body: { plan_id: plan.id, return_url: window.location.origin },
+        body: {
+          plan_id: plan.id,
+          payer_email: payerEmail,
+          return_url: window.location.origin,
+        },
       });
       if (error) throw error;
       const url = data?.init_point;
@@ -66,6 +83,23 @@ export default function PlansDialog({ open, onOpenChange }: Props) {
             cheio disponível no limite.
           </DialogDescription>
         </DialogHeader>
+
+        <div className="grid gap-2 rounded-lg border border-border bg-muted/30 p-4">
+          <Label htmlFor="mercado-pago-email">E-mail da sua conta Mercado Pago</Label>
+          <Input
+            id="mercado-pago-email"
+            type="email"
+            inputMode="email"
+            autoComplete="email"
+            value={mercadoPagoEmail}
+            onChange={(event) => setMercadoPagoEmail(event.target.value)}
+            placeholder="email usado no Mercado Pago"
+            disabled={loadingId !== null}
+          />
+          <p className="text-xs text-muted-foreground">
+            Deve ser exatamente o mesmo e-mail da conta Mercado Pago usada no pagamento.
+          </p>
+        </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mt-2">
           {PLANS.map((plan) => {
