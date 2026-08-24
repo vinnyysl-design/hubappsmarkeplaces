@@ -87,6 +87,17 @@ Deno.serve(async (req) => {
       req.headers.get("origin") ||
       "https://hub.analyticalx.com.br";
 
+    const payerEmail =
+      typeof body?.payer_email === "string"
+        ? body.payer_email.trim().toLowerCase()
+        : "";
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(payerEmail)) {
+      return new Response(JSON.stringify({ error: "invalid_payer_email" }), {
+        status: 400,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
     const planId = typeof body?.plan_id === "string" ? body.plan_id : "mensal";
     const plan = SUBSCRIPTION_PLANS[planId];
     if (!plan) {
@@ -116,6 +127,7 @@ Deno.serve(async (req) => {
     const basePayload: Record<string, unknown> = {
       reason: plan.reason,
       external_reference: `${userId}|${planId}`,
+      payer_email: payerEmail,
       back_url: `${origin}/?subscription=success`,
       status: "pending",
       auto_recurring: autoRecurring,
@@ -132,17 +144,8 @@ Deno.serve(async (req) => {
         body: JSON.stringify(payload),
       });
 
-    // 1ª tentativa: SEM payer_email — assim o Mercado Pago aceita qualquer conta
-    // logada no checkout (evita "Seu e-mail não corresponde ao da assinatura").
-    let mpRes = await createPreapproval(basePayload);
-    let mpData = await mpRes.json();
-
-    // Fallback: se o MP exigir o e-mail, reenvia com o e-mail da conta do hub.
-    if (!mpRes.ok) {
-      console.warn("MP preapproval sem payer_email falhou, tentando com e-mail:", mpData);
-      mpRes = await createPreapproval({ ...basePayload, payer_email: userEmail });
-      mpData = await mpRes.json();
-    }
+    const mpRes = await createPreapproval(basePayload);
+    const mpData = await mpRes.json();
 
     if (!mpRes.ok) {
       console.error("MP preapproval error:", mpRes.status, mpData);
