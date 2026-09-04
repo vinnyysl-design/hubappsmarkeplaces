@@ -6,7 +6,6 @@ project_id = "nhgehigwwxcqsovjzxch"
   [functions.auth-email-hook]
     verify_jwt = false
   [functions.validate-user]
-  [functions.validate-user]
     verify_jwt = false
   [functions.sso-image-generator]
     verify_jwt = true
