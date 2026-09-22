@@ -43,9 +43,13 @@ export default function PlansDialog({ open, onOpenChange }: Props) {
     if (!open) return;
     let cancelled = false;
     (async () => {
+      const { data: auth } = await supabase.auth.getUser();
+      const uid = auth?.user?.id;
+      if (!uid) return;
       const { data } = await supabase
         .from("coupon_redemptions")
         .select("code, discount_percent, first_payment_done")
+        .eq("user_id", uid)
         .eq("first_payment_done", false)
         .maybeSingle();
       if (!cancelled && data) {
