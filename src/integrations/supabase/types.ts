@@ -521,11 +521,6 @@ export type Database = {
         Args: { _fingerprint: string }
         Returns: Json
       }
-      delete_email: {
-        Args: { message_id: number; queue_name: string }
-        Returns: boolean
-      }
-      email_queue_dispatch: { Args: never; Returns: undefined }
       enforce_trial_status: {
         Args: { _user_id: string }
         Returns: {
@@ -533,10 +528,6 @@ export type Database = {
           trial_ends_at: string
           trial_expired: boolean
         }[]
-      }
-      enqueue_email: {
-        Args: { payload: Json; queue_name: string }
-        Returns: number
       }
       get_user_status: {
         Args: { _user_id: string }
@@ -554,25 +545,8 @@ export type Database = {
         Args: { _phone: string; _user_id: string }
         Returns: undefined
       }
-      move_to_dlq: {
-        Args: {
-          dlq_name: string
-          message_id: number
-          payload: Json
-          source_queue: string
-        }
-        Returns: number
-      }
       normalize_email: { Args: { _email: string }; Returns: string }
       normalize_phone: { Args: { _phone: string }; Returns: string }
-      read_email_batch: {
-        Args: { batch_size: number; queue_name: string; vt: number }
-        Returns: {
-          message: Json
-          msg_id: number
-          read_ct: number
-        }[]
-      }
       validate_signup_email: { Args: { _email: string }; Returns: Json }
     }
     Enums: {
