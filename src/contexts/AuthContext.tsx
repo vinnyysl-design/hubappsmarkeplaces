@@ -45,7 +45,8 @@ interface AuthContextValue {
     email: string,
     password: string,
     displayName: string,
-    phone?: string
+    phone?: string,
+    couponCode?: string
   ) => Promise<{ error: string | null }>;
   resetPassword: (email: string) => Promise<{ error: string | null }>;
   updatePassword: (password: string) => Promise<{ error: string | null }>;
@@ -87,7 +88,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [plan, setPlan] = useState<UserPlan | null>(null);
   const [loading, setLoading] = useState(true);
 
-  const loadProfile = useCallback(async (uid: string, emailConfirmed: boolean) => {
+  const loadProfile = useCallback(async (
+    uid: string,
+    emailConfirmed: boolean,
+    metaCoupon?: string | null
+  ) => {
+    // Resgata o cupom informado no cadastro (só funciona autenticado)
+    if (metaCoupon) {
+      try {
+        await supabase.rpc("redeem_coupon", { _code: metaCoupon, _user_id: uid });
+      } catch (e) {
+        console.warn("[coupon] não foi possível resgatar:", e);
+      }
+    }
+
     // Se o usuário já confirmou o email mas o trial ainda não foi ativado, ativa agora.
     if (emailConfirmed) {
       await supabase.rpc("activate_trial_after_email_confirm", { _user_id: uid });
@@ -133,7 +147,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (newSession?.user) {
         const confirmed = Boolean(newSession.user.email_confirmed_at);
         setTimeout(async () => {
-          await loadProfile(newSession.user.id, confirmed);
+          await loadProfile(
+            newSession.user.id,
+            confirmed,
+            (newSession.user.user_metadata as any)?.coupon_code ?? null
+          );
           const result = await validateAccess();
           if (!result.ok) {
             const reason = result.data?.error;
@@ -178,7 +196,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setToken(existing?.access_token ?? null);
       if (existing?.user) {
         const confirmed = Boolean(existing.user.email_confirmed_at);
-        loadProfile(existing.user.id, confirmed).finally(() => setLoading(false));
+        loadProfile(
+          existing.user.id,
+          confirmed,
+          (existing.user.user_metadata as any)?.coupon_code ?? null
+        ).finally(() => setLoading(false));
       } else {
         setLoading(false);
       }
@@ -205,7 +227,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     email,
     password,
     displayName,
-    phoneArg
+    phoneArg,
+    couponCode
+
   ) => {
     // 1. Valida o email: formato, descartável, e duplicado (normalizado)
     const { data: validation, error: valErr } = await supabase.rpc(
@@ -243,7 +267,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       password,
       options: {
         emailRedirectTo: REDIRECT_URL,
-        data: { display_name: displayName, phone: phoneArg ?? null },
+        data: {
+          display_name: displayName,
+          phone: phoneArg ?? null,
+          coupon_code: couponCode ? couponCode.trim().toUpperCase() : null,
+        },
       },
     });
     if (error) {

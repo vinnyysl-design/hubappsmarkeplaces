@@ -10,6 +10,8 @@ import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "@/hooks/use-toast";
 import logoSrc from "@/assets/logo-x.png";
 import SupportButton from "@/components/SupportButton";
+import { supabase } from "@/integrations/supabase/client";
+import { Ticket, Check, X } from "lucide-react";
 
 const emailSchema = z.string().trim().email({ message: "Email inválido" }).max(255);
 const passwordSchema = z
@@ -101,6 +103,47 @@ export default function Auth() {
   const [signupEmail, setSignupEmail] = useState("");
   const [signupPhone, setSignupPhone] = useState("");
   const [signupPassword, setSignupPassword] = useState("");
+  const [signupCoupon, setSignupCoupon] = useState("");
+  const [couponState, setCouponState] = useState<
+    | { kind: "idle" }
+    | { kind: "checking" }
+    | { kind: "valid"; code: string; discount: number }
+    | { kind: "invalid"; message: string }
+  >({ kind: "idle" });
+
+  const checkCoupon = async () => {
+    const code = signupCoupon.trim().toUpperCase();
+    if (!code) {
+      setCouponState({ kind: "idle" });
+      return;
+    }
+    setCouponState({ kind: "checking" });
+    const { data, error } = await supabase.rpc("validate_coupon", { _code: code });
+    if (error) {
+      setCouponState({ kind: "invalid", message: "Não foi possível validar o cupom." });
+      return;
+    }
+    const res = data as { valid: boolean; reason?: string; code?: string; discount_percent?: number };
+    if (res?.valid) {
+      setCouponState({
+        kind: "valid",
+        code: res.code ?? code,
+        discount: Number(res.discount_percent ?? 0),
+      });
+      return;
+    }
+    const reasons: Record<string, string> = {
+      not_found: "Cupom não encontrado.",
+      inactive: "Este cupom não está mais ativo.",
+      expired: "Este cupom expirou.",
+      not_started: "Este cupom ainda não está valendo.",
+      exhausted: "Este cupom atingiu o limite de usos.",
+    };
+    setCouponState({
+      kind: "invalid",
+      message: reasons[res?.reason ?? ""] ?? "Cupom inválido.",
+    });
+  };
 
   // reset state
   const [resetEmail, setResetEmail] = useState("");
@@ -166,7 +209,9 @@ export default function Auth() {
       emailP.data,
       pwP.data,
       nameP.data,
-      phoneP.data
+      phoneP.data,
+      couponState.kind === "valid" ? couponState.code : undefined
+
     );
 
     setSubmitting(false);
@@ -315,6 +360,47 @@ export default function Auth() {
                   <p className="text-xs text-muted-foreground">
                     Mínimo 8 caracteres.
                   </p>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="signup-coupon">
+                    Cupom de desconto{" "}
+                    <span className="text-muted-foreground font-normal">(opcional)</span>
+                  </Label>
+                  <div className="relative">
+                    <Ticket
+                      size={16}
+                      className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground"
+                    />
+                    <Input
+                      id="signup-coupon"
+                      type="text"
+                      autoCapitalize="characters"
+                      placeholder="EVENTO10"
+                      className="pl-9 uppercase"
+                      value={signupCoupon}
+                      onChange={(e) => {
+                        setSignupCoupon(e.target.value);
+                        setCouponState({ kind: "idle" });
+                      }}
+                      onBlur={checkCoupon}
+                    />
+                  </div>
+                  {couponState.kind === "checking" && (
+                    <p className="text-xs text-muted-foreground flex items-center gap-1">
+                      <Loader2 size={12} className="animate-spin" /> Verificando cupom...
+                    </p>
+                  )}
+                  {couponState.kind === "valid" && (
+                    <p className="text-xs text-emerald-500 flex items-center gap-1 font-medium">
+                      <Check size={12} /> Cupom {couponState.code} aplicado:{" "}
+                      {couponState.discount}% de desconto no 1º mês da assinatura.
+                    </p>
+                  )}
+                  {couponState.kind === "invalid" && (
+                    <p className="text-xs text-destructive flex items-center gap-1">
+                      <X size={12} /> {couponState.message}
+                    </p>
+                  )}
                 </div>
                 <Button type="submit" className="w-full" disabled={submitting}>
                   {submitting && <Loader2 className="animate-spin mr-2" size={16} />}

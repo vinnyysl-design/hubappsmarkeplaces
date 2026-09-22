@@ -33,6 +33,7 @@ import SuspiciousAccountsPanel from "@/components/SuspiciousAccountsPanel";
 import TrialUsersPanel from "@/components/TrialUsersPanel";
 import SubscriptionsPanel from "@/components/SubscriptionsPanel";
 import ReviewsPanel from "@/components/ReviewsPanel";
+import CouponsPanel from "@/components/CouponsPanel";
 import ContactsPanel, { formatPhoneBR, toWhatsAppNumber } from "@/components/ContactsPanel";
 import PaymentsPanel, {
   RegisterPaymentButton,
@@ -51,6 +52,7 @@ interface ProfileRow {
   plan: "trial" | "pagante" | "cortesia";
   mp_next_payment_date: string | null;
   mp_preapproval_status: string | null;
+  coupon_code: string | null;
 }
 
 
@@ -77,7 +79,7 @@ export default function Admin() {
         supabase
           .from("profiles")
           .select(
-            "id,email,display_name,phone,status,created_at,plan,mp_next_payment_date,mp_preapproval_status",
+            "id,email,display_name,phone,status,created_at,plan,mp_next_payment_date,mp_preapproval_status,coupon_code",
           )
 
 
@@ -233,6 +235,15 @@ export default function Admin() {
               <TrialUsersPanel />
             </AccordionContent>
           </AccordionItem>
+          <AccordionItem value="coupons" className="border border-border rounded-xl px-4 bg-card">
+            <AccordionTrigger className="hover:no-underline text-foreground font-semibold">
+              🎟️ Cupons de Desconto
+            </AccordionTrigger>
+            <AccordionContent>
+              <CouponsPanel />
+            </AccordionContent>
+          </AccordionItem>
+
           <AccordionItem value="reviews" className="border border-border rounded-xl px-4 bg-card">
             <AccordionTrigger className="hover:no-underline text-foreground font-semibold">
               ⭐ Avaliações dos Usuários
@@ -284,6 +295,7 @@ export default function Admin() {
 
                         <TableHead>Status</TableHead>
                         <TableHead>Plano</TableHead>
+                        <TableHead>Cupom</TableHead>
                         <TableHead>Último pagamento</TableHead>
                         <TableHead>Próx. vencimento</TableHead>
                         <TableHead className="text-right">Ações</TableHead>
@@ -353,6 +365,15 @@ export default function Admin() {
                                   <SelectItem value="cortesia">Cortesia</SelectItem>
                                 </SelectContent>
                               </Select>
+                            </TableCell>
+                            <TableCell className="text-xs whitespace-nowrap">
+                              {row.coupon_code ? (
+                                <Badge variant="secondary" className="text-[10px]">
+                                  {row.coupon_code}
+                                </Badge>
+                              ) : (
+                                <span className="text-muted-foreground">—</span>
+                              )}
                             </TableCell>
                             <TableCell className="text-xs whitespace-nowrap">
                               {formatDateBR(payInfo?.last_paid_at ?? null)}

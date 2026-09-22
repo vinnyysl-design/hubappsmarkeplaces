@@ -14,6 +14,92 @@ export type Database = {
   }
   public: {
     Tables: {
+      coupon_redemptions: {
+        Row: {
+          applied_at: string
+          code: string
+          coupon_id: string
+          created_at: string
+          discount_percent: number
+          first_payment_done: boolean
+          id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          applied_at?: string
+          code: string
+          coupon_id: string
+          created_at?: string
+          discount_percent: number
+          first_payment_done?: boolean
+          id?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          applied_at?: string
+          code?: string
+          coupon_id?: string
+          created_at?: string
+          discount_percent?: number
+          first_payment_done?: boolean
+          id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "coupon_redemptions_coupon_id_fkey"
+            columns: ["coupon_id"]
+            isOneToOne: false
+            referencedRelation: "coupons"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      coupons: {
+        Row: {
+          active: boolean
+          code: string
+          created_at: string
+          description: string | null
+          discount_percent: number
+          id: string
+          max_uses: number | null
+          updated_at: string
+          uses_count: number
+          valid_from: string
+          valid_until: string | null
+        }
+        Insert: {
+          active?: boolean
+          code: string
+          created_at?: string
+          description?: string | null
+          discount_percent?: number
+          id?: string
+          max_uses?: number | null
+          updated_at?: string
+          uses_count?: number
+          valid_from?: string
+          valid_until?: string | null
+        }
+        Update: {
+          active?: boolean
+          code?: string
+          created_at?: string
+          description?: string | null
+          discount_percent?: number
+          id?: string
+          max_uses?: number | null
+          updated_at?: string
+          uses_count?: number
+          valid_from?: string
+          valid_until?: string | null
+        }
+        Relationships: []
+      }
       disposable_email_domains: {
         Row: {
           created_at: string
@@ -229,6 +315,7 @@ export type Database = {
       }
       profiles: {
         Row: {
+          coupon_code: string | null
           created_at: string
           display_name: string | null
           email: string | null
@@ -251,6 +338,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          coupon_code?: string | null
           created_at?: string
           display_name?: string | null
           email?: string | null
@@ -273,6 +361,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          coupon_code?: string | null
           created_at?: string
           display_name?: string | null
           email?: string | null
@@ -547,6 +636,11 @@ export type Database = {
       }
       normalize_email: { Args: { _email: string }; Returns: string }
       normalize_phone: { Args: { _phone: string }; Returns: string }
+      redeem_coupon: {
+        Args: { _code: string; _user_id: string }
+        Returns: Json
+      }
+      validate_coupon: { Args: { _code: string }; Returns: Json }
       validate_signup_email: { Args: { _email: string }; Returns: Json }
     }
     Enums: {

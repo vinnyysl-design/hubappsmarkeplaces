@@ -109,12 +109,29 @@ Deno.serve(async (req) => {
 
     const webhookUrl = `${SUPABASE_URL}/functions/v1/mp-webhook`;
 
+    // ===== Cupom: desconto no primeiro mês =====
+    const admin = createClient(SUPABASE_URL, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
+    const { data: redemption } = await admin
+      .from("coupon_redemptions")
+      .select("id, code, discount_percent, first_payment_done")
+      .eq("user_id", userId)
+      .eq("first_payment_done", false)
+      .maybeSingle();
+
+    let firstAmount = plan.monthly;
+    if (redemption) {
+      const pct = Number(redemption.discount_percent ?? 0);
+      if (pct > 0 && pct <= 100) {
+        firstAmount = Math.round(plan.monthly * (1 - pct / 100) * 100) / 100;
+      }
+    }
+
     // Data de início: agora + 5 min (MP exige start_date no futuro para preapproval)
     const startDate = new Date(Date.now() + 5 * 60 * 1000);
     const autoRecurring: Record<string, unknown> = {
       frequency: 1,
       frequency_type: "months",
-      transaction_amount: plan.monthly,
+      transaction_amount: firstAmount,
       currency_id: "BRL",
       start_date: startDate.toISOString(),
     };
@@ -156,7 +173,6 @@ Deno.serve(async (req) => {
     }
 
     // Guarda o preapproval_id pendente no perfil (será promovido a authorized pelo webhook)
-    const admin = createClient(SUPABASE_URL, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
     await admin
       .from("profiles")
       .update({
@@ -172,6 +188,8 @@ Deno.serve(async (req) => {
         init_point: mpData.init_point,
         plan_id: planId,
         monthly: plan.monthly,
+        first_month: firstAmount,
+        coupon_code: redemption?.code ?? null,
         months: plan.months,
       }),
       { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
