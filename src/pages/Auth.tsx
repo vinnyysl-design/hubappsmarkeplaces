@@ -112,7 +112,7 @@ export default function Auth() {
   >({ kind: "idle" });
 
   const checkCoupon = async () => {
-    const code = signupCoupon.trim().toUpperCase();
+    const code = signupCoupon.trim();
     if (!code) {
       setCouponState({ kind: "idle" });
       return;
@@ -375,7 +375,7 @@ export default function Auth() {
                       id="signup-coupon"
                       type="text"
                       autoCapitalize="characters"
-                      placeholder="EVENTO10"
+                      placeholder="MeliXp10"
                       className="pl-9 uppercase"
                       value={signupCoupon}
                       onChange={(e) => {

@@ -150,7 +150,7 @@ export default function CouponsPanel() {
             id="coupon-code"
             value={code}
             onChange={(e) => setCode(e.target.value)}
-            placeholder="EVENTO10"
+            placeholder="MeliXp10"
             className="uppercase"
           />
         </div>

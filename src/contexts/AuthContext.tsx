@@ -270,7 +270,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         data: {
           display_name: displayName,
           phone: phoneArg ?? null,
-          coupon_code: couponCode ? couponCode.trim().toUpperCase() : null,
+          coupon_code: couponCode ? couponCode.trim() : null,
         },
       },
     });
