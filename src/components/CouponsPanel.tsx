@@ -79,7 +79,7 @@ export default function CouponsPanel() {
   }, []);
 
   const createCoupon = async () => {
-    const normalized = code.trim().toUpperCase();
+    const normalized = code.trim();
     const pct = Number(discount);
     if (normalized.length < 3) {
       toast({ title: "Informe um código com ao menos 3 caracteres", variant: "destructive" });
@@ -150,7 +150,7 @@ export default function CouponsPanel() {
             id="coupon-code"
             value={code}
             onChange={(e) => setCode(e.target.value)}
-            placeholder="EVENTO10"
+            placeholder="MeliXp10"
             className="uppercase"
           />
         </div>
