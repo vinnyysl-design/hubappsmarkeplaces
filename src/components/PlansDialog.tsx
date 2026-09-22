@@ -1,6 +1,6 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
-import { Check, Loader2, Sparkles, CreditCard } from "lucide-react";
+import { Check, Loader2, Sparkles, CreditCard, Ticket } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import { Input } from "@/components/ui/input";
@@ -37,6 +37,28 @@ const brl = (v: number) =>
 export default function PlansDialog({ open, onOpenChange }: Props) {
   const [loadingId, setLoadingId] = useState<PlanId | null>(null);
   const [mercadoPagoEmail, setMercadoPagoEmail] = useState("");
+  const [coupon, setCoupon] = useState<{ code: string; discount: number } | null>(null);
+
+  useEffect(() => {
+    if (!open) return;
+    let cancelled = false;
+    (async () => {
+      const { data } = await supabase
+        .from("coupon_redemptions")
+        .select("code, discount_percent, first_payment_done")
+        .eq("first_payment_done", false)
+        .maybeSingle();
+      if (!cancelled && data) {
+        setCoupon({ code: data.code, discount: Number(data.discount_percent) });
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [open]);
+
+  const firstMonth = (value: number) =>
+    coupon ? Math.round(value * (1 - coupon.discount / 100) * 100) / 100 : value;
 
   const handleChoose = async (plan: Plan) => {
     const payerEmail = mercadoPagoEmail.trim().toLowerCase();
@@ -101,6 +123,16 @@ export default function PlansDialog({ open, onOpenChange }: Props) {
           </p>
         </div>
 
+        {coupon && (
+          <div className="flex items-center gap-2 rounded-lg border border-emerald-500/40 bg-emerald-500/10 px-4 py-2.5">
+            <Ticket size={15} className="text-emerald-500 shrink-0" />
+            <p className="text-xs text-foreground">
+              Cupom <strong>{coupon.code}</strong> aplicado: {coupon.discount}% de desconto
+              no 1º mês de qualquer plano.
+            </p>
+          </div>
+        )}
+
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mt-2">
           {PLANS.map((plan) => {
             const loading = loadingId === plan.id;
@@ -139,6 +171,11 @@ export default function PlansDialog({ open, onOpenChange }: Props) {
                   {plan.discount > 0 && (
                     <p className="text-xs font-semibold text-emerald-500 mt-1">
                       Economia de {plan.discount}% vs. mensal
+                    </p>
+                  )}
+                  {coupon && (
+                    <p className="text-xs font-semibold text-emerald-500 mt-1">
+                      1º mês: {brl(firstMonth(plan.monthly))} com o cupom {coupon.code}
                     </p>
                   )}
                 </div>

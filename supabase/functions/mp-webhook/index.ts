@@ -26,6 +26,14 @@ const corsHeaders = {
 const IMAGE_TOOL_WEBHOOK =
   "https://geradordeimagens.analyticalx.com.br/api/public/hub/credits";
 
+/** Valor cheio da mensalidade por plano (usado para retirar o desconto de cupom) */
+const PLAN_MONTHLY: Record<string, number> = {
+  mensal: 100.0,
+  trimestral: 93.0,
+  semestral: 85.0,
+  anual: 75.0,
+};
+
 const PACK_USES: Record<string, number> = {
   "pack-5": 5,
   "pack-8": 8,
@@ -231,6 +239,44 @@ Deno.serve(async (req) => {
         .from("profiles")
         .update({ status: "ativo", plan: "pagante" })
         .eq("id", profile.id);
+
+      // ===== Cupom: primeiro mês pago com desconto → volta ao valor cheio =====
+      const { data: redemption } = await supabase
+        .from("coupon_redemptions")
+        .select("id, code")
+        .eq("user_id", profile.id)
+        .eq("first_payment_done", false)
+        .maybeSingle();
+
+      if (redemption) {
+        const fullAmount = PLAN_MONTHLY[String(profile.subscription_plan_id ?? "")];
+        if (fullAmount && preapprovalId) {
+          const putRes = await fetch(
+            `https://api.mercadopago.com/preapproval/${preapprovalId}`,
+            {
+              method: "PUT",
+              headers: { ...mpHeaders, "Content-Type": "application/json" },
+              body: JSON.stringify({
+                auto_recurring: {
+                  transaction_amount: fullAmount,
+                  currency_id: "BRL",
+                },
+              }),
+            },
+          );
+          if (!putRes.ok) {
+            console.error(
+              "restore full amount failed",
+              putRes.status,
+              await putRes.text(),
+            );
+          }
+        }
+        await supabase
+          .from("coupon_redemptions")
+          .update({ first_payment_done: true })
+          .eq("id", redemption.id);
+      }
 
       return json({ ok: true, kind: "authorized_payment", recorded: true });
     }
