@@ -27,6 +27,7 @@ const App = () => (
           <Routes>
             <Route path="/auth" element={<Auth />} />
             <Route path="/reset-password" element={<ResetPassword />} />
+            <Route path="/parceiro/:token" element={<Parceiro />} />
             <Route path="/verify-phone" element={<VerifyPhone />} />
             <Route
               path="/"
