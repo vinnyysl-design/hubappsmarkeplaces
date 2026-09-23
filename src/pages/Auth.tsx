@@ -402,7 +402,7 @@ export default function Auth() {
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="signup-coupon">
-                    Cupom de desconto{" "}
+                    Cupom{" "}
                     <span className="text-muted-foreground font-normal">(opcional)</span>
                   </Label>
                   <div className="relative">
@@ -432,7 +432,7 @@ export default function Auth() {
                   {couponState.kind === "valid" && (
                     <p className="text-xs text-emerald-500 flex items-center gap-1 font-medium">
                       <Check size={12} /> Cupom {couponState.code} aplicado:{" "}
-                      {couponState.discount}% de desconto no 1º mês da assinatura.
+                      {couponBenefit(couponState)}.
                     </p>
                   )}
                   {couponState.kind === "invalid" && (
