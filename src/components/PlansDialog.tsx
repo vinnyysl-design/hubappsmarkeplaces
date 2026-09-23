@@ -48,11 +48,12 @@ export default function PlansDialog({ open, onOpenChange }: Props) {
       if (!uid) return;
       const { data } = await supabase
         .from("coupon_redemptions")
-        .select("code, discount_percent, first_payment_done")
+        .select("code, discount_percent, first_payment_done, kind")
         .eq("user_id", uid)
         .eq("first_payment_done", false)
+        .eq("kind", "discount")
         .maybeSingle();
-      if (!cancelled && data) {
+      if (!cancelled && data && Number(data.discount_percent) > 0) {
         setCoupon({ code: data.code, discount: Number(data.discount_percent) });
       }
     })();

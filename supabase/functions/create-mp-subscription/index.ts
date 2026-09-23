@@ -113,9 +113,10 @@ Deno.serve(async (req) => {
     const admin = createClient(SUPABASE_URL, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
     const { data: redemption } = await admin
       .from("coupon_redemptions")
-      .select("id, code, discount_percent, first_payment_done")
+      .select("id, code, discount_percent, first_payment_done, kind")
       .eq("user_id", userId)
       .eq("first_payment_done", false)
+      .eq("kind", "discount")
       .maybeSingle();
 
     let firstAmount = plan.monthly;
