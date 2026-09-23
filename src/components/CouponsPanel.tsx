@@ -319,7 +319,17 @@ export default function CouponsPanel() {
               placeholder="ilimitado"
             />
           </div>
+          <div className="space-y-1.5">
+            <Label htmlFor="coupon-partner">Empresa parceira (gera link externo)</Label>
+            <Input
+              id="coupon-partner"
+              value={partnerName}
+              onChange={(e) => setPartnerName(e.target.value)}
+              placeholder="Ex: Nexia"
+            />
+          </div>
         </div>
+
 
         <div className="flex flex-col sm:flex-row sm:items-center gap-3 justify-between pt-1">
           <div className="flex items-center gap-3">
@@ -388,6 +398,7 @@ export default function CouponsPanel() {
                 <TableHead>Finalidade</TableHead>
                 <TableHead>Válido até</TableHead>
                 <TableHead>Usos</TableHead>
+                <TableHead>Link do parceiro</TableHead>
                 <TableHead>Ativo</TableHead>
                 <TableHead className="text-right">Ações</TableHead>
               </TableRow>
@@ -395,7 +406,7 @@ export default function CouponsPanel() {
             <TableBody>
               {coupons.length === 0 && (
                 <TableRow>
-                  <TableCell colSpan={8} className="text-sm text-muted-foreground">
+                  <TableCell colSpan={9} className="text-sm text-muted-foreground">
                     Nenhum cupom cadastrado.
                   </TableCell>
                 </TableRow>
@@ -425,6 +436,30 @@ export default function CouponsPanel() {
                   <TableCell className="text-xs">
                     {c.uses_count}
                     {c.max_uses ? ` / ${c.max_uses}` : ""}
+                  </TableCell>
+                  <TableCell className="text-xs">
+                    {c.partner_token ? (
+                      <div className="flex items-center gap-1">
+                        <a
+                          href={partnerLink(c.partner_token)}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="text-primary hover:underline flex items-center gap-1"
+                        >
+                          <Link2 size={13} /> {c.partner_name ?? "abrir"}
+                        </a>
+                        <Button
+                          size="icon"
+                          variant="ghost"
+                          className="h-7 w-7"
+                          onClick={() => copyLink(c.partner_token!)}
+                        >
+                          <Copy size={13} />
+                        </Button>
+                      </div>
+                    ) : (
+                      "—"
+                    )}
                   </TableCell>
                   <TableCell>
                     <Switch checked={c.active} onCheckedChange={() => toggleActive(c)} />
