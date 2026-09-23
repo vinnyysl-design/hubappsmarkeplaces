@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Loader2, Plus, Trash2, Ticket, Gift, Percent, Trophy, Users, Link2, Copy } from "lucide-react";
+import { Loader2, Plus, Trash2, Ticket, Gift, Percent, Trophy, Users, Link2, Copy, ImageIcon } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -41,6 +41,7 @@ interface CouponRow {
   created_at: string;
   partner_name: string | null;
   partner_token: string | null;
+  partner_logo_url: string | null;
 }
 
 interface RedemptionRow {
@@ -98,6 +99,7 @@ export default function CouponsPanel() {
   const [validUntil, setValidUntil] = useState("");
   const [maxUses, setMaxUses] = useState("");
   const [partnerName, setPartnerName] = useState("");
+  const [partnerLogoUrl, setPartnerLogoUrl] = useState("");
 
   const partnerLink = (token: string) =>
     `${window.location.origin}/parceiro/${token}`;
@@ -105,6 +107,11 @@ export default function CouponsPanel() {
   const copyLink = async (token: string) => {
     await navigator.clipboard.writeText(partnerLink(token));
     toast({ title: "Link copiado", description: "Envie para a empresa parceira." });
+  };
+
+  const copyLogoUrl = async (url: string) => {
+    await navigator.clipboard.writeText(url);
+    toast({ title: "Link do logo copiado" });
   };
 
   const newToken = () =>
@@ -180,6 +187,7 @@ export default function CouponsPanel() {
       valid_until: validUntil ? new Date(`${validUntil}T23:59:59`).toISOString() : null,
       max_uses: maxUses ? Number(maxUses) : null,
       partner_name: partnerName.trim() || null,
+      partner_logo_url: partnerLogoUrl.trim() || null,
       partner_token: partnerName.trim() ? newToken() : null,
       description:
         kind === "free_access"
@@ -205,6 +213,7 @@ export default function CouponsPanel() {
     setValidUntil("");
     setMaxUses("");
     setPartnerName("");
+    setPartnerLogoUrl("");
     toast({ title: "Cupom criado", description: normalized });
     load();
   };
@@ -328,6 +337,15 @@ export default function CouponsPanel() {
               placeholder="Ex: Nexia"
             />
           </div>
+          <div className="space-y-1.5">
+            <Label htmlFor="coupon-partner-logo">Link do logo da parceira</Label>
+            <Input
+              id="coupon-partner-logo"
+              value={partnerLogoUrl}
+              onChange={(e) => setPartnerLogoUrl(e.target.value)}
+              placeholder="https://.../logo.png"
+            />
+          </div>
         </div>
 
 
@@ -398,6 +416,7 @@ export default function CouponsPanel() {
                 <TableHead>Finalidade</TableHead>
                 <TableHead>Válido até</TableHead>
                 <TableHead>Usos</TableHead>
+                <TableHead>Logo</TableHead>
                 <TableHead>Link do parceiro</TableHead>
                 <TableHead>Ativo</TableHead>
                 <TableHead className="text-right">Ações</TableHead>
@@ -406,7 +425,7 @@ export default function CouponsPanel() {
             <TableBody>
               {coupons.length === 0 && (
                 <TableRow>
-                  <TableCell colSpan={9} className="text-sm text-muted-foreground">
+                  <TableCell colSpan={10} className="text-sm text-muted-foreground">
                     Nenhum cupom cadastrado.
                   </TableCell>
                 </TableRow>
@@ -416,7 +435,7 @@ export default function CouponsPanel() {
                   <TableCell className="font-medium">
                     <span className="flex items-center gap-2">
                       {c.kind === "free_access" ? (
-                        <Gift size={14} className="text-emerald-500" />
+                        <Gift size={14} className="text-primary" />
                       ) : (
                         <Ticket size={14} className="text-primary" />
                       )}
@@ -438,6 +457,30 @@ export default function CouponsPanel() {
                     {c.max_uses ? ` / ${c.max_uses}` : ""}
                   </TableCell>
                   <TableCell className="text-xs">
+                    {c.partner_logo_url ? (
+                      <div className="flex items-center gap-1">
+                        <img
+                          src={c.partner_logo_url}
+                          alt={`Logo ${c.partner_name ?? c.code}`}
+                          className="h-7 w-7 rounded border border-border object-contain p-0.5"
+                        />
+                        <Button
+                          size="icon"
+                          variant="ghost"
+                          className="h-7 w-7"
+                          onClick={() => copyLogoUrl(c.partner_logo_url ?? "")}
+                          aria-label="Copiar link do logo"
+                        >
+                          <Copy size={13} />
+                        </Button>
+                      </div>
+                    ) : (
+                      <span className="flex items-center gap-1 text-muted-foreground">
+                        <ImageIcon size={13} /> —
+                      </span>
+                    )}
+                  </TableCell>
+                  <TableCell className="text-xs">
                     {c.partner_token ? (
                       <div className="flex items-center gap-1">
                         <a
@@ -452,7 +495,10 @@ export default function CouponsPanel() {
                           size="icon"
                           variant="ghost"
                           className="h-7 w-7"
-                          onClick={() => copyLink(c.partner_token!)}
+                          onClick={() => {
+                            if (c.partner_token) copyLink(c.partner_token);
+                          }}
+                          aria-label="Copiar link do parceiro"
                         >
                           <Copy size={13} />
                         </Button>

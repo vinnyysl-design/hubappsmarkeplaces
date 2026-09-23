@@ -1,9 +1,11 @@
 import { useCallback, useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
-import { Loader2, RefreshCw, Ticket, Users, CheckCircle2 } from "lucide-react";
+import { Loader2, RefreshCw, Ticket, Users, CheckCircle2, Handshake, BarChart3 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
+import { Bar, BarChart, CartesianGrid, XAxis, YAxis } from "recharts";
 import {
   Table,
   TableBody,
@@ -21,19 +23,47 @@ interface Lead {
   data: string;
 }
 
+interface MonthlyClosed {
+  month: string;
+  closed: number;
+}
+
 interface Report {
   ok: boolean;
   reason?: string;
   code?: string;
   partner_name?: string | null;
+  partner_logo_url?: string | null;
   discount_percent?: number | null;
   total_leads?: number;
   total_closed?: number;
+  monthly_closed?: MonthlyClosed[];
   generated_at?: string;
   leads?: Lead[];
 }
 
 const HOUR = 60 * 60 * 1000;
+
+const chartConfig = {
+  closed: {
+    label: "Assinaturas",
+    color: "hsl(var(--primary))",
+  },
+};
+
+const partnerInitials = (name?: string | null, code?: string) => {
+  const source = (name || code || "P").trim();
+  const words = source.split(/\s+/).filter(Boolean);
+  if (words.length > 1) return `${words[0][0] ?? ""}${words[1][0] ?? ""}`.toUpperCase();
+  return source.slice(0, 2).toUpperCase();
+};
+
+const monthLabel = (value: string) => {
+  const [year, month] = value.split("-").map(Number);
+  if (!year || !month) return value;
+  const date = new Date(year, month - 1, 1);
+  return new Intl.DateTimeFormat("pt-BR", { month: "short" }).format(date).replace(".", "");
+};
 
 export default function Parceiro() {
   const { token } = useParams<{ token: string }>();
@@ -87,20 +117,47 @@ export default function Parceiro() {
   }
 
   const leads = report.leads ?? [];
+  const monthlyClosed = (report.monthly_closed ?? []).map((item) => ({
+    ...item,
+    label: monthLabel(item.month),
+  }));
+  const hasMonthlyData = monthlyClosed.some((item) => Number(item.closed) > 0);
 
   return (
     <div className="min-h-screen bg-background px-4 py-10">
       <div className="mx-auto w-full max-w-3xl space-y-6">
-        <header className="space-y-1">
-          <p className="text-xs uppercase tracking-wider text-muted-foreground">
-            Acompanhamento de indicações
-          </p>
-          <h1 className="text-2xl font-bold">{report.partner_name ?? report.code}</h1>
-          <p className="text-sm text-muted-foreground flex items-center gap-2">
-            <Ticket size={14} className="text-primary" />
-            Cupom <span className="font-semibold text-foreground">{report.code}</span>
-            {report.discount_percent ? ` · ${Number(report.discount_percent)}% de desconto` : ""}
-          </p>
+        <header className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex items-center gap-4">
+            <div className="flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-lg border border-border bg-card">
+              {report.partner_logo_url ? (
+                <img
+                  src={report.partner_logo_url}
+                  alt={`Logo ${report.partner_name ?? report.code}`}
+                  className="h-full w-full object-contain p-2"
+                />
+              ) : (
+                <span className="text-xl font-bold text-foreground">
+                  {partnerInitials(report.partner_name, report.code)}
+                </span>
+              )}
+            </div>
+            <div className="space-y-1">
+              <p className="text-xs uppercase tracking-wider text-muted-foreground">
+                Acompanhamento de indicações
+              </p>
+              <h1 className="text-2xl font-bold">{report.partner_name ?? report.code}</h1>
+              <div className="text-sm text-muted-foreground flex flex-wrap items-center gap-2">
+                <Badge variant="outline" className="gap-1">
+                  <Handshake size={13} /> Parceria
+                </Badge>
+                <span className="flex items-center gap-1.5">
+                  <Ticket size={14} className="text-primary" />
+                  Cupom <span className="font-semibold text-foreground">{report.code}</span>
+                </span>
+                {report.discount_percent ? <span>· {Number(report.discount_percent)}% de desconto</span> : null}
+              </div>
+            </div>
+          </div>
         </header>
 
         <div className="grid gap-3 sm:grid-cols-2">
@@ -114,8 +171,34 @@ export default function Parceiro() {
             <p className="text-xs text-muted-foreground flex items-center gap-1">
               <CheckCircle2 size={13} /> Fecharam assinatura
             </p>
-            <p className="text-2xl font-bold text-emerald-500">{report.total_closed ?? 0}</p>
+            <p className="text-2xl font-bold text-primary">{report.total_closed ?? 0}</p>
           </div>
+        </div>
+
+        <div className="rounded-lg border border-border bg-card p-4">
+          <div className="mb-4 flex items-center justify-between gap-3">
+            <div>
+              <h2 className="text-sm font-semibold flex items-center gap-2">
+                <BarChart3 size={15} className="text-primary" /> Assinaturas por mês
+              </h2>
+              <p className="text-xs text-muted-foreground">Comparativo mensal de fechamentos com este cupom</p>
+            </div>
+          </div>
+          {hasMonthlyData ? (
+            <ChartContainer config={chartConfig} className="h-[220px] w-full aspect-auto">
+              <BarChart data={monthlyClosed} margin={{ left: -20, right: 8, top: 8, bottom: 0 }}>
+                <CartesianGrid vertical={false} />
+                <XAxis dataKey="label" tickLine={false} axisLine={false} />
+                <YAxis allowDecimals={false} tickLine={false} axisLine={false} width={32} />
+                <ChartTooltip cursor={false} content={<ChartTooltipContent hideLabel />} />
+                <Bar dataKey="closed" fill="var(--color-closed)" radius={[6, 6, 0, 0]} />
+              </BarChart>
+            </ChartContainer>
+          ) : (
+            <div className="flex h-[180px] items-center justify-center rounded-lg border border-dashed border-border text-sm text-muted-foreground">
+              Ainda não há assinaturas fechadas para comparar.
+            </div>
+          )}
         </div>
 
         <div className="rounded-lg border border-border bg-card p-4">
