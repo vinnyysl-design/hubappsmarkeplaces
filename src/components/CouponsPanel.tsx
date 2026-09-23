@@ -41,6 +41,7 @@ interface CouponRow {
   created_at: string;
   partner_name: string | null;
   partner_token: string | null;
+  partner_logo_url: string | null;
 }
 
 interface RedemptionRow {
@@ -98,6 +99,7 @@ export default function CouponsPanel() {
   const [validUntil, setValidUntil] = useState("");
   const [maxUses, setMaxUses] = useState("");
   const [partnerName, setPartnerName] = useState("");
+  const [partnerLogoUrl, setPartnerLogoUrl] = useState("");
 
   const partnerLink = (token: string) =>
     `${window.location.origin}/parceiro/${token}`;
@@ -180,6 +182,7 @@ export default function CouponsPanel() {
       valid_until: validUntil ? new Date(`${validUntil}T23:59:59`).toISOString() : null,
       max_uses: maxUses ? Number(maxUses) : null,
       partner_name: partnerName.trim() || null,
+      partner_logo_url: partnerLogoUrl.trim() || null,
       partner_token: partnerName.trim() ? newToken() : null,
       description:
         kind === "free_access"
@@ -205,6 +208,7 @@ export default function CouponsPanel() {
     setValidUntil("");
     setMaxUses("");
     setPartnerName("");
+    setPartnerLogoUrl("");
     toast({ title: "Cupom criado", description: normalized });
     load();
   };
@@ -328,6 +332,15 @@ export default function CouponsPanel() {
               placeholder="Ex: Nexia"
             />
           </div>
+          <div className="space-y-1.5">
+            <Label htmlFor="coupon-partner-logo">Link do logo da parceira</Label>
+            <Input
+              id="coupon-partner-logo"
+              value={partnerLogoUrl}
+              onChange={(e) => setPartnerLogoUrl(e.target.value)}
+              placeholder="https://.../logo.png"
+            />
+          </div>
         </div>
 
 
@@ -440,6 +453,13 @@ export default function CouponsPanel() {
                   <TableCell className="text-xs">
                     {c.partner_token ? (
                       <div className="flex items-center gap-1">
+                        {c.partner_logo_url ? (
+                          <img
+                            src={c.partner_logo_url}
+                            alt={`Logo ${c.partner_name ?? c.code}`}
+                            className="h-6 w-6 rounded border border-border object-contain p-0.5"
+                          />
+                        ) : null}
                         <a
                           href={partnerLink(c.partner_token)}
                           target="_blank"
