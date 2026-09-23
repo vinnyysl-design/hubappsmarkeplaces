@@ -79,6 +79,7 @@ export type Database = {
           id: string
           kind: string
           max_uses: number | null
+          partner_logo_url: string | null
           partner_name: string | null
           partner_token: string | null
           purpose: string | null
@@ -98,6 +99,7 @@ export type Database = {
           id?: string
           kind?: string
           max_uses?: number | null
+          partner_logo_url?: string | null
           partner_name?: string | null
           partner_token?: string | null
           purpose?: string | null
@@ -117,6 +119,7 @@ export type Database = {
           id?: string
           kind?: string
           max_uses?: number | null
+          partner_logo_url?: string | null
           partner_name?: string | null
           partner_token?: string | null
           purpose?: string | null
