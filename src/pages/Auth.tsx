@@ -151,12 +151,23 @@ export default function Auth() {
       setCouponState({ kind: "invalid", message: "Não foi possível validar o cupom." });
       return;
     }
-    const res = data as { valid: boolean; reason?: string; code?: string; discount_percent?: number };
+    const res = data as {
+      valid: boolean;
+      reason?: string;
+      code?: string;
+      discount_percent?: number | null;
+      kind?: string;
+      grants_trial?: boolean;
+      free_days?: number | null;
+    };
     if (res?.valid) {
       setCouponState({
         kind: "valid",
         code: res.code ?? code,
         discount: Number(res.discount_percent ?? 0),
+        type: res.kind === "free_access" ? "free_access" : "discount",
+        grantsTrial: res.grants_trial !== false,
+        freeDays: res.free_days ?? null,
       });
       return;
     }
