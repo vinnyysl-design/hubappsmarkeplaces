@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Loader2, Plus, Trash2, Ticket, Gift, Percent, Trophy, Users } from "lucide-react";
+import { Loader2, Plus, Trash2, Ticket, Gift, Percent, Trophy, Users, Link2, Copy } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -39,6 +39,8 @@ interface CouponRow {
   uses_count: number;
   active: boolean;
   created_at: string;
+  partner_name: string | null;
+  partner_token: string | null;
 }
 
 interface RedemptionRow {
@@ -95,6 +97,20 @@ export default function CouponsPanel() {
   const [grantsTrial, setGrantsTrial] = useState(true);
   const [validUntil, setValidUntil] = useState("");
   const [maxUses, setMaxUses] = useState("");
+  const [partnerName, setPartnerName] = useState("");
+
+  const partnerLink = (token: string) =>
+    `${window.location.origin}/parceiro/${token}`;
+
+  const copyLink = async (token: string) => {
+    await navigator.clipboard.writeText(partnerLink(token));
+    toast({ title: "Link copiado", description: "Envie para a empresa parceira." });
+  };
+
+  const newToken = () =>
+    Array.from(crypto.getRandomValues(new Uint8Array(12)))
+      .map((b) => b.toString(16).padStart(2, "0"))
+      .join("");
 
   const load = async () => {
     setLoading(true);
@@ -163,6 +179,8 @@ export default function CouponsPanel() {
       purpose: purpose.trim() || null,
       valid_until: validUntil ? new Date(`${validUntil}T23:59:59`).toISOString() : null,
       max_uses: maxUses ? Number(maxUses) : null,
+      partner_name: partnerName.trim() || null,
+      partner_token: partnerName.trim() ? newToken() : null,
       description:
         kind === "free_access"
           ? `${days} dias de acesso grátis`
@@ -186,6 +204,7 @@ export default function CouponsPanel() {
     setGrantsTrial(true);
     setValidUntil("");
     setMaxUses("");
+    setPartnerName("");
     toast({ title: "Cupom criado", description: normalized });
     load();
   };
@@ -300,7 +319,17 @@ export default function CouponsPanel() {
               placeholder="ilimitado"
             />
           </div>
+          <div className="space-y-1.5">
+            <Label htmlFor="coupon-partner">Empresa parceira (gera link externo)</Label>
+            <Input
+              id="coupon-partner"
+              value={partnerName}
+              onChange={(e) => setPartnerName(e.target.value)}
+              placeholder="Ex: Nexia"
+            />
+          </div>
         </div>
+
 
         <div className="flex flex-col sm:flex-row sm:items-center gap-3 justify-between pt-1">
           <div className="flex items-center gap-3">
@@ -369,6 +398,7 @@ export default function CouponsPanel() {
                 <TableHead>Finalidade</TableHead>
                 <TableHead>Válido até</TableHead>
                 <TableHead>Usos</TableHead>
+                <TableHead>Link do parceiro</TableHead>
                 <TableHead>Ativo</TableHead>
                 <TableHead className="text-right">Ações</TableHead>
               </TableRow>
@@ -376,7 +406,7 @@ export default function CouponsPanel() {
             <TableBody>
               {coupons.length === 0 && (
                 <TableRow>
-                  <TableCell colSpan={8} className="text-sm text-muted-foreground">
+                  <TableCell colSpan={9} className="text-sm text-muted-foreground">
                     Nenhum cupom cadastrado.
                   </TableCell>
                 </TableRow>
@@ -406,6 +436,30 @@ export default function CouponsPanel() {
                   <TableCell className="text-xs">
                     {c.uses_count}
                     {c.max_uses ? ` / ${c.max_uses}` : ""}
+                  </TableCell>
+                  <TableCell className="text-xs">
+                    {c.partner_token ? (
+                      <div className="flex items-center gap-1">
+                        <a
+                          href={partnerLink(c.partner_token)}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="text-primary hover:underline flex items-center gap-1"
+                        >
+                          <Link2 size={13} /> {c.partner_name ?? "abrir"}
+                        </a>
+                        <Button
+                          size="icon"
+                          variant="ghost"
+                          className="h-7 w-7"
+                          onClick={() => copyLink(c.partner_token!)}
+                        >
+                          <Copy size={13} />
+                        </Button>
+                      </div>
+                    ) : (
+                      "—"
+                    )}
                   </TableCell>
                   <TableCell>
                     <Switch checked={c.active} onCheckedChange={() => toggleActive(c)} />

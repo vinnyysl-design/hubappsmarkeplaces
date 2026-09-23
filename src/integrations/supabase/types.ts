@@ -79,6 +79,8 @@ export type Database = {
           id: string
           kind: string
           max_uses: number | null
+          partner_name: string | null
+          partner_token: string | null
           purpose: string | null
           updated_at: string
           uses_count: number
@@ -96,6 +98,8 @@ export type Database = {
           id?: string
           kind?: string
           max_uses?: number | null
+          partner_name?: string | null
+          partner_token?: string | null
           purpose?: string | null
           updated_at?: string
           uses_count?: number
@@ -113,6 +117,8 @@ export type Database = {
           id?: string
           kind?: string
           max_uses?: number | null
+          partner_name?: string | null
+          partner_token?: string | null
           purpose?: string | null
           updated_at?: string
           uses_count?: number
@@ -639,6 +645,7 @@ export type Database = {
           trial_expired: boolean
         }[]
       }
+      get_partner_report: { Args: { _token: string }; Returns: Json }
       get_user_status: {
         Args: { _user_id: string }
         Returns: Database["public"]["Enums"]["user_status"]

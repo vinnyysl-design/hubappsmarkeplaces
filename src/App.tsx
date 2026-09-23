@@ -13,6 +13,7 @@ import Admin from "./pages/Admin.tsx";
 import AppViewer from "./pages/AppViewer.tsx";
 import VerifyPhone from "./pages/VerifyPhone.tsx";
 import ComprarPack from "./pages/ComprarPack.tsx";
+import Parceiro from "./pages/Parceiro.tsx";
 
 const queryClient = new QueryClient();
 
@@ -26,6 +27,7 @@ const App = () => (
           <Routes>
             <Route path="/auth" element={<Auth />} />
             <Route path="/reset-password" element={<ResetPassword />} />
+            <Route path="/parceiro/:token" element={<Parceiro />} />
             <Route path="/verify-phone" element={<VerifyPhone />} />
             <Route
               path="/"
