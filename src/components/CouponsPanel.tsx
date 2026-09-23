@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Loader2, Plus, Trash2, Ticket, Gift, Percent, Trophy, Users } from "lucide-react";
+import { Loader2, Plus, Trash2, Ticket, Gift, Percent, Trophy, Users, Link2, Copy } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -39,6 +39,8 @@ interface CouponRow {
   uses_count: number;
   active: boolean;
   created_at: string;
+  partner_name: string | null;
+  partner_token: string | null;
 }
 
 interface RedemptionRow {
