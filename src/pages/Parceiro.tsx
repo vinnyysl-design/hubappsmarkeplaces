@@ -171,7 +171,7 @@ export default function Parceiro() {
             <p className="text-xs text-muted-foreground flex items-center gap-1">
               <CheckCircle2 size={13} /> Fecharam assinatura
             </p>
-            <p className="text-2xl font-bold text-emerald-500">{report.total_closed ?? 0}</p>
+            <p className="text-2xl font-bold text-primary">{report.total_closed ?? 0}</p>
           </div>
         </div>
 
