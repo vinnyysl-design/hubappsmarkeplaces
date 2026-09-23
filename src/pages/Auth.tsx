@@ -107,9 +107,37 @@ export default function Auth() {
   const [couponState, setCouponState] = useState<
     | { kind: "idle" }
     | { kind: "checking" }
-    | { kind: "valid"; code: string; discount: number }
+    | {
+        kind: "valid";
+        code: string;
+        discount: number;
+        type: "discount" | "free_access";
+        grantsTrial: boolean;
+        freeDays: number | null;
+      }
     | { kind: "invalid"; message: string }
   >({ kind: "idle" });
+
+  const couponBenefit = (c: {
+    code: string;
+    discount: number;
+    type: "discount" | "free_access";
+    grantsTrial: boolean;
+    freeDays: number | null;
+  }) => {
+    const parts: string[] = [];
+    if (c.type === "free_access" && c.freeDays) {
+      parts.push(
+        c.freeDays % 30 === 0 && c.freeDays >= 30
+          ? `${c.freeDays / 30} ${c.freeDays === 30 ? "mês" : "meses"} de acesso grátis`
+          : `${c.freeDays} dias de acesso grátis`,
+      );
+    } else if (c.discount > 0) {
+      parts.push(`${c.discount}% de desconto no 1º mês da assinatura`);
+    }
+    parts.push(c.grantsTrial ? "inclui os 10 dias grátis" : "sem os 10 dias grátis");
+    return parts.join(" • ");
+  };
 
   const checkCoupon = async () => {
     const code = signupCoupon.trim();
