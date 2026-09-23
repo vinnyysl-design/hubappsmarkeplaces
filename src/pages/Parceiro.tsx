@@ -146,7 +146,7 @@ export default function Parceiro() {
                 Acompanhamento de indicações
               </p>
               <h1 className="text-2xl font-bold">{report.partner_name ?? report.code}</h1>
-              <p className="text-sm text-muted-foreground flex flex-wrap items-center gap-2">
+              <div className="text-sm text-muted-foreground flex flex-wrap items-center gap-2">
                 <Badge variant="outline" className="gap-1">
                   <Handshake size={13} /> Parceria
                 </Badge>
@@ -155,7 +155,7 @@ export default function Parceiro() {
                   Cupom <span className="font-semibold text-foreground">{report.code}</span>
                 </span>
                 {report.discount_percent ? <span>· {Number(report.discount_percent)}% de desconto</span> : null}
-              </p>
+              </div>
             </div>
           </div>
         </header>
