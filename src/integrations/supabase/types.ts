@@ -20,9 +20,12 @@ export type Database = {
           code: string
           coupon_id: string
           created_at: string
-          discount_percent: number
+          discount_percent: number | null
           first_payment_done: boolean
+          free_days: number | null
+          granted_until: string | null
           id: string
+          kind: string
           updated_at: string
           user_id: string
         }
@@ -31,9 +34,12 @@ export type Database = {
           code: string
           coupon_id: string
           created_at?: string
-          discount_percent: number
+          discount_percent?: number | null
           first_payment_done?: boolean
+          free_days?: number | null
+          granted_until?: string | null
           id?: string
+          kind?: string
           updated_at?: string
           user_id: string
         }
@@ -42,9 +48,12 @@ export type Database = {
           code?: string
           coupon_id?: string
           created_at?: string
-          discount_percent?: number
+          discount_percent?: number | null
           first_payment_done?: boolean
+          free_days?: number | null
+          granted_until?: string | null
           id?: string
+          kind?: string
           updated_at?: string
           user_id?: string
         }
@@ -64,9 +73,13 @@ export type Database = {
           code: string
           created_at: string
           description: string | null
-          discount_percent: number
+          discount_percent: number | null
+          free_days: number | null
+          grants_trial: boolean
           id: string
+          kind: string
           max_uses: number | null
+          purpose: string | null
           updated_at: string
           uses_count: number
           valid_from: string
@@ -77,9 +90,13 @@ export type Database = {
           code: string
           created_at?: string
           description?: string | null
-          discount_percent?: number
+          discount_percent?: number | null
+          free_days?: number | null
+          grants_trial?: boolean
           id?: string
+          kind?: string
           max_uses?: number | null
+          purpose?: string | null
           updated_at?: string
           uses_count?: number
           valid_from?: string
@@ -90,9 +107,13 @@ export type Database = {
           code?: string
           created_at?: string
           description?: string | null
-          discount_percent?: number
+          discount_percent?: number | null
+          free_days?: number | null
+          grants_trial?: boolean
           id?: string
+          kind?: string
           max_uses?: number | null
+          purpose?: string | null
           updated_at?: string
           uses_count?: number
           valid_from?: string
