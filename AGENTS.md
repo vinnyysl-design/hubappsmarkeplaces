@@ -1,1 +1,1 @@
-- App previews come from one reusable modal fed by an optional `preview` field per app in apps.json (videoMp4/videoWebm/poster/image/benefits); never hand-build per-app windows. Why: 11+ apps must stay consistent.
+- App previews come from one reusable modal; per-app video/cover/benefits live only in the central preview config keyed by app slug (all fields optional). Why: swap videos without touching the Hub layout.
