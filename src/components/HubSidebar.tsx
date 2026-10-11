@@ -1,5 +1,5 @@
 import { LayoutGrid, Star, Clock, Cog, Megaphone, FileBarChart, Calculator, RotateCcw, MessageCircle, Folder, StarHalf } from "lucide-react";
-import logoSrc from "@/assets/logo-analyticalx.png.asset.json";
+import logoSrc from "@/assets/logo-x.png";
 import {
   Sidebar,
   SidebarContent,
@@ -53,7 +53,7 @@ export default function HubSidebar({ view, onChange, counts, categorias, support
     <Sidebar collapsible="icon">
       <SidebarHeader className="border-b border-sidebar-border">
         <div className="flex items-center gap-2.5 px-1 py-1.5">
-          <img src={logoSrc.url} alt="Analytical X" className="h-8 w-8 rounded-md object-contain shrink-0" />
+          <img src={logoSrc} alt="Analytical X" className="h-8 w-8 rounded-md object-contain shrink-0" />
           {!collapsed && (
             <div className="leading-tight min-w-0">
               <p className="text-sm font-bold text-sidebar-foreground truncate">Analytical X</p>
