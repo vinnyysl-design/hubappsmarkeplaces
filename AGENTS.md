@@ -1,0 +1,1 @@
+- App previews come from one reusable modal fed by an optional `preview` field per app in apps.json (videoMp4/videoWebm/poster/image/benefits); never hand-build per-app windows. Why: 11+ apps must stay consistent.

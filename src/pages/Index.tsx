@@ -7,7 +7,8 @@ import { useAppPrefs } from "@/hooks/useAppPrefs";
 import { toast } from "@/hooks/use-toast";
 import MetricCards from "@/components/MetricCards";
 import AppCard, { type HubApp } from "@/components/AppCard";
-import AppPreviewDialog from "@/components/AppPreviewDialog";
+import AppPreviewModal from "@/components/AppPreviewModal";
+import { usePreviewPrefs } from "@/hooks/usePreviewPrefs";
 import ThemeToggle from "@/components/ThemeToggle";
 import UserMenu from "@/components/UserMenu";
 import WhatsNewDialog from "@/components/WhatsNewDialog";
@@ -120,6 +121,7 @@ const Index = () => {
   const [view, setView] = useState<HubView>("todos");
   const [plansOpen, setPlansOpen] = useState(false);
   const [preview, setPreview] = useState<HubApp | null>(null);
+  const previewPrefs = usePreviewPrefs();
   const paying = false;
   const { favorites, recent } = useAppPrefs();
   const displayName =
@@ -183,7 +185,12 @@ const Index = () => {
       <ReviewDialog />
       <TermsDialog open={needsTerms} onAccepted={() => refreshProfile()} />
       <PlansDialog open={plansOpen} onOpenChange={setPlansOpen} />
-      <AppPreviewDialog app={preview} onClose={() => setPreview(null)} />
+      <AppPreviewModal
+        app={preview}
+        locked={isBlocked}
+        onClose={() => setPreview(null)}
+        onDontShowChange={(id, v) => (v ? previewPrefs.markSeen(id) : previewPrefs.unmarkSeen(id))}
+      />
       <div className="min-h-screen flex w-full bg-background">
         <HubSidebar view={view} onChange={setView} counts={counts} categorias={categoriasList} supportHref={supportHref} />
 

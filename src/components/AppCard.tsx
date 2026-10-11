@@ -1,6 +1,6 @@
 import { BarChart3, Package, Rocket, DollarSign, RotateCcw, Landmark, ArrowUpRight, Lock, Eye, Image as ImageIcon, Star, PlayCircle } from "lucide-react";
-import { Link } from "react-router-dom";
-import { trackToolClick } from "@/hooks/useTracking";
+import AppAccessLink from "@/components/AppAccessLink";
+import { usePreviewPrefs } from "@/hooks/usePreviewPrefs";
 import { useAuth } from "@/contexts/AuthContext";
 import { useAppPrefs } from "@/hooks/useAppPrefs";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
@@ -51,30 +51,26 @@ const TERMS_VERSION = "1.0";
 interface Props {
   app: HubApp;
   /** Abre a janela de prévia do app (integração futura). */
-  onPreview?: (app: HubApp) => void;
+  onPreview?: (app: HubApp, opts?: { auto?: boolean }) => void;
 }
 
 const AppCard = ({ app, onPreview }: Props) => {
-  const { user, status, isAdmin, termsAcceptedAt, termsVersion } = useAuth() as any;
-  const { isFavorite, toggleFavorite, track } = useAppPrefs();
+  const { status, isAdmin, termsAcceptedAt, termsVersion } = useAuth() as any;
+  const { isFavorite, toggleFavorite } = useAppPrefs();
+  const { shouldAutoShow } = usePreviewPrefs();
   const appId = app.slug || app.nome;
   const fav = isFavorite(appId);
   const isBeta = app.status === "Beta";
-  const to = app.slug ? `/app/${app.slug}` : "/";
   const needsTerms = !isAdmin && status === "ativo" && (!termsAcceptedAt || termsVersion !== TERMS_VERSION);
   const locked = !isAdmin && (status === "bloqueado" || needsTerms);
   const canais = app.canais ?? [];
   const allChannels = canais.includes("Todos os canais");
 
-  const onAccess = () => {
-    track(appId);
-    if (app.external) {
-      void trackToolClick(user?.id, {
-        tool_id: appId,
-        tool_name: app.nome,
-        tool_category: app.categoria,
-        tool_url: app.url,
-      });
+  // 1º acesso: abre a prévia antes de entrar no app (até o usuário dispensar ou acessar por ela)
+  const onAccess = (e: React.MouseEvent<HTMLAnchorElement>) => {
+    if (onPreview && shouldAutoShow(appId)) {
+      e.preventDefault();
+      onPreview(app, { auto: true });
     }
   };
 
@@ -174,14 +170,10 @@ const AppCard = ({ app, onPreview }: Props) => {
           >
             <Lock size={14} /> Bloqueado
           </span>
-        ) : app.external ? (
-          <a href={app.url} target="_blank" rel="noopener noreferrer" onClick={onAccess} className={accessCls}>
-            Acessar App <ArrowUpRight size={14} />
-          </a>
         ) : (
-          <Link to={to} onClick={onAccess} className={accessCls}>
+          <AppAccessLink app={app} onClick={onAccess} className={accessCls}>
             Acessar App <ArrowUpRight size={14} />
-          </Link>
+          </AppAccessLink>
         )}
       </div>
     </article>
