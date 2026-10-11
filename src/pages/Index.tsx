@@ -28,7 +28,7 @@ const WHATSAPP_NUMBER = "5511915264364";
 
 const Index = () => {
   usePageViewTracker();
-  const { status, isAdmin, refreshProfile, termsAcceptedAt, termsVersion, isAuthenticated, trialStatus, trialEndsAt, plan } = useAuth();
+  const { user, status, isAdmin, refreshProfile, termsAcceptedAt, termsVersion, isAuthenticated, trialStatus, trialEndsAt, plan } = useAuth();
 
   // Retorno da assinatura recorrente (Mercado Pago) — sincroniza status
   useEffect(() => {
