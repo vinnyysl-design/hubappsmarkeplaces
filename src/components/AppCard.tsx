@@ -1,7 +1,8 @@
-import { ExternalLink, BarChart3, Package, Rocket, DollarSign, RotateCcw, Landmark, ArrowUpRight, Lock, Eye, Image as ImageIcon } from "lucide-react";
+import { BarChart3, Package, Rocket, DollarSign, RotateCcw, Landmark, ArrowUpRight, Lock, Eye, Image as ImageIcon, Star } from "lucide-react";
 import { Link } from "react-router-dom";
 import { trackToolClick } from "@/hooks/useTracking";
 import { useAuth } from "@/contexts/AuthContext";
+import { useAppPrefs, markRecent } from "@/hooks/useAppPrefs";
 
 interface App {
   slug?: string;
@@ -35,6 +36,9 @@ const TERMS_VERSION = "1.0";
 
 const AppCard = ({ app }: { app: App }) => {
   const { user, status, isAdmin, termsAcceptedAt, termsVersion } = useAuth() as any;
+  const { isFavorite, toggleFavorite } = useAppPrefs();
+  const appId = app.slug || app.nome;
+  const fav = isFavorite(appId);
   const icon = iconMap[app.icone] || <ArrowUpRight size={22} />;
   const isBeta = app.status === "Beta";
   const to = app.slug ? `/app/${app.slug}` : "/";
@@ -84,6 +88,7 @@ const AppCard = ({ app }: { app: App }) => {
       );
 
   return (
+    <div className="relative h-full" onClickCapture={(e) => { if (locked || (e.target as HTMLElement).closest("button")) return; markRecent(appId); }}>
     <Wrapper>
       <div className="flex items-start justify-between mb-4">
         <div className={`flex items-center justify-center w-10 h-10 rounded-lg ${locked ? "bg-muted text-muted-foreground" : "bg-primary/10 text-primary"}`}>
@@ -94,9 +99,10 @@ const AppCard = ({ app }: { app: App }) => {
             <Lock size={11} /> Bloqueado
           </span>
         ) : (
-          <ExternalLink size={14} className="text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity mt-1" />
+          <span className="w-8 h-8" />
         )}
       </div>
+
 
       <h3 className="text-base font-semibold text-foreground mb-1.5 leading-snug">{app.nome}</h3>
       <p className="text-sm text-muted-foreground flex-1 mb-3 leading-relaxed">{app.descricao}</p>
@@ -150,7 +156,22 @@ const AppCard = ({ app }: { app: App }) => {
         )}
       </div>
     </Wrapper>
+    {!locked && (
+      <button
+        type="button"
+        onClick={(e) => { e.preventDefault(); e.stopPropagation(); toggleFavorite(appId); }}
+        aria-label={fav ? "Remover dos favoritos" : "Adicionar aos favoritos"}
+        aria-pressed={fav}
+        className={`absolute top-4 right-4 z-10 flex items-center justify-center w-8 h-8 rounded-lg border transition-colors ${
+          fav ? "border-primary/30 bg-primary/10 text-primary" : "border-transparent text-muted-foreground hover:text-primary hover:border-border"
+        }`}
+      >
+        <Star size={15} className={fav ? "fill-current" : ""} />
+      </button>
+    )}
+    </div>
   );
+
 };
 
 export default AppCard;
