@@ -1,10 +1,11 @@
-import { BarChart3, Package, Rocket, DollarSign, RotateCcw, Landmark, ArrowUpRight, Lock, Eye, Image as ImageIcon, Star } from "lucide-react";
+import { BarChart3, Package, Rocket, DollarSign, RotateCcw, Landmark, ArrowUpRight, Lock, Eye, Image as ImageIcon, Star, PlayCircle } from "lucide-react";
 import { Link } from "react-router-dom";
 import { trackToolClick } from "@/hooks/useTracking";
 import { useAuth } from "@/contexts/AuthContext";
-import { useAppPrefs, markRecent } from "@/hooks/useAppPrefs";
+import { useAppPrefs } from "@/hooks/useAppPrefs";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 
-interface App {
+export interface HubApp {
   slug?: string;
   nome: string;
   descricao: string;
@@ -17,6 +18,9 @@ interface App {
   external?: boolean;
   sso?: boolean;
   canais?: string[];
+  aiKnowledge?: string;
+  whatsNew?: string;
+  version?: string;
 }
 
 const iconMap: Record<string, React.ReactNode> = {
@@ -31,147 +35,157 @@ const iconMap: Record<string, React.ReactNode> = {
   "👁️": <Eye size={22} />,
   "🎨": <ImageIcon size={22} />,
 };
+export const appIcon = (icone: string) => iconMap[icone] || <ArrowUpRight size={22} />;
+
+const CHANNEL_SHORT: Record<string, string> = {
+  "Mercado Livre": "ML",
+  Shopee: "SHP",
+  Amazon: "AMZ",
+  Magalu: "MGL",
+  "TikTok Shop": "TT",
+  TikTok: "TT",
+};
 
 const TERMS_VERSION = "1.0";
 
-const AppCard = ({ app }: { app: App }) => {
+interface Props {
+  app: HubApp;
+  /** Abre a janela de prévia do app (integração futura). */
+  onPreview?: (app: HubApp) => void;
+}
+
+const AppCard = ({ app, onPreview }: Props) => {
   const { user, status, isAdmin, termsAcceptedAt, termsVersion } = useAuth() as any;
-  const { isFavorite, toggleFavorite } = useAppPrefs();
+  const { isFavorite, toggleFavorite, track } = useAppPrefs();
   const appId = app.slug || app.nome;
   const fav = isFavorite(appId);
-  const icon = iconMap[app.icone] || <ArrowUpRight size={22} />;
   const isBeta = app.status === "Beta";
   const to = app.slug ? `/app/${app.slug}` : "/";
   const needsTerms = !isAdmin && status === "ativo" && (!termsAcceptedAt || termsVersion !== TERMS_VERSION);
   const locked = !isAdmin && (status === "bloqueado" || needsTerms);
+  const canais = app.canais ?? [];
+  const allChannels = canais.includes("Todos os canais");
 
-  const sharedClass =
-    "group bg-card border border-border rounded-xl p-5 hover:border-primary/40 transition-all duration-200 flex flex-col h-full cursor-pointer";
-  const lockedClass =
-    "relative bg-card border border-border rounded-xl p-5 flex flex-col h-full cursor-not-allowed opacity-70 select-none";
-
-  const handleExternalClick = () => {
-    void trackToolClick(user?.id, {
-      tool_id: app.slug || app.nome,
-      tool_name: app.nome,
-      tool_category: app.categoria,
-      tool_url: app.url,
-    });
+  const onAccess = () => {
+    track(appId);
+    if (app.external) {
+      void trackToolClick(user?.id, {
+        tool_id: appId,
+        tool_name: app.nome,
+        tool_category: app.categoria,
+        tool_url: app.url,
+      });
+    }
   };
 
-  const Wrapper = locked
-    ? ({ children }: { children: React.ReactNode }) => (
-        <div
-          className={lockedClass}
-          title={needsTerms ? "Aceite o Termo de Uso para liberar o acesso" : "Acesso bloqueado — aguarde liberação do administrador"}
-          aria-disabled="true"
-        >
-          {children}
-        </div>
-      )
-    : app.external
-    ? ({ children }: { children: React.ReactNode }) => (
-        <a
-          href={app.url}
-          target="_blank"
-          rel="noopener noreferrer"
-          onClick={handleExternalClick}
-          className={sharedClass}
-        >
-          {children}
-        </a>
-      )
-    : ({ children }: { children: React.ReactNode }) => (
-        <Link to={to} className={sharedClass}>
-          {children}
-        </Link>
-      );
+  const btnBase =
+    "inline-flex flex-1 items-center justify-center gap-1.5 h-9 rounded-lg text-xs font-semibold transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring";
+  const accessCls = `${btnBase} bg-primary text-primary-foreground hover:opacity-90`;
 
   return (
-    <div className="relative h-full" onClickCapture={(e) => { if (locked || (e.target as HTMLElement).closest("button")) return; markRecent(appId); }}>
-    <Wrapper>
+    <article
+      data-app={appId}
+      className={`group relative flex flex-col h-full rounded-xl border bg-card p-5 transition-all duration-200 ${
+        locked
+          ? "border-border opacity-75"
+          : "border-border hover:-translate-y-0.5 hover:border-primary/40 hover:shadow-lg hover:shadow-primary/5 focus-within:border-primary/50 focus-within:ring-1 focus-within:ring-primary/30"
+      }`}
+    >
+      {/* Topo: ícone + favorito */}
       <div className="flex items-start justify-between mb-4">
-        <div className={`flex items-center justify-center w-10 h-10 rounded-lg ${locked ? "bg-muted text-muted-foreground" : "bg-primary/10 text-primary"}`}>
-          {locked ? <Lock size={20} /> : icon}
+        <div
+          className={`flex items-center justify-center w-12 h-12 rounded-xl transition-colors duration-200 ${
+            locked ? "bg-muted text-muted-foreground" : "bg-primary/10 text-primary group-hover:bg-primary/15"
+          }`}
+        >
+          {appIcon(app.icone)}
         </div>
-        {locked ? (
-          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-medium bg-destructive/10 text-destructive border border-destructive/20">
-            <Lock size={11} /> Bloqueado
-          </span>
-        ) : (
-          <span className="w-8 h-8" />
-        )}
+        <button
+          type="button"
+          onClick={() => toggleFavorite(appId)}
+          aria-label={fav ? `Remover ${app.nome} dos favoritos` : `Adicionar ${app.nome} aos favoritos`}
+          aria-pressed={fav}
+          className={`flex items-center justify-center w-8 h-8 rounded-lg border transition-colors duration-150 ${
+            fav ? "border-primary/30 bg-primary/10 text-primary" : "border-transparent text-muted-foreground hover:text-primary hover:border-border"
+          }`}
+        >
+          <Star size={15} className={fav ? "fill-current" : ""} />
+        </button>
       </div>
 
+      {/* Nome + descrição (máx. 2 linhas) */}
+      <h3 className="text-base font-semibold text-foreground leading-snug line-clamp-2 min-h-[2.75rem]">{app.nome}</h3>
+      <p className="mt-1 text-sm text-muted-foreground leading-relaxed line-clamp-2 min-h-[2.75rem]" title={app.descricao}>
+        {app.descricao}
+      </p>
 
-      <h3 className="text-base font-semibold text-foreground mb-1.5 leading-snug">{app.nome}</h3>
-      <p className="text-sm text-muted-foreground flex-1 mb-3 leading-relaxed">{app.descricao}</p>
-
-      {app.canais && app.canais.length > 0 && (
-        <div className="flex flex-wrap gap-1 mb-3">
-          {app.canais.map((c) => {
-            const colorClass =
-              c === "Mercado Livre"
-                ? "bg-yellow-400/20 text-yellow-400 border-yellow-400/30"
-                : c === "Shopee"
-                ? "bg-orange-500/20 text-orange-400 border-orange-500/30"
-                : c === "TikTok Shop" || c === "TikTok"
-                ? "bg-slate-400/20 text-slate-300 border-slate-400/30"
-                : c === "Amazon"
-                ? "bg-white/15 text-white border-white/25"
-                : c === "Magalu"
-                ? "bg-blue-500/20 text-blue-300 border-blue-500/30"
-                : c === "Todos os canais"
-                ? "bg-primary/10 text-primary border-primary/20"
-                : "bg-muted text-muted-foreground border border-border";
-            return (
-              <span
-                key={c}
-                className={`inline-block px-1.5 py-0.5 rounded text-[10px] font-medium border ${colorClass}`}
-              >
-                {c}
-              </span>
-            );
-          })}
-        </div>
-      )}
-
-      <div className="flex flex-wrap items-center gap-1.5 mt-auto">
-        <span className="inline-block px-2 py-0.5 rounded-md text-[11px] font-medium bg-[hsl(var(--badge-cat-bg))] text-[hsl(var(--badge-cat-text))]">
-          {app.categoria}
-        </span>
-        {isBeta ? (
-          <span className="inline-block px-2 py-0.5 rounded-md text-[11px] font-medium bg-[hsl(var(--badge-beta-bg))] text-[hsl(var(--badge-beta-text))]">
-            Beta
-          </span>
-        ) : (
-          <span className="inline-block px-2 py-0.5 rounded-md text-[11px] font-medium bg-[hsl(var(--badge-status-bg))] text-[hsl(var(--badge-status-text))]">
+      {/* Metadados compactos */}
+      <div className="mt-4 flex items-center justify-between gap-2 text-xs">
+        <div className="flex items-center gap-2 min-w-0">
+          <span className="text-muted-foreground truncate">{app.categoria}</span>
+          <span
+            className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md text-[11px] font-medium ${
+              isBeta
+                ? "bg-[hsl(var(--badge-beta-bg))] text-[hsl(var(--badge-beta-text))]"
+                : "bg-[hsl(var(--badge-status-bg))] text-[hsl(var(--badge-status-text))]"
+            }`}
+          >
+            <span className="w-1.5 h-1.5 rounded-full bg-current" />
             {app.status}
           </span>
-        )}
-        {app.tag && (
-          <span className="inline-block px-2 py-0.5 rounded-md text-[11px] font-medium bg-[hsl(var(--badge-tag-bg))] text-[hsl(var(--badge-tag-text))]">
-            {app.tag}
-          </span>
+        </div>
+        {canais.length > 0 && (
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <span className="flex items-center gap-1 shrink-0 cursor-default" aria-label={`Marketplaces: ${canais.join(", ")}`}>
+                {allChannels ? (
+                  <span className="px-1.5 py-0.5 rounded border border-border text-[10px] font-medium text-muted-foreground">Todos os canais</span>
+                ) : (
+                  canais.slice(0, 3).map((c) => (
+                    <span key={c} className="px-1.5 py-0.5 rounded border border-border text-[10px] font-semibold text-muted-foreground">
+                      {CHANNEL_SHORT[c] ?? c}
+                    </span>
+                  ))
+                )}
+                {!allChannels && canais.length > 3 && (
+                  <span className="text-[10px] font-medium text-muted-foreground">+{canais.length - 3}</span>
+                )}
+              </span>
+            </TooltipTrigger>
+            <TooltipContent>{canais.join(" · ")}</TooltipContent>
+          </Tooltip>
         )}
       </div>
-    </Wrapper>
-    {!locked && (
-      <button
-        type="button"
-        onClick={(e) => { e.preventDefault(); e.stopPropagation(); toggleFavorite(appId); }}
-        aria-label={fav ? "Remover dos favoritos" : "Adicionar aos favoritos"}
-        aria-pressed={fav}
-        className={`absolute top-4 right-4 z-10 flex items-center justify-center w-8 h-8 rounded-lg border transition-colors ${
-          fav ? "border-primary/30 bg-primary/10 text-primary" : "border-transparent text-muted-foreground hover:text-primary hover:border-border"
-        }`}
-      >
-        <Star size={15} className={fav ? "fill-current" : ""} />
-      </button>
-    )}
-    </div>
-  );
 
+      {/* Ações */}
+      <div className="mt-auto pt-4 flex gap-2">
+        <button
+          type="button"
+          onClick={() => onPreview?.(app)}
+          className={`${btnBase} border border-border text-foreground hover:border-primary/40 hover:text-primary`}
+        >
+          <PlayCircle size={15} /> Conhecer App
+        </button>
+        {locked ? (
+          <span
+            className={`${btnBase} bg-muted text-muted-foreground cursor-not-allowed`}
+            title={needsTerms ? "Aceite o Termo de Uso para liberar o acesso" : "Acesso bloqueado — escolha um plano para liberar"}
+            aria-disabled="true"
+          >
+            <Lock size={14} /> Bloqueado
+          </span>
+        ) : app.external ? (
+          <a href={app.url} target="_blank" rel="noopener noreferrer" onClick={onAccess} className={accessCls}>
+            Acessar App <ArrowUpRight size={14} />
+          </a>
+        ) : (
+          <Link to={to} onClick={onAccess} className={accessCls}>
+            Acessar App <ArrowUpRight size={14} />
+          </Link>
+        )}
+      </div>
+    </article>
+  );
 };
 
 export default AppCard;
