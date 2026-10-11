@@ -30,11 +30,11 @@ const entries: AppPreviewConfig[] = [
   { appId: "adsengine" },
   { appId: "precificacao" },
   { appId: "devolucoes" },
-  { appId: "conciliacao" },
-  { appId: "ponto-equilibrio" },
+  { appId: "painel-financeiro" },
   { appId: "inteligencia-mercado" },
-  { appId: "rentabilidade" },
-  { appId: "vision" },
+  { appId: "ponto-equilibrio" },
+  { appId: "conciliacao" },
+  { appId: "vision-x" },
   { appId: "gerador-imagens" },
 ];
 

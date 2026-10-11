@@ -4,6 +4,7 @@ import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@/compone
 import { Checkbox } from "@/components/ui/checkbox";
 import { appIcon, type HubApp } from "@/components/AppCard";
 import AppAccessLink from "@/components/AppAccessLink";
+import { getAppPreview } from "@/data/appPreviews";
 
 /** Metadados opcionais de prévia por app (campo "preview" em apps.json). */
 export interface AppPreviewMeta {
@@ -16,6 +17,8 @@ export interface AppPreviewMeta {
 
 /** Até 3 benefícios: usa preview.benefits; senão extrai de "Relatórios disponíveis" do catálogo. */
 export function getBenefits(app: HubApp & { preview?: AppPreviewMeta }): string[] {
+  const cfg = getAppPreview(app.slug || app.nome)?.benefits;
+  if (cfg?.length) return cfg.slice(0, 3);
   if (app.preview?.benefits?.length) return app.preview.benefits.slice(0, 3);
   const m = app.aiKnowledge?.match(/Relatórios disponíveis:\s*([^\n]+)/i);
   if (!m) return [];
@@ -52,8 +55,18 @@ export default function AppPreviewModal({ app, locked, onClose, onDontShowChange
     onClose();
   };
 
-  const p = app?.preview;
+  const cfg = app ? getAppPreview(app.slug || app.nome) : undefined;
+  const p: AppPreviewMeta | undefined = app
+    ? {
+        ...app.preview,
+        videoMp4: cfg?.videoUrl || app.preview?.videoMp4,
+        image: cfg?.previewImageUrl || app.preview?.image,
+        poster: cfg?.previewImageUrl || app.preview?.poster,
+      }
+    : undefined;
   const hasVideo = !!(p?.videoMp4 || p?.videoWebm);
+  const title = cfg?.previewTitle || app?.nome;
+  const description = cfg?.previewDescription || app?.descricao;
   const benefits = app ? getBenefits(app) : [];
   const id = app ? app.slug || app.nome : "";
 
@@ -93,7 +106,7 @@ export default function AppPreviewModal({ app, locked, onClose, onDontShowChange
                       className="w-full h-full object-contain bg-background"
                       poster={p?.poster || p?.image}
                       controls={started}
-                      preload="metadata"
+                      preload="none"
                       playsInline
                     >
                       {p?.videoWebm && <source src={p.videoWebm} type="video/webm" />}
@@ -111,6 +124,11 @@ export default function AppPreviewModal({ app, locked, onClose, onDontShowChange
                         </span>
                       </button>
                     )}
+                    {!started && cfg?.videoDuration && (
+                      <span className="absolute bottom-3 right-3 px-2 py-0.5 rounded-md bg-background/80 text-xs font-medium text-foreground">
+                        {cfg.videoDuration}
+                      </span>
+                    )}
                   </>
                 ) : p?.image ? (
                   <img src={p.image} alt={`Apresentação de ${app.nome}`} className="w-full h-full object-cover" />
@@ -119,7 +137,7 @@ export default function AppPreviewModal({ app, locked, onClose, onDontShowChange
                     <div className="flex items-center justify-center w-20 h-20 rounded-2xl bg-primary/15 text-primary [&_svg]:w-10 [&_svg]:h-10">
                       {appIcon(app.icone)}
                     </div>
-                    <p className="text-lg md:text-xl font-bold text-foreground leading-snug max-w-md">{app.nome}</p>
+                    <p className="text-lg md:text-xl font-bold text-foreground leading-snug max-w-md">{title}</p>
                     <p className="text-xs text-muted-foreground">Analytical X App Center</p>
                   </div>
                 )}
@@ -127,7 +145,7 @@ export default function AppPreviewModal({ app, locked, onClose, onDontShowChange
 
               {/* Informações */}
               <div className="px-5 py-4 space-y-4">
-                <DialogDescription className="text-sm text-muted-foreground leading-relaxed">{app.descricao}</DialogDescription>
+                <DialogDescription className="text-sm text-muted-foreground leading-relaxed">{description}</DialogDescription>
                 {benefits.length > 0 && (
                   <ul className="space-y-2">
                     {benefits.map((b) => (
