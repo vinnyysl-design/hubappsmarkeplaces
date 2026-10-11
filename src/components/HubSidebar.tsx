@@ -46,7 +46,7 @@ export default function HubSidebar({ view, onChange, counts, categorias, support
   const main = [
     { v: "todos" as HubView, label: "Todos os aplicativos", icon: LayoutGrid, count: counts.todos },
     { v: "favoritos" as HubView, label: "Favoritos", icon: Star, count: counts.favoritos },
-    { v: "recentes" as HubView, label: "Usados recentemente", icon: Clock, count: counts.recentes },
+    { v: "recentes" as HubView, label: "Utilizados recentemente", icon: Clock, count: counts.recentes },
   ];
 
   return (
