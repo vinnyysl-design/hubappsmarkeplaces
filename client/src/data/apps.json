@@ -167,7 +167,7 @@
     "github": "",
     "icone": "👁️",
     "version": "1.0.0",
-    "aiKnowledge": "O que faz: agente de IA especialista que analisa anúncios (título, descrição, fotos, ficha técnica, preço) e dá recomendações para aumentar conversão e qualidade no Mercado Livre e outros marketplaces.\n\nComo usar:\n1. Cole o link do anúncio ou faça upload das informações.\n2. O Vision X gera análise completa: pontos fortes, fracos e plano de melhorias.\n3. Aplique as sugestões e revise periodicamente.\n\nRelatórios disponíveis: análise qualitativa do anúncio, checklist de SEO, sugestão de título/descrição, recomendações de fotos.\n\nQuando usar: ao publicar um anúncio novo, ao revisar campeões de venda ou para destravar SKUs com baixa conversão.",
+    "aiKnowledge": "O que faz: agente de IA especialista que analisa anúncios (título, descrição, fotos, ficha técnica, preço) e dá recomendações para aumentar conversão e qualidade no Mercado Livre e na Shopee.\n\nComo usar:\n1. Cole o link do anúncio ou faça upload das informações.\n2. O Vision X gera análise completa: pontos fortes, fracos e plano de melhorias.\n3. Aplique as sugestões e revise periodicamente.\n\nRelatórios disponíveis: análise qualitativa do anúncio, checklist de SEO, sugestão de título/descrição, recomendações de fotos.\n\nQuando usar: ao publicar um anúncio novo, ao revisar campeões de venda ou para destravar SKUs com baixa conversão.",
     "canais": [
       "Mercado Livre",
       "Shopee"
