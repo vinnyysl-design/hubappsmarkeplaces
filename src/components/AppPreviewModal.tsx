@@ -37,15 +37,19 @@ interface Props {
   onClose: () => void;
   /** chamado quando o usuário marca/desmarca "Não mostrar novamente" */
   onDontShowChange?: (id: string, dontShow: boolean) => void;
+  /** chamado quando o usuário acessa o app pela prévia (apresentação concluída) */
+  onCompleted?: (id: string) => void;
 }
 
-export default function AppPreviewModal({ app, locked, onClose, onDontShowChange }: Props) {
+export default function AppPreviewModal({ app, locked, onClose, onDontShowChange, onCompleted }: Props) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const [started, setStarted] = useState(false);
   const [dontShow, setDontShow] = useState(false);
+  const [videoError, setVideoError] = useState(false);
 
   useEffect(() => {
     setStarted(false);
+    setVideoError(false);
     setDontShow(false);
     return () => videoRef.current?.pause();
   }, [app]);
@@ -64,7 +68,7 @@ export default function AppPreviewModal({ app, locked, onClose, onDontShowChange
         poster: cfg?.previewImageUrl || app.preview?.poster,
       }
     : undefined;
-  const hasVideo = !!(p?.videoMp4 || p?.videoWebm);
+  const hasVideo = !!(p?.videoMp4 || p?.videoWebm) && !videoError;
   const title = cfg?.previewTitle || app?.nome;
   const description = cfg?.previewDescription || app?.descricao;
   const benefits = app ? getBenefits(app) : [];
@@ -108,9 +112,10 @@ export default function AppPreviewModal({ app, locked, onClose, onDontShowChange
                       controls={started}
                       preload="none"
                       playsInline
+                      onError={() => setVideoError(true)}
                     >
                       {p?.videoWebm && <source src={p.videoWebm} type="video/webm" />}
-                      {p?.videoMp4 && <source src={p.videoMp4} type="video/mp4" />}
+                      {p?.videoMp4 && <source src={p.videoMp4} type="video/mp4" onError={() => setVideoError(true)} />}
                     </video>
                     {!started && (
                       <button
@@ -195,7 +200,7 @@ export default function AppPreviewModal({ app, locked, onClose, onDontShowChange
                 ) : (
                   <AppAccessLink
                     app={app}
-                    onClick={() => { onDontShowChange?.(id, true); close(); }}
+                    onClick={() => { onCompleted?.(id); close(); }}
                     className="inline-flex flex-1 sm:flex-none items-center justify-center gap-1.5 h-10 px-4 rounded-lg bg-primary text-primary-foreground text-sm font-semibold hover:opacity-90 transition-opacity duration-150"
                   >
                     Acessar aplicativo <ArrowUpRight size={15} />

@@ -81,10 +81,15 @@ const AppCard = ({ app, onPreview }: Props) => {
   return (
     <article
       data-app={appId}
+      onClick={(e) => {
+        // Clique principal no card = mesmo comportamento do botão "Acessar App"
+        if (locked || (e.target as HTMLElement).closest("a,button,[role=button]")) return;
+        e.currentTarget.querySelector<HTMLAnchorElement>("a[data-access]")?.click();
+      }}
       className={`group relative flex flex-col h-full rounded-xl border bg-card p-5 transition-all duration-200 ${
         locked
           ? "border-border opacity-75"
-          : "border-border hover:-translate-y-0.5 hover:border-primary/40 hover:shadow-lg hover:shadow-primary/5 focus-within:border-primary/50 focus-within:ring-1 focus-within:ring-primary/30"
+          : "cursor-pointer border-border hover:-translate-y-0.5 hover:border-primary/40 hover:shadow-lg hover:shadow-primary/5 focus-within:border-primary/50 focus-within:ring-1 focus-within:ring-primary/30"
       }`}
     >
       {/* Topo: ícone + favorito */}
@@ -171,7 +176,7 @@ const AppCard = ({ app, onPreview }: Props) => {
             <Lock size={14} /> Bloqueado
           </span>
         ) : (
-          <AppAccessLink app={app} onClick={onAccess} className={accessCls}>
+          <AppAccessLink app={app} onClick={onAccess} className={accessCls} data-access>
             Acessar App <ArrowUpRight size={14} />
           </AppAccessLink>
         )}

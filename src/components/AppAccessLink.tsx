@@ -10,11 +10,13 @@ export default function AppAccessLink({
   className,
   children,
   onClick,
+  ...rest
 }: {
   app: HubApp;
   className?: string;
   children: React.ReactNode;
   onClick?: (e: React.MouseEvent<HTMLAnchorElement>) => void;
+  [k: `data-${string}`]: unknown;
 }) {
   const { user } = useAuth();
   const { track } = useAppPrefs();
@@ -31,13 +33,13 @@ export default function AppAccessLink({
 
   if (app.external) {
     return (
-      <a href={app.url} target="_blank" rel="noopener noreferrer" onClick={handle} className={className}>
+      <a href={app.url} target="_blank" rel="noopener noreferrer" onClick={handle} className={className} {...rest}>
         {children}
       </a>
     );
   }
   return (
-    <Link to={app.slug ? `/app/${app.slug}` : "/"} onClick={handle} className={className}>
+    <Link to={app.slug ? `/app/${app.slug}` : "/"} onClick={handle} className={className} {...rest}>
       {children}
     </Link>
   );

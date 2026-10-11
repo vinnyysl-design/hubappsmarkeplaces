@@ -189,7 +189,8 @@ const Index = () => {
         app={preview}
         locked={isBlocked}
         onClose={() => setPreview(null)}
-        onDontShowChange={(id, v) => (v ? previewPrefs.markSeen(id) : previewPrefs.unmarkSeen(id))}
+        onDontShowChange={(id, v) => previewPrefs.setDismissed(id, v)}
+        onCompleted={(id) => previewPrefs.markCompleted(id)}
       />
       <div className="min-h-screen flex w-full bg-background">
         <HubSidebar view={view} onChange={setView} counts={counts} categorias={categoriasList} supportHref={supportHref} />
