@@ -189,7 +189,7 @@ export default function AppPreviewModal({ app, locked, onClose, onDontShowChange
                 <button
                   type="button"
                   onClick={close}
-                  className="inline-flex flex-1 sm:flex-none items-center justify-center gap-1.5 h-10 px-4 rounded-lg border border-border text-sm font-medium text-foreground hover:border-primary/40 transition-colors duration-150"
+                  className="inline-flex flex-1 sm:flex-none items-center justify-center gap-1.5 h-10 px-4 rounded-lg border border-border text-sm font-medium whitespace-nowrap text-foreground hover:border-primary/40 transition-colors duration-150"
                 >
                   <ArrowLeft size={15} /> Voltar ao Hub
                 </button>
@@ -201,7 +201,7 @@ export default function AppPreviewModal({ app, locked, onClose, onDontShowChange
                   <AppAccessLink
                     app={app}
                     onClick={() => { onCompleted?.(id); close(); }}
-                    className="inline-flex flex-1 sm:flex-none items-center justify-center gap-1.5 h-10 px-4 rounded-lg bg-primary text-primary-foreground text-sm font-semibold hover:opacity-90 transition-opacity duration-150"
+                    className="inline-flex flex-1 sm:flex-none items-center justify-center gap-1.5 h-10 px-4 rounded-lg bg-primary text-primary-foreground text-sm font-semibold whitespace-nowrap hover:opacity-90 transition-opacity duration-150"
                   >
                     Acessar aplicativo <ArrowUpRight size={15} />
                   </AppAccessLink>

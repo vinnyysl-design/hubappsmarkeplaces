@@ -16,7 +16,7 @@ const MetricCards = ({ total, ativos, beta, categorias }: MetricCardsProps) => {
   ];
 
   return (
-    <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-2 gap-2">
+    <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-2 gap-2">
       {metrics.map((m) => (
         <div
           key={m.label}

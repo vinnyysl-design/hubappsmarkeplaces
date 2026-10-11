@@ -179,7 +179,7 @@ const Index = () => {
   )}`;
 
   return (
-    <SidebarProvider>
+    <SidebarProvider defaultOpen={typeof window === "undefined" || window.innerWidth >= 1024}>
       <WhatsNewDialog />
       <WelcomeDialog />
       <ReviewDialog />
@@ -235,7 +235,7 @@ const Index = () => {
                     />
                   </div>
                 </div>
-                <div className="lg:w-[340px] shrink-0">
+                <div className="lg:w-[340px] shrink-0 min-w-0">
                   <MetricCards total={apps.length} ativos={ativos} beta={beta} categorias={numCategorias} />
                 </div>
               </div>
