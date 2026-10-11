@@ -75,7 +75,7 @@ const AppCard = ({ app, onPreview }: Props) => {
   };
 
   const btnBase =
-    "inline-flex flex-1 items-center justify-center gap-1.5 h-9 rounded-lg text-xs font-semibold transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring";
+    "inline-flex flex-1 min-w-0 items-center justify-center gap-1.5 h-9 px-2 rounded-lg text-xs font-semibold whitespace-nowrap transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring";
   const accessCls = `${btnBase} bg-primary text-primary-foreground hover:opacity-90`;
 
   return (
@@ -121,7 +121,7 @@ const AppCard = ({ app, onPreview }: Props) => {
       </p>
 
       {/* Metadados compactos */}
-      <div className="mt-4 flex items-center justify-between gap-2 text-xs">
+      <div className="mt-4 flex flex-wrap items-center justify-between gap-x-2 gap-y-1.5 text-xs">
         <div className="flex items-center gap-2 min-w-0">
           <span className="text-muted-foreground truncate">{app.categoria}</span>
           <span
