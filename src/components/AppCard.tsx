@@ -88,7 +88,7 @@ const AppCard = ({ app }: { app: App }) => {
       );
 
   return (
-    <div className="relative h-full" onClickCapture={() => { if (!locked) markRecent(appId); }}>
+    <div className="relative h-full" onClickCapture={(e) => { if (locked || (e.target as HTMLElement).closest("button")) return; markRecent(appId); }}>
     <Wrapper>
       <div className="flex items-start justify-between mb-4">
         <div className={`flex items-center justify-center w-10 h-10 rounded-lg ${locked ? "bg-muted text-muted-foreground" : "bg-primary/10 text-primary"}`}>
