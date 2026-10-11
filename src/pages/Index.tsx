@@ -6,7 +6,8 @@ import { useAppPrefs } from "@/hooks/useAppPrefs";
 
 import { toast } from "@/hooks/use-toast";
 import MetricCards from "@/components/MetricCards";
-import AppCard from "@/components/AppCard";
+import AppCard, { type HubApp } from "@/components/AppCard";
+import AppPreviewDialog from "@/components/AppPreviewDialog";
 import ThemeToggle from "@/components/ThemeToggle";
 import UserMenu from "@/components/UserMenu";
 import WhatsNewDialog from "@/components/WhatsNewDialog";
@@ -118,6 +119,7 @@ const Index = () => {
   const [busca, setBusca] = useState("");
   const [view, setView] = useState<HubView>("todos");
   const [plansOpen, setPlansOpen] = useState(false);
+  const [preview, setPreview] = useState<HubApp | null>(null);
   const paying = false;
   const { favorites, recent } = useAppPrefs();
   const displayName =
@@ -162,7 +164,7 @@ const Index = () => {
   };
 
   const sectionTitle =
-    view === "favoritos" ? "Favoritos" : view === "recentes" ? "Usados recentemente" : categoria !== "Todos" ? categoria : "Todos os aplicativos";
+    view === "favoritos" ? "Favoritos" : view === "recentes" ? "Utilizados recentemente" : categoria !== "Todos" ? categoria : "Todos os aplicativos";
   const emptyText =
     view === "favoritos" && !busca
       ? "Você ainda não favoritou nenhum aplicativo. Toque na estrela de um card para adicioná-lo aqui."
@@ -181,6 +183,7 @@ const Index = () => {
       <ReviewDialog />
       <TermsDialog open={needsTerms} onAccepted={() => refreshProfile()} />
       <PlansDialog open={plansOpen} onOpenChange={setPlansOpen} />
+      <AppPreviewDialog app={preview} onClose={() => setPreview(null)} />
       <div className="min-h-screen flex w-full bg-background">
         <HubSidebar view={view} onChange={setView} counts={counts} categorias={categoriasList} supportHref={supportHref} />
 
@@ -299,7 +302,7 @@ const Index = () => {
                 </h2>
                 <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
                   {destaques.map((app) => (
-                    <AppCard key={`d-${app.nome}`} app={app} />
+                    <AppCard key={`d-${app.nome}`} app={app} onPreview={setPreview} />
                   ))}
                 </div>
               </section>
@@ -317,7 +320,7 @@ const Index = () => {
               ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
                   {filtrados.map((app) => (
-                    <AppCard key={app.nome} app={app} />
+                    <AppCard key={app.nome} app={app} onPreview={setPreview} />
                   ))}
                 </div>
               )}
