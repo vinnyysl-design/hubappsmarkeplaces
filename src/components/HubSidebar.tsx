@@ -57,7 +57,7 @@ export default function HubSidebar({ view, onChange, counts, categorias, support
           {!collapsed && (
             <div className="leading-tight min-w-0">
               <p className="text-sm font-bold text-sidebar-foreground truncate">Analytical X</p>
-              <p className="text-[11px] text-muted-foreground truncate">App Center</p>
+              <p className="text-[11px] text-muted-foreground truncate">BI Para Marketplaces</p>
             </div>
           )}
         </div>
