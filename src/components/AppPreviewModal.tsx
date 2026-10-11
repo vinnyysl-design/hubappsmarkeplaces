@@ -177,7 +177,7 @@ export default function AppPreviewModal({ app, locked, onClose, onDontShowChange
                 ) : (
                   <AppAccessLink
                     app={app}
-                    onClick={() => close()}
+                    onClick={() => { onDontShowChange?.(id, true); close(); }}
                     className="inline-flex flex-1 sm:flex-none items-center justify-center gap-1.5 h-10 px-4 rounded-lg bg-primary text-primary-foreground text-sm font-semibold hover:opacity-90 transition-opacity duration-150"
                   >
                     Acessar aplicativo <ArrowUpRight size={15} />
