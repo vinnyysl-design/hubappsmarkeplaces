@@ -1,6 +1,11 @@
 import { LayoutGrid, Star, Clock, Cog, Megaphone, FileBarChart, Calculator, RotateCcw, MessageCircle, Folder, StarHalf } from "lucide-react";
 import logoAsset from "@/assets/logo-x-futurista.png.asset.json";
+import wordmarkDarkAsset from "@/assets/analyticalx-wordmark-dark.png.asset.json";
+import wordmarkLightAsset from "@/assets/analyticalx-wordmark-light.png.asset.json";
 const logoSrc = logoAsset.url;
+const wordmarkDarkSrc = wordmarkDarkAsset.url;
+const wordmarkLightSrc = wordmarkLightAsset.url;
+
 import {
   Sidebar,
   SidebarContent,
@@ -57,7 +62,9 @@ export default function HubSidebar({ view, onChange, counts, categorias, support
           <img src={logoSrc} alt="Analytical X" className="h-8 w-8 rounded-md object-contain shrink-0" />
           {!collapsed && (
             <div className="leading-tight min-w-0">
-              <p className="text-sm font-bold text-sidebar-foreground truncate">Analytical X</p>
+              <img src={wordmarkDarkSrc} alt="Analytical X" className="h-5 w-auto max-w-full object-contain [.light_&]:hidden" />
+              <img src={wordmarkLightSrc} alt="Analytical X" className="hidden h-5 w-auto max-w-full object-contain [.light_&]:block" />
+
               <p className="text-[11px] text-muted-foreground truncate">BI Para Marketplaces</p>
             </div>
           )}
