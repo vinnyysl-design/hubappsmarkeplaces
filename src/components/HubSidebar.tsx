@@ -1,6 +1,11 @@
 import { LayoutGrid, Star, Clock, Cog, Megaphone, FileBarChart, Calculator, RotateCcw, MessageCircle, Folder, StarHalf } from "lucide-react";
 import logoAsset from "@/assets/logo-x-futurista.png.asset.json";
+import wordmarkDarkAsset from "@/assets/analyticalx-wordmark-dark.png.asset.json";
+import wordmarkLightAsset from "@/assets/analyticalx-wordmark-light.png.asset.json";
 const logoSrc = logoAsset.url;
+const wordmarkDarkSrc = wordmarkDarkAsset.url;
+const wordmarkLightSrc = wordmarkLightAsset.url;
+
 import {
   Sidebar,
   SidebarContent,
