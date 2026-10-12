@@ -10,6 +10,8 @@
  */
 import curvaVideo from "@/assets/previews/curva-abc-preview.mp4.asset.json";
 import curvaCover from "@/assets/previews/curva-abc-cover.jpg.asset.json";
+import precificacaoVideo from "@/assets/previews/precificacao-preview.mp4.asset.json";
+import precificacaoCover from "@/assets/previews/precificacao-cover.jpg.asset.json";
 
 export interface AppPreviewConfig {
   appId: string;
@@ -36,7 +38,12 @@ const entries: AppPreviewConfig[] = [
   },
   { appId: "fulfillment" },
   { appId: "adsengine" },
-  { appId: "precificacao" },
+  {
+    appId: "precificacao",
+    videoUrl: precificacaoVideo.url,
+    previewImageUrl: precificacaoCover.url,
+    videoDuration: "0:30",
+  },
   { appId: "devolucoes" },
   { appId: "painel-financeiro" },
   { appId: "inteligencia-mercado" },
