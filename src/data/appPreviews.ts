@@ -8,6 +8,9 @@
  *
  * Como associar um MP4: veja docs/VIDEOS-DEMONSTRATIVOS.md
  */
+import curvaVideo from "@/assets/previews/curva-abc-preview.mp4.asset.json";
+import curvaCover from "@/assets/previews/curva-abc-cover.jpg.asset.json";
+
 export interface AppPreviewConfig {
   appId: string;
   /** URL do vídeo MP4 (Lovable Assets, link externo direto ou arquivo em /public). */
@@ -25,7 +28,12 @@ export interface AppPreviewConfig {
 }
 
 const entries: AppPreviewConfig[] = [
-  { appId: "curva-abc" },
+  {
+    appId: "curva-abc",
+    videoUrl: curvaVideo.url,
+    previewImageUrl: curvaCover.url,
+    videoDuration: "0:30",
+  },
   { appId: "fulfillment" },
   { appId: "adsengine" },
   { appId: "precificacao" },
