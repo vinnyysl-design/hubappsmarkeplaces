@@ -38,7 +38,12 @@ const entries: AppPreviewConfig[] = [
   },
   { appId: "fulfillment" },
   { appId: "adsengine" },
-  { appId: "precificacao" },
+  {
+    appId: "precificacao",
+    videoUrl: precificacaoVideo.url,
+    previewImageUrl: precificacaoCover.url,
+    videoDuration: "0:30",
+  },
   { appId: "devolucoes" },
   { appId: "painel-financeiro" },
   { appId: "inteligencia-mercado" },
