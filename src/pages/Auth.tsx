@@ -92,7 +92,9 @@ export default function Auth() {
   const { login, signup, resetPassword, isAuthenticated, loading } = useAuth();
   const navigate = useNavigate();
   const [submitting, setSubmitting] = useState(false);
-  const [tab, setTab] = useState<"login" | "signup" | "reset">("login");
+  const [tab, setTab] = useState<"login" | "signup" | "reset">(() =>
+    typeof window !== "undefined" && new URLSearchParams(window.location.search).get("modo") === "cadastro" ? "signup" : "login"
+  );
 
   // login state
   const [loginEmail, setLoginEmail] = useState("");
