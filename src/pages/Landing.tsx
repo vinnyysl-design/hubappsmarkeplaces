@@ -28,7 +28,6 @@ const FAQ = [
   { q: "Para quais marketplaces funciona?", a: "As ferramentas foram feitas para vendedores do Mercado Livre e da Shopee, e várias também aceitam dados de Amazon, Magalu e TikTok Shop." },
   { q: "Preciso conectar minha conta do marketplace?", a: "Não. Você usa os relatórios que já exporta do seu canal ou ERP (CSV/Excel) e a análise sai na hora." },
   { q: "Quais as formas de pagamento?", a: "Pix ou cartão em até 12x, via Mercado Pago. O acesso é liberado automaticamente após a confirmação." },
-  { q: "Posso cancelar quando quiser?", a: "Sim. Você escolhe o período do plano e não há fidelidade além dele." },
   { q: "Tenho um cupom de parceiro, onde uso?", a: "No cadastro há um campo para o cupom. O desconto ou benefício é aplicado automaticamente." },
 ];
 
