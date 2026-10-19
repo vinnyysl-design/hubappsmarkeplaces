@@ -8,8 +8,8 @@
  *
  * Como associar um MP4: veja docs/VIDEOS-DEMONSTRATIVOS.md
  */
-import curvaVideo from "@/assets/previews/curva-abc-preview.mp4.asset.json";
-import curvaCover from "@/assets/previews/curva-abc-cover.jpg.asset.json";
+import curvaVideo from "@/assets/previews/curva-abc-preview-v2.mp4.asset.json";
+import curvaCover from "@/assets/previews/curva-abc-cover-v2.jpg.asset.json";
 import precificacaoVideo from "@/assets/previews/precificacao-preview.mp4.asset.json";
 import precificacaoCover from "@/assets/previews/precificacao-cover.jpg.asset.json";
 
@@ -34,7 +34,7 @@ const entries: AppPreviewConfig[] = [
     appId: "curva-abc",
     videoUrl: curvaVideo.url,
     previewImageUrl: curvaCover.url,
-    videoDuration: "0:30",
+    videoDuration: "0:10",
   },
   { appId: "fulfillment" },
   { appId: "adsengine" },
