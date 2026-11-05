@@ -12,3 +12,5 @@ The API returns 503 until separately reviewed identity, service and private DB
 bindings are installed. This preview is not proof that real SSO already works.
 Framing is initially denied; set only the two verified preview origins later,
 after the identity gate is qualified. No password entry or email flow exists here.
+
+Publication scope: closed, team-protected Deploy Preview only, for HTTPS/artifact/503 verification. Real SSO and all data bindings remain disabled.
