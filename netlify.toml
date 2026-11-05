@@ -1,19 +1,8 @@
+# Isolated PR branch only. build.mjs refuses production and branch deploys.
 [build]
-  command = "npm run build"
+  base = "qa/tool-sso"
+  command = "node build.mjs"
   publish = "dist"
   functions = "netlify/functions"
-
-[functions]
-  node_bundler = "esbuild"
-
-# Atalho amigável: /api/validate-user -> /.netlify/functions/validate-user
-[[redirects]]
-  from = "/api/*"
-  to = "/.netlify/functions/:splat"
-  status = 200
-
-# SPA fallback (deve ficar por último)
-[[redirects]]
-  from = "/*"
-  to = "/index.html"
-  status = 200
+[build.environment]
+  NODE_VERSION = "24"
