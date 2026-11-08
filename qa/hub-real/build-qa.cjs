@@ -5,8 +5,8 @@ if(process.env.CONTEXT!=='deploy-preview'||process.env.REVIEW_ID!=='1'||process.
 const {validateQaWindow}=require('./tools/qa-window.cjs');
 const windowConfig=validateQaWindow(JSON.parse(fs.readFileSync(path.join(__dirname,'qa-window.json'),'utf8').replace(/^\uFEFF/,'')));
 (async()=>{
- await build({stage:'staging',projectRef:'mdqlgwnggbkgmplgkebd',supabaseUrl:'https://mdqlgwnggbkgmplgkebd.supabase.co',publishableKey:'sb_publishable_niqCH59CqrrGi5QHLGrL-g_qSpWnNYD',frontendOrigin:origin,readOnly:true,externalIntegrations:'disabled',signup:'disabled',...(windowConfig.enabled?{qaFrameOrigins:windowConfig.frames}:{})},{app:__dirname});
- fs.writeFileSync(path.join(__dirname,'dist-staging/version.json'),JSON.stringify({app:'hub',stage:windowConfig.enabled?'qa-v3-owner-window':'qa-real-ui-v3-closed',commit:process.env.COMMIT_REF||null,ssoEnabled:windowConfig.enabled,billingEnabled:false,frameEnabled:windowConfig.enabled,windowStart:windowConfig.windowStart,windowEnd:windowConfig.windowEnd}));
+ await build({stage:'staging',projectRef:'mdqlgwnggbkgmplgkebd',supabaseUrl:'https://mdqlgwnggbkgmplgkebd.supabase.co',publishableKey:'sb_publishable_niqCH59CqrrGi5QHLGrL-g_qSpWnNYD',frontendOrigin:origin,readOnly:true,externalIntegrations:'disabled',signup:'disabled'},{app:__dirname});
+ fs.writeFileSync(path.join(__dirname,'dist-staging/version.json'),JSON.stringify({app:'hub',stage:windowConfig.enabled?'qa-v3-owner-window':'qa-real-ui-v3-closed',commit:process.env.COMMIT_REF||null,ssoEnabled:windowConfig.enabled,billingEnabled:false,frameEnabled:false,transport:"popup",windowStart:windowConfig.windowStart,windowEnd:windowConfig.windowEnd}));
 })().catch(()=>{console.error('CLOSED_QA_BUILD_FAILED');process.exitCode=1});
 
 

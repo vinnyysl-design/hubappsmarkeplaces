@@ -19,16 +19,20 @@ export function qaAllowed(gate: QaGate, origin: string, userId: string | undefin
 }
 const opaque = (v: unknown): v is string => typeof v === "string" && /^[A-Za-z0-9_-]{43}$/.test(v);
 const exact = (v: unknown, keys: string[]): v is Record<string, unknown> => !!v && typeof v === "object" && !Array.isArray(v) && Object.keys(v).sort().join() === [...keys].sort().join();
-export function createHubBridge({ app, peer, active, authorize, post, failed }: {
+export function createHubBridge({ app, peer, active, authorize, post, failed, terminated }: {
   app: QaApp; peer: Window; active: () => boolean;
   authorize: (body: { app: QaApp; audience: string; nonce: string; challenge: string }) => Promise<unknown>;
-  post: (message: object, origin: string) => void; failed: () => void;
+  post: (message: object, origin: string) => void; failed: () => void; terminated?: () => void;
 }) {
   let used = false, closed = false, nonce: string | null = null;
   return {
     async receive(event: MessageEvent) {
-      if (closed || used || !active() || event.source !== peer || event.origin !== QA_APPS[app].origin) return false;
+      if (closed || !active() || event.source !== peer || event.origin !== QA_APPS[app].origin) return false;
       const data: unknown = event.data;
+      if (used && nonce && exact(data, ["protocol", "type", "app", "nonce"]) && data.protocol === BROWSER_PROTOCOL && data.type === "tool:closed" && data.app === app && data.nonce === nonce) {
+        closed = true; nonce = null; terminated?.(); return false;
+      }
+      if (used) return false;
       if (!exact(data, ["protocol", "type", "app", "nonce", "challenge"]) || data.protocol !== BROWSER_PROTOCOL || data.type !== "tool:ready" || data.app !== app || !opaque(data.nonce) || !opaque(data.challenge)) return false;
       used = true; nonce = data.nonce;
       try {
