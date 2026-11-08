@@ -1,0 +1,14 @@
+const assert=require('node:assert/strict');const{validateQaWindow,FRAMES}=require('./qa-window.cjs');
+const c={enabled:false,ownerId:'3f65242c-b030-4505-aa01-344676f50991',windowStart:0,windowEnd:0};
+assert.deepEqual(validateQaWindow(c).frames,[]);
+const live={...c,enabled:true,windowStart:100000,windowEnd:7300000};
+assert.deepEqual(validateQaWindow(live,100001).frames,FRAMES);
+for(const change of [{windowEnd:7300001},{ownerId:'other'},{windowStart:0},{windowEnd:100000},{extra:true}])assert.throws(()=>validateQaWindow({...live,...change},100001));
+assert.throws(()=>validateQaWindow(live,7235000));
+assert.throws(()=>validateQaWindow({...c,windowEnd:7300000}));
+console.log('9 QA window cases passed; no clock/deadline configured');
+const {validate}=require('./staging-build.cjs');
+const base={stage:'staging',projectRef:'mdqlgwnggbkgmplgkebd',supabaseUrl:'https://mdqlgwnggbkgmplgkebd.supabase.co',publishableKey:'sb_publishable_niqCH59CqrrGi5QHLGrL-g_qSpWnNYD',frontendOrigin:'https://deploy-preview-1--analyticalxhub.netlify.app',readOnly:true,externalIntegrations:'disabled',signup:'disabled'};
+validate({...base,qaFrameOrigins:[...FRAMES]});
+for(const frames of [['*'],['https://example.invalid'],[FRAMES[0]],['https://adsengine.analyticalx.com.br',FRAMES[1]]])assert.throws(()=>validate({...base,qaFrameOrigins:frames}));
+console.log('5 frame-origin cases passed');

@@ -1,3 +1,4 @@
+import QaTools from "./pages/QaTools";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Route, Routes } from "react-router-dom";
 import { Toaster as Sonner } from "@/components/ui/sonner";
@@ -26,6 +27,7 @@ const App = () => (
       <BrowserRouter>
         <AuthProvider>
           <Routes>
+            <Route path="/qa-tools" element={<ProtectedRoute requireActive><QaTools /></ProtectedRoute>} />
             <Route path="/auth" element={<Auth />} />
             <Route path="/reset-password" element={<ResetPassword />} />
             <Route path="/parceiro/:token" element={<Parceiro />} />
@@ -66,3 +68,4 @@ const App = () => (
 );
 
 export default App;
+

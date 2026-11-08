@@ -1,3 +1,4 @@
+import qaWindow from "../../qa-window.json";
 export const QA_HUB = "https://deploy-preview-1--analyticalxhub.netlify.app";
 export const QA_BACKEND = "https://mdqlgwnggbkgmplgkebd.supabase.co";
 export const QA_OWNER = "3f65242c-b030-4505-aa01-344676f50991";
@@ -9,7 +10,7 @@ export const QA_APPS = Object.freeze({
 export type QaApp = keyof typeof QA_APPS;
 export type QaGate = { enabled: boolean; ownerId: string | null; windowStart: number; windowEnd: number };
 // Explicitly closed. Activation requires separate approval and verified server configuration.
-export const QA_GATE: Readonly<QaGate> = Object.freeze({ enabled: false, ownerId: null, windowStart: 0, windowEnd: 0 });
+export const QA_GATE: Readonly<QaGate> = Object.freeze({ ...qaWindow });
 export function qaAllowed(gate: QaGate, origin: string, userId: string | undefined, now = Date.now()) {
   return gate.enabled === true && gate.ownerId === QA_OWNER && userId === QA_OWNER && origin === QA_HUB &&
     Number.isSafeInteger(gate.windowStart) && Number.isSafeInteger(gate.windowEnd) &&
@@ -63,3 +64,4 @@ export async function qaUserRequest(app: QaApp, operation: "authorize" | "revoke
     return JSON.parse(text) as unknown;
   } finally { clearTimeout(timer); signal.removeEventListener("abort", abort); }
 }
+

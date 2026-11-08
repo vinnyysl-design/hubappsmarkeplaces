@@ -6,7 +6,7 @@ import { createHubBridge, QA_APPS, QA_GATE, qaAllowed, qaUserRequest, type QaApp
 export default function QaToolAccess({ app }: { app: QaApp }) {
   const { user, session, accessState, status: accountStatus, administrativeBlocked, financialBlocked } = useAuth();
   const [opened, setOpened] = useState(false);
-  const [status, setStatus] = useState("QA V3 desativado. Nenhuma conexão será iniciada.");
+  const [status, setStatus] = useState("QA V3 desativado. Nenhuma conex�o ser� iniciada.");
   const frame = useRef<HTMLIFrameElement>(null);
   const openedSession = useRef<string | null>(null);
   const current = useRef({ user, session, accessState, accountStatus, administrativeBlocked, financialBlocked });
@@ -28,18 +28,18 @@ export default function QaToolAccess({ app }: { app: QaApp }) {
         return qaUserRequest(app, "authorize", body, originalSession!, controller.signal);
       },
       post: (message, origin) => peer.postMessage(message, origin),
-      failed: () => setStatus("Acesso QA indisponível. Não houve repetição automática."),
+      failed: () => setStatus("Acesso QA indispon�vel. N�o houve repeti��o autom�tica."),
     });
-    const receive = (event: MessageEvent) => { void bridge.receive(event).then(sent => { if (sent && isCurrent()) setStatus("Código QA encaminhado. Validação na ferramenta ainda pendente."); }); };
+    const receive = (event: MessageEvent) => { void bridge.receive(event).then(sent => { if (sent && isCurrent()) setStatus("C�digo QA encaminhado. Valida��o na ferramenta ainda pendente."); }); };
     window.addEventListener("message", receive);
-    const timer = window.setTimeout(() => setOpened(false), Math.max(0, Math.min(QA_GATE.windowEnd - 65000, (session?.expires_at ?? 0) * 1000 - 65000) - Date.now()));
+    const timer = window.setTimeout(() => { void qaShutdown.closeAll(); }, Math.max(0, Math.min(QA_GATE.windowEnd - 65000, (session?.expires_at ?? 0) * 1000 - 65000) - Date.now()));
     let finishing: Promise<boolean> | null = null;
     const finish = (): Promise<boolean> => {
       if (finishing) return finishing;
       qaShutdown.terminalize(); active = false; openedSession.current = null;
       controller.abort(); bridge.close(); clearTimeout(timer); window.removeEventListener("message", receive);
       setOpened(false);
-      setStatus("Acesso QA encerrado. Não abra outro ciclo nesta sessão.");
+      setStatus("Acesso QA encerrado. N�o abra outro ciclo nesta sess�o.");
       finishing = qaShutdown.track((async () => {
         if (!attempted || !originalSession) return true;
         let verified = false;
@@ -47,8 +47,8 @@ export default function QaToolAccess({ app }: { app: QaApp }) {
           const result = await qaUserRequest(app, "revoke", {}, originalSession, new AbortController().signal, 10000);
           verified = (result as { revocationVerified?: boolean })?.revocationVerified === true;
         } catch { /* Logout must proceed even if remote revocation is uncertain. */ }
-        setStatus(verified ? "Acesso QA encerrado; revogação confirmada. Esta sessão QA é terminal."
-          : "Acesso local encerrado; revogação remota não confirmada. Não reabra nem repita automaticamente.");
+        setStatus(verified ? "Acesso QA encerrado; revoga��o confirmada. Esta sess�o QA � terminal."
+          : "Acesso local encerrado; revoga��o remota n�o confirmada. N�o reabra nem repita automaticamente.");
         return verified;
       })());
       return finishing;
@@ -58,10 +58,11 @@ export default function QaToolAccess({ app }: { app: QaApp }) {
     return () => { window.removeEventListener("pagehide", finish); unregister(); void finish(); };
   }, [opened, app, user?.id, session?.access_token, accessState, accountStatus, administrativeBlocked, financialBlocked]);
   const available = allowed();
-  return <section aria-label="Integração QA V3" className="p-4">
+  return <section aria-label="Integra��o QA V3" className="p-4">
     <p role="status">{status}</p>
-    {!opened && <button disabled={!available} onClick={() => { if (allowed()) { openedSession.current = session!.access_token; setStatus("Aguardando solicitação da ferramenta QA."); setOpened(true); } }}>Abrir ferramenta QA</button>}
-    {opened && <button onClick={() => setOpened(false)}>Encerrar acesso QA</button>}
+    {!opened && <button disabled={!available} onClick={() => { if (allowed()) { openedSession.current = session!.access_token; setStatus("Aguardando solicita��o da ferramenta QA."); setOpened(true); } }}>Abrir ferramenta QA</button>}
+    {opened && <button onClick={() => { void qaShutdown.closeAll(); }}>Encerrar acesso QA</button>}
     {opened && available && <iframe ref={frame} title={`QA ${app}`} src={`${QA_APPS[app].origin}/`} referrerPolicy="no-referrer" className="w-full min-h-[600px]" />}
   </section>;
 }
+

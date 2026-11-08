@@ -8,7 +8,7 @@ vi.mock("@/lib/qa-tool-shutdown", async original => {
   const actual = await original<typeof import("@/lib/qa-tool-shutdown")>();
   return { ...actual, qaShutdown: {
     terminal: () => state.shutdown.terminal(), terminalize: () => state.shutdown.terminalize(),
-    register: (fn: any) => state.shutdown.register(fn), track: (p: any) => state.shutdown.track(p),
+    closeAll: () => state.shutdown.closeAll(), register: (fn: any) => state.shutdown.register(fn), track: (p: any) => state.shutdown.track(p),
   } };
 });
 vi.mock("@/contexts/AuthContext", () => ({ useAuth: () => state.auth }));
@@ -35,7 +35,7 @@ it("real component opens exact preview on click, issues once and revokes on clos
   expect(JSON.stringify(post.mock.calls)).not.toContain("synthetic-qa-bearer");
   expect(send.mock.calls[0][0]).toContain("qa-tool-sso-v3-ads-user/authorize");
   fireEvent.click(screen.getByText("Encerrar acesso QA"));
-  await waitFor(() => expect(screen.getByRole("status").textContent).toContain("revogação confirmada"));
+  await waitFor(() => expect(screen.getByRole("status").textContent).toContain("revoga��o confirmada"));
   expect(send).toHaveBeenCalledTimes(2); expect(view.container.querySelector("iframe")).toBeNull();
   expect(screen.getByText("Abrir ferramenta QA")).toBeDisabled();
 });
@@ -66,4 +66,21 @@ it("cannot reopen while the earlier revocation is pending", async () => {
   expect(view.container.querySelector("iframe")).toBeNull(); expect(send).toHaveBeenCalledTimes(2);
   release(new Response(JSON.stringify({ revocationVerified: true }), { headers: { "content-type": "application/json" } }));
   await waitFor(() => expect(screen.getByText("Abrir ferramenta QA")).toBeDisabled());
+});
+
+it("keeps both tool frames together and closes both before final logout", async () => {
+  const send = vi.fn().mockImplementation((url: string) => Promise.resolve(new Response(JSON.stringify(url.endsWith("/revoke") ? { revocationVerified: true } : { code: "c".repeat(43) }), { headers: { "content-type": "application/json" } })));
+  vi.stubGlobal("fetch", send);
+  const view = render(<><QaToolAccess app="adsengine"/><QaToolAccess app="vision-x"/></>);
+  for(const button of screen.getAllByText("Abrir ferramenta QA")) fireEvent.click(button);
+  const frames = [...view.container.querySelectorAll("iframe")]; expect(frames).toHaveLength(2);
+  const posts = frames.map(f => vi.spyOn(f.contentWindow!, "postMessage").mockImplementation(() => {}));
+  const apps = ["adsengine", "vision-x"] as const;
+  for(let i=0;i<2;i++)fireEvent(window,new MessageEvent("message",{source:frames[i].contentWindow,origin:QA_APPS[apps[i]].origin,data:{protocol:BROWSER_PROTOCOL,type:"tool:ready",app:apps[i],nonce:(i?"v":"a").repeat(43),challenge:"h".repeat(43)}}));
+  await waitFor(()=>expect(posts[1]).toHaveBeenCalled()); expect(send).toHaveBeenCalledTimes(2);
+  fireEvent.click(screen.getAllByText("Encerrar acesso QA")[0]);
+  await waitFor(()=>expect(view.container.querySelectorAll("iframe")).toHaveLength(0));
+  expect(send).toHaveBeenCalledTimes(4);
+  for(const post of posts)expect(post.mock.calls.some(call=>(call[0] as {type:string}).type==="hub:logout")).toBe(true);
+  for(const button of screen.getAllByText("Abrir ferramenta QA"))expect(button).toBeDisabled();
 });
