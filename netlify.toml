@@ -1,8 +1,8 @@
-# Isolated PR branch only. build.mjs refuses production and branch deploys.
+# QA branch only. Build script rejects production, other PRs/sites and activation.
 [build]
-  base = "qa/tool-sso"
-  command = "node build.mjs"
-  publish = "dist"
+  base = "qa/hub-real"
+  command = "node build-qa.cjs"
+  publish = "dist-staging"
   functions = "netlify/functions"
 [build.environment]
-  NODE_VERSION = "24"
+  NODE_VERSION = "20.20.2"
