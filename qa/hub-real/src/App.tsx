@@ -1,71 +1,14 @@
-import QaTools from "./pages/QaTools";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Route, Routes } from "react-router-dom";
-import { Toaster as Sonner } from "@/components/ui/sonner";
-import { Toaster } from "@/components/ui/toaster";
-import { TooltipProvider } from "@/components/ui/tooltip";
-import { AuthProvider } from "@/contexts/AuthContext";
-import ProtectedRoute from "@/components/ProtectedRoute";
-import HomeGate from "@/components/HomeGate";
-import Landing from "./pages/Landing.tsx";
-import NotFound from "./pages/NotFound.tsx";
-import Auth from "./pages/Auth.tsx";
-import ResetPassword from "./pages/ResetPassword.tsx";
-import Admin from "./pages/Admin.tsx";
-import AppViewer from "./pages/AppViewer.tsx";
-import VerifyPhone from "./pages/VerifyPhone.tsx";
-import ComprarPack from "./pages/ComprarPack.tsx";
-import Parceiro from "./pages/Parceiro.tsx";
-
-const queryClient = new QueryClient();
-
-const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <Toaster />
-      <Sonner />
-      <BrowserRouter>
-        <AuthProvider>
-          <Routes>
-            <Route path="/qa-tools" element={<ProtectedRoute requireActive><QaTools /></ProtectedRoute>} />
-            <Route path="/auth" element={<Auth />} />
-            <Route path="/reset-password" element={<ResetPassword />} />
-            <Route path="/parceiro/:token" element={<Parceiro />} />
-            <Route path="/verify-phone" element={<VerifyPhone />} />
-            <Route path="/" element={<HomeGate />} />
-            <Route path="/apresentacao" element={<Landing />} />
-            <Route
-              path="/admin"
-              element={
-                <ProtectedRoute requireAdmin>
-                  <Admin />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/app/:slug"
-              element={
-                <ProtectedRoute requireActive>
-                  <AppViewer />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/comprar-pack"
-              element={
-                <ProtectedRoute>
-                  <ComprarPack />
-                </ProtectedRoute>
-              }
-            />
-            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </AuthProvider>
-      </BrowserRouter>
-    </TooltipProvider>
-  </QueryClientProvider>
-);
-
-export default App;
-
+import {lazy,Suspense,useEffect,useState} from "react";
+const OrdinaryApp=lazy(()=>import("./OrdinaryApp"));
+const QaIdentityEntry=lazy(()=>import("./pages/QaIdentityEntry"));
+const qaPath=(path:string)=>path==="/qa-tools"||path==="/qa-auth";
+// Each document chooses one auth tree. Crossing trees requires a fresh document,
+// never mounting ordinary AuthProvider alongside a QA credential.
+export default function App(){
+ const [initialQa]=useState(()=>qaPath(location.pathname));
+ const [blocked,setBlocked]=useState(false);
+ useEffect(()=>{const changed=()=>{if(initialQa||qaPath(location.pathname))setBlocked(true);};
+ window.addEventListener("popstate",changed);return()=>window.removeEventListener("popstate",changed);},[initialQa]);
+ if(blocked)return <p>Execucao encerrada por navegacao. Nao reinicie o teste.</p>;
+ return <Suspense fallback={<p>Carregando...</p>}>{initialQa?<QaIdentityEntry/>:<OrdinaryApp/>}</Suspense>;
+}
