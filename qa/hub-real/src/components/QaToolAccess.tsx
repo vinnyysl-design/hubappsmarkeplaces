@@ -32,7 +32,18 @@ export default function QaToolAccess({ app }: { app: QaApp }) {
 
     if (!opened) return;
 
-    if (!allowed() || openedSession.current !== session?.access_token || !popup.current || popup.current.closed) { setOpened(false); return; }
+    if (!allowed() || openedSession.current !== session?.access_token || !popup.current || popup.current.closed) {
+      // A popup may exist before its effect registers a shutdown callback.
+      // Expiry or identity changes during that gap must close it as well.
+      qaShutdown.terminalize();
+      void qaShutdown.closeAll();
+      try { popup.current?.close(); } catch { /* Closing a detached peer is best effort. */ }
+      popup.current = null;
+      openedSession.current = null;
+      setOpened(false);
+      setStatus("Acesso QA encerrado antes da autorização. Não reinicie esta sessão.");
+      return;
+    }
 
     let active = true, attempted = false;
 
@@ -117,7 +128,7 @@ export default function QaToolAccess({ app }: { app: QaApp }) {
 
     return () => { window.removeEventListener("pagehide", finish); unregister(); void finish(); };
 
-  }, [opened, app, user?.id, session?.access_token, accessState, accountStatus, administrativeBlocked, financialBlocked]);
+  }, [opened, app, user?.id, session?.access_token, session?.expires_at, accessState, accountStatus, administrativeBlocked, financialBlocked]);
 
   const available = allowed();
 

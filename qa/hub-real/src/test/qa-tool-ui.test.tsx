@@ -1,6 +1,6 @@
 import { createQaShutdown } from "@/lib/qa-tool-shutdown";
 import { afterEach, beforeEach, expect, it, vi } from "vitest";
-import { render, screen, fireEvent, cleanup, waitFor } from "@testing-library/react";
+import { render, screen, fireEvent, cleanup, waitFor, act } from "@testing-library/react";
 import QaToolAccess from "@/components/QaToolAccess";
 import { BROWSER_PROTOCOL, QA_APPS, QA_HUB, QA_OWNER } from "@/lib/qa-tool-bridge";
 const state = vi.hoisted(() => ({ auth: {} as any, shutdown: null as any, peers: [] as any[], open: null as any }));
@@ -92,3 +92,49 @@ it("unmount closes popup without leaving a live browser peer",()=>{const view=re
 it("authorization failure terminalizes and closes popup with bounded revoke",async()=>{const send=vi.fn().mockImplementation((url:string)=>Promise.resolve(new Response(JSON.stringify(url.endsWith("/revoke")?{revocationVerified:true}:{error:"denied"}),{status:url.endsWith("/revoke")?200:403,headers:{"content-type":"application/json"}})));vi.stubGlobal("fetch",send);render(<QaToolAccess app="adsengine"/>);fireEvent.click(screen.getByText("Abrir ferramenta QA"));const peer=state.peers[0];fireEvent(window,new MessageEvent("message",{origin:QA_APPS.adsengine.origin,source:peer,data:{protocol:BROWSER_PROTOCOL,type:"tool:ready",app:"adsengine",nonce:"n".repeat(43),challenge:"h".repeat(43)}}));await waitFor(()=>expect(peer.close).toHaveBeenCalled());expect(screen.getByText("Abrir ferramenta QA")).toBeDisabled();expect(send).toHaveBeenCalledTimes(2);});
 
 it("bound tool closed terminates both and discards late authorize",async()=>{let release:any;const send=vi.fn().mockImplementation((url:string)=>url.endsWith("/revoke")?Promise.resolve(new Response(JSON.stringify({revocationVerified:true}),{headers:{"content-type":"application/json"}})):new Promise(resolve=>{release=resolve}));vi.stubGlobal("fetch",send);render(<><QaToolAccess app="adsengine"/><QaToolAccess app="vision-x"/></>);for(const b of screen.getAllByText("Abrir ferramenta QA"))fireEvent.click(b);const peer=state.peers[0];const emit=(data:any,source=peer,origin=QA_APPS.adsengine.origin)=>fireEvent(window,new MessageEvent("message",{source,origin,data}));const terminal={protocol:BROWSER_PROTOCOL,type:"tool:closed",app:"adsengine",nonce:"n".repeat(43)};emit(terminal);expect(peer.close).not.toHaveBeenCalled();emit({protocol:BROWSER_PROTOCOL,type:"tool:ready",app:"adsengine",nonce:"n".repeat(43),challenge:"h".repeat(43)});await waitFor(()=>expect(send).toHaveBeenCalledTimes(1));emit({...terminal,nonce:"x".repeat(43)});emit({...terminal,extra:true});emit(terminal,state.peers[1]);emit(terminal,peer,QA_APPS["vision-x"].origin);expect(peer.close).not.toHaveBeenCalled();emit(terminal);await waitFor(()=>expect(state.peers[1].close).toHaveBeenCalled());emit(terminal);release(new Response(JSON.stringify({code:"c".repeat(43)}),{headers:{"content-type":"application/json"}}));await new Promise(r=>setTimeout(r,10));expect(peer.postMessage.mock.calls.some((c:any)=>c[0].type==="hub:code")).toBe(false);expect(send).toHaveBeenCalledTimes(2);});
+
+it("shorter expiry on the same bearer closes both popups immediately", () => {
+  const send = vi.fn(); vi.stubGlobal("fetch", send);
+  const content = <><QaToolAccess app="adsengine"/><QaToolAccess app="vision-x"/></>;
+  const view = render(content);
+  for (const button of screen.getAllByText("Abrir ferramenta QA")) fireEvent.click(button);
+  expect(state.peers).toHaveLength(2);
+  state.auth = {...state.auth, session: {...state.auth.session, expires_at: Math.floor(Date.now()/1000)+60}};
+  view.rerender(<><QaToolAccess app="adsengine"/><QaToolAccess app="vision-x"/></>);
+  for (const peer of state.peers) expect(peer.close).toHaveBeenCalled();
+  expect(state.shutdown.terminal()).toBe(true);
+  expect(send).not.toHaveBeenCalled();
+  for (const button of screen.getAllByText("Abrir ferramenta QA")) expect(button).toBeDisabled();
+});
+
+it("session expiry timer closes both bound popups before expiration", async () => {
+  vi.useFakeTimers();
+  try {
+    const send = vi.fn(); vi.stubGlobal("fetch", send);
+    state.auth = {...state.auth, session: {...state.auth.session, expires_at: Math.floor(Date.now()/1000)+70}};
+    render(<><QaToolAccess app="adsengine"/><QaToolAccess app="vision-x"/></>);
+    for (const button of screen.getAllByText("Abrir ferramenta QA")) fireEvent.click(button);
+    await act(async()=>{ await vi.advanceTimersByTimeAsync(6000); });
+    for (const peer of state.peers) expect(peer.close).toHaveBeenCalled();
+    expect(state.shutdown.terminal()).toBe(true);
+    expect(send).not.toHaveBeenCalled();
+    for (const button of screen.getAllByText("Abrir ferramenta QA")) expect(button).toBeDisabled();
+  } finally { cleanup(); vi.useRealTimers(); }
+});
+
+it("expiry between popup creation and effect closes the unregistered popup", () => {
+  const send = vi.fn(); vi.stubGlobal("fetch", send);
+  state.open.mockImplementation(()=>{
+    const peer={closed:false,postMessage:vi.fn(),close:vi.fn(function(this:{closed:boolean}){this.closed=true;})};
+    state.peers.push(peer);
+    state.auth.session.expires_at=0;
+    return peer as unknown as Window;
+  });
+  render(<QaToolAccess app="adsengine"/>);
+  fireEvent.click(screen.getByText("Abrir ferramenta QA"));
+  expect(state.peers).toHaveLength(1);
+  expect(state.peers[0].close).toHaveBeenCalled();
+  expect(state.shutdown.terminal()).toBe(true);
+  expect(send).not.toHaveBeenCalled();
+  expect(screen.getByText("Abrir ferramenta QA")).toBeDisabled();
+});
