@@ -1,0 +1,11 @@
+{
+  "enabled": false,
+  "purpose": "identity-only",
+  "ownerId": null,
+  "windowStart": 0,
+  "windowEnd": 0,
+  "apps": [
+    "adsengine",
+    "vision-x"
+  ]
+}

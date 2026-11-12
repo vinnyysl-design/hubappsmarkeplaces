@@ -1,0 +1,1 @@
+- App previews come from one reusable modal; per-app video/cover/benefits live only in the central preview config keyed by app slug (all fields optional). Why: swap videos without touching the Hub layout.

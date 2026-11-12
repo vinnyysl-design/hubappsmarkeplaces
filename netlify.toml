@@ -1,19 +1,8 @@
+# QA branch only. Build script rejects production, other PRs/sites and activation.
 [build]
-  command = "npm run build"
-  publish = "dist"
+  base = "qa/hub-real"
+  command = "node build-qa.cjs"
+  publish = "dist-staging"
   functions = "netlify/functions"
-
-[functions]
-  node_bundler = "esbuild"
-
-# Atalho amigável: /api/validate-user -> /.netlify/functions/validate-user
-[[redirects]]
-  from = "/api/*"
-  to = "/.netlify/functions/:splat"
-  status = 200
-
-# SPA fallback (deve ficar por último)
-[[redirects]]
-  from = "/*"
-  to = "/index.html"
-  status = 200
+[build.environment]
+  NODE_VERSION = "20.20.2"
