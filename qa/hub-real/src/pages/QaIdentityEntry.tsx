@@ -1,3 +1,4 @@
+import {createQaLogoutObserver,qaClosureMessage} from "@/lib/qa-logout-receipt";
 import {createBoundedQaFetch} from "@/lib/qa-bounded-fetch";
 import {useEffect,useRef,useState} from "react";
 import {createClient} from "@supabase/supabase-js";
@@ -15,18 +16,19 @@ export default function QaIdentityEntry() {
  const [busy,setBusy]=useState(false),[terminal,setTerminal]=useState(false);
  const alive=useRef(true),attempted=useRef(false),stopped=useRef(false),client=useRef<any>(null);
  const cleanup=useRef<Promise<void>|null>(null);
+ const logout=useRef<ReturnType<typeof createQaLogoutObserver>|null>(null);
  const expectedToken=useRef<string|null>(null),unsubscribe=useRef<(()=>void)|null>(null);
  const scope=()=>["/qa-tools","/qa-auth"].includes(location.pathname)&&!location.search&&!location.hash&&identityScope(fixture,QA_GATE,import.meta.env.VITE_DEPLOYMENT_STAGE,location.origin);
  const finish=()=> {
   stopped.current=true;qaShutdown.terminalize();
   if(alive.current){setTerminal(true);setSnapshot(null);setPassword("");}
   if(cleanup.current)return cleanup.current;
+  if(alive.current)setMessage("Fluxo local encerrado. Confirmacao remota em andamento.");
   cleanup.current=(async()=>{
-   const revoked=await qaShutdown.closeAll();
-   let signedOut=true;
-   try { if(client.current){const r=await client.current.auth.signOut({scope:"local"});signedOut=!r.error;} } catch {signedOut=false;}
-   unsubscribe.current?.();unsubscribe.current=null;expectedToken.current=null;client.current=null;
-   if(alive.current)setMessage(revoked&&signedOut?"Execucao encerrada. Nao reinicie nesta aba.":"Encerramento remoto nao confirmado. Nao repita o teste.");
+   const toolsClosed=await qaShutdown.closeAll();
+   const receipt=client.current&&logout.current?await logout.current.signOut(client.current,expectedToken.current):{remote:"unknown" as const,sdkCompleted:false};
+   unsubscribe.current?.();unsubscribe.current=null;expectedToken.current=null;client.current=null;logout.current=null;
+   if(alive.current)setMessage(qaClosureMessage(toolsClosed,receipt));
   })();
   return cleanup.current;
  };
@@ -43,7 +45,8 @@ export default function QaIdentityEntry() {
   try {
    const deployment=readDeploymentConfig(import.meta.env);
    if(deployment.url!=="https://mdqlgwnggbkgmplgkebd.supabase.co")throw Error("QA_UNAVAILABLE");
-   const c=createClient(deployment.url,deployment.publishableKey,{auth:{persistSession:false,autoRefreshToken:false,detectSessionInUrl:false,storageKey:"qa-identity-only-memory"},global:{fetch:createBoundedQaFetch()}});
+   const observer=createQaLogoutObserver(createBoundedQaFetch());logout.current=observer;
+   const c=createClient(deployment.url,deployment.publishableKey,{auth:{persistSession:false,autoRefreshToken:false,detectSessionInUrl:false,storageKey:"qa-identity-only-memory"},global:{fetch:observer.fetch}});
    client.current=c;attemptClient=c;
    const subscription=c.auth.onAuthStateChange((event,changed)=>{
     if(event==="TOKEN_REFRESHED"||event==="USER_UPDATED"||(expectedToken.current&&(event==="SIGNED_OUT"||changed?.access_token!==expectedToken.current))){void finish();}
@@ -60,13 +63,13 @@ export default function QaIdentityEntry() {
    // A sign-in may finish after unmount/timeout. Sign out this dedicated client
    // again; the earlier cleanup could have preceded session creation.
    try {await attemptClient?.auth.signOut({scope:"local"});}catch{}
-   if(alive.current)setMessage("Acesso QA indisponivel. Nao houve repeticao automatica.");
+   if(alive.current)setMessage("Acesso QA indisponivel. Logout remoto nao confirmado. Nao repita o teste.");
    await finish();
   }finally{if(alive.current)setBusy(false);}
  };
- if(!scope())return <main><h1>QA identity-only fechado</h1><p>Nenhum login sera iniciado.</p></main>;
+ if(!scope()&&!attempted.current&&!terminal)return <main><h1>QA identity-only fechado</h1><p>Nenhum login sera iniciado.</p></main>;
  return <main><h1>Verificacao QA de identidade</h1><p role="status">{message}</p>
- {!snapshot&&!terminal&&<form onSubmit={login}><label>Email QA<input autoComplete="off" type="email" value={email} onChange={e=>setEmail(e.target.value)} required disabled={busy}/></label>
+ {!snapshot&&!terminal&&scope()&&<form onSubmit={login}><label>Email QA<input autoComplete="off" type="email" value={email} onChange={e=>setEmail(e.target.value)} required disabled={busy}/></label>
  <label>Senha<input autoComplete="off" type="password" value={password} onChange={e=>setPassword(e.target.value)} required disabled={busy}/></label><button disabled={busy||attempted.current}>Entrar somente no QA</button></form>}
  {snapshot&&<><p>Abra ambas sem navegar ou atualizar. Nao execute analises.</p><QaToolAccessCore app="adsengine" identity={snapshot}/><QaToolAccessCore app="vision-x" identity={snapshot}/></>}
  {!terminal&&<button onClick={()=>void finish()}>Encerrar e sair do QA</button>}

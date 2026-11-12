@@ -41,3 +41,69 @@ it("short token is rejected before tools open",async()=>{session.expires_at=Date
 
 it("back or forward after login closes tools and dedicated session",async()=>{render(<Entry/>);login();await screen.findByText("tool:adsengine");vi.stubGlobal("location",{origin,pathname:"/",search:"",hash:""});fireEvent(window,new PopStateEvent("popstate"));await waitFor(()=>expect(screen.queryByText("tool:adsengine")).toBeNull());expect(h.terminal).toBe(true);await waitFor(()=>expect(h.client.auth.signOut).toHaveBeenCalledWith({scope:"local"}));});
 it("wrong pathname never enables QA even with fixture open",()=>{vi.stubGlobal("location",{origin,pathname:"/ordinary",search:"",hash:""});render(<Entry/>);expect(screen.getByText("QA identity-only fechado")).toBeTruthy();expect(h.create).not.toHaveBeenCalled();});
+
+it("SDK success without an observed request remains local-only",async()=>{
+ render(<Entry/>);login();await screen.findByText("tool:adsengine");
+ fireEvent.click(screen.getByText("Encerrar e sair do QA"));
+ await screen.findByText(/Logout remoto nao confirmado/);
+ expect(screen.queryByText(/Logout aceito pelo servidor/)).toBeNull();
+});
+it.each([401,403,404,500])("HTTP%s never makes UI claim remote acceptance",async status=>{
+ vi.stubGlobal("fetch",vi.fn().mockResolvedValue(Response.json({error:"synthetic"},{status})));
+ h.client.auth.signOut.mockImplementation(async()=>{await h.create.mock.calls[0][2].global.fetch("https://mdqlgwnggbkgmplgkebd.supabase.co/auth/v1/logout?scope=local",{method:"POST",headers:{authorization:"Bearer "+session.access_token}});return {error:null};});
+ render(<Entry/>);login();await screen.findByText("tool:adsengine");
+ fireEvent.click(screen.getByText("Encerrar e sair do QA"));
+ await screen.findByText(/Logout remoto nao confirmado/);
+});
+it("canonical204 is specific acceptance, never instant JWT invalidation",async()=>{
+ vi.stubGlobal("fetch",vi.fn().mockResolvedValue(new Response(null,{status:204})));
+ h.client.auth.signOut.mockImplementation(async()=>{await h.create.mock.calls[0][2].global.fetch("https://mdqlgwnggbkgmplgkebd.supabase.co/auth/v1/logout?scope=local",{method:"POST",headers:{authorization:"Bearer "+session.access_token}});return {error:null};});
+ render(<Entry/>);login();await screen.findByText("tool:adsengine");fireEvent.click(screen.getByText("Encerrar e sair do QA"));
+ await screen.findByText(/Logout aceito pelo servidor/);expect(screen.getByRole("status").textContent).toContain("Tokens ja emitidos podem valer ate expirar");
+});
+it("signals local barrier while remote close is pending; distinguishes SSO failure",async()=>{
+ let finish!:(v:boolean)=>void;h.close.mockImplementation(()=>new Promise(r=>{finish=r;}));
+ vi.stubGlobal("fetch",vi.fn().mockResolvedValue(new Response(null,{status:204})));
+ h.client.auth.signOut.mockImplementation(async()=>{await h.create.mock.calls[0][2].global.fetch("https://mdqlgwnggbkgmplgkebd.supabase.co/auth/v1/logout?scope=local",{method:"POST",headers:{authorization:"Bearer "+session.access_token}});return {error:null};});
+ render(<Entry/>);login();await screen.findByText("tool:adsengine");fireEvent.click(screen.getByText("Encerrar e sair do QA"));
+ expect(screen.getByText(/Confirmacao remota em andamento/)).toBeTruthy();expect(screen.queryByText("tool:adsengine")).toBeNull();expect(h.client.auth.signOut).not.toHaveBeenCalled();
+ finish(false);await screen.findByText(/Logout aceito pelo servidor/);expect(screen.getByRole("status").textContent).toContain("Fechamento das ferramentas nao confirmado");
+});
+it("SIGNED_OUT reentrancy does not await nested logout inside SDK lock",async()=>{
+ vi.stubGlobal("fetch",vi.fn().mockResolvedValue(new Response(null,{status:204})));
+ h.client.auth.signOut.mockImplementation(async()=>{
+  await h.create.mock.calls[0][2].global.fetch("https://mdqlgwnggbkgmplgkebd.supabase.co/auth/v1/logout?scope=local",{method:"POST",headers:{authorization:"Bearer "+session.access_token}});
+  await h.callback("SIGNED_OUT",null);return {error:null};
+ });
+ render(<Entry/>);login();await screen.findByText("tool:adsengine");fireEvent.click(screen.getByText("Encerrar e sair do QA"));
+ await screen.findByText(/Logout aceito pelo servidor/);expect(h.client.auth.signOut).toHaveBeenCalledTimes(1);expect(h.close).toHaveBeenCalledTimes(1);
+});
+it("expired scope preserves terminal uncertainty without reopening login",async()=>{
+ render(<Entry/>);login();await screen.findByText("tool:adsengine");
+ h.fixture.windowEnd=Date.now()-1;fireEvent(window,new Event("pagehide"));
+ await screen.findByText(/Logout remoto nao confirmado/);
+ expect(screen.queryByText("QA identity-only fechado")).toBeNull();expect(screen.queryByLabelText("Senha")).toBeNull();expect(screen.queryByText("tool:adsengine")).toBeNull();
+});
+it("late login after prior cleanup makes a second local logout, not a false receipt",async()=>{
+ let resolve!:(v:any)=>void;h.client.auth.signInWithPassword.mockImplementation(()=>new Promise(r=>{resolve=r;}));
+ const view=render(<Entry/>);login();view.unmount();
+ await waitFor(()=>expect(h.client.auth.signOut).toHaveBeenCalledTimes(1));
+ resolve({data:{session},error:null});await waitFor(()=>expect(h.client.auth.signOut).toHaveBeenCalledTimes(2));expect(h.client.from).not.toHaveBeenCalled();
+});
+
+it.each([true,false])("repeated finish and route polling preserve final receipt accepted=%s",async accepted=>{
+ if(accepted){
+  vi.stubGlobal("fetch",vi.fn().mockResolvedValue(new Response(null,{status:204})));
+  h.client.auth.signOut.mockImplementation(async()=>{await h.create.mock.calls[0][2].global.fetch("https://mdqlgwnggbkgmplgkebd.supabase.co/auth/v1/logout?scope=local",{method:"POST",headers:{authorization:"Bearer "+session.access_token}});return {error:null};});
+ }
+ render(<Entry/>);login();await screen.findByText("tool:adsengine");
+ vi.stubGlobal("location",{origin,pathname:"/elsewhere",search:"",hash:""});
+ fireEvent(window,new PopStateEvent("popstate"));
+ await screen.findByText(accepted?/Logout aceito pelo servidor/:/Logout remoto nao confirmado/);
+ const final=screen.getByRole("status").textContent;
+ fireEvent(window,new Event("pagehide"));fireEvent(window,new PopStateEvent("popstate"));
+ await new Promise(r=>setTimeout(r,550));
+ expect(screen.getByRole("status").textContent).toBe(final);
+ expect(screen.queryByText(/Confirmacao remota em andamento/)).toBeNull();
+ expect(h.client.auth.signOut).toHaveBeenCalledTimes(1);expect(h.close).toHaveBeenCalledTimes(1);
+});
